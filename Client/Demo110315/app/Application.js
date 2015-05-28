@@ -71,7 +71,7 @@ Ext.define('Demo110315.Application', {
             'Demo110315.model.Version'],
     
     // create a reference in Ext.application so we can access it from multiple functions
-//    splashscreen: {},
+    splashscreen: {},
     
     init: function() {
         var me = this;
@@ -99,16 +99,17 @@ Ext.define('Demo110315.Application', {
 //            Ext.getBody().unmask();
             // fade out the body mask
             me.splashscreen.fadeOut({
-                duration: 1000,
-                remove: true
+                duration: 1000
+//                remove: true
             });
  
             // fade out the message
             me.splashscreen.next().fadeOut({
                 duration: 1000,
-                remove: true,
+//                remove: true, 
                 listeners:{
                     afteranimate: function(el, startTime, eOpts){
+                        Ext.getBody().unmask();
                         Ext.create('Demo110315.view.main.Main');
                     }
                 }
