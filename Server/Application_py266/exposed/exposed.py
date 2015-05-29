@@ -62,13 +62,13 @@ class Exposed(object):
             elem = elements_dict[p.id_pae]
             item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
             if (item.paetype == 2):
-                item.gid = seqsMap.put(idgen,elem)                    
+                item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)      
                 item.expanded = False
                 seq[item.id]=item
 
             # It is a module
             else:
-                item.gid = modsMap.put(idgen,elem)
+                item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
                 seq[p.id_parent].children.insert(p.order, item)
 
 #        seqs = seq.viewvalues()
@@ -87,7 +87,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
-            item.gid = modsMap.put(idgen,elem)
+            item.gid = modsMap.put(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
         #merge the sequences created
@@ -142,13 +142,13 @@ class Exposed(object):
             elem = elements_dict[p.id_pae]
             item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
             if (item.paetype == 2):
-                item.gid = seqsMap.put(idgen,elem)                    
+                item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl) 
                 item.expanded = False
                 seq[item.id]=item
 
             # It is a module
             else:
-                item.gid = modsMap.put(idgen,elem)
+                item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
                 seq[p.id_parent].children.insert(p.order, item)
 
         seqs = seq.values()# seq.viewvalues()
@@ -166,7 +166,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
-            item.gid = modsMap.put(idgen,elem)
+            item.gid = modsMap.put(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
         #merge the sequences created

@@ -13,18 +13,22 @@ class ModulesDict(object):
     def __init__(self):
         self.modDict = {}
     
-    def put(self, counter, module):
+    def put(self, counter, module, id_pathid, order,lvl):
         mid = module.id
-        if (mid in self.modDict.values()):
-            return [k for k, v in self.modDict.iteritems() if v == mid][0]
+        value = str(mid)+","+str(id_pathid)+","+str(order)+","+str(lvl)
+        if (value in self.modDict.values()):
+            return [k for k, v in self.modDict.iteritems() if v == value][0]
         else:
             gid = counter.getNext()
-            self.modDict[gid] = mid
+            self.modDict[gid] = value
             return gid
         
     def get(self,gid):
         if self.modDict.has_key(gid):
-            return self.modDict.get(gid)
+            value = self.modDict.get(gid)
+            vals_list = value.split(",")
+            id_mod = vals_list[0]
+            return int(id_mod)
         else:
             return -2
 
@@ -54,18 +58,22 @@ class SequencesDict(object):
     def __init__(self):
         self.seqDict = {}
     
-    def put(self, counter, sequence):
+    def put(self, counter, sequence, id_pathid, order,lvl):
         sid = sequence.id
-        if(sid in self.seqDict.values()):
-            return [k for k, v in self.seqDict.iteritems() if v == sid][0]
+        value = str(sid)+","+str(id_pathid)+","+str(order)+","+str(lvl)
+        if(value in self.seqDict.values()):
+            return [k for k, v in self.seqDict.iteritems() if v == value][0]
         else:
             gid = counter.getNext()
-            self.seqDict[gid] = sid
+            self.seqDict[gid] = value
             return gid
         
     def get(self,gid):
-        if self.seqDict.has_key(gid):
-            return self.seqDict.get(gid)
+        if self.self.seqDict.get(gid):
+            value = self.seqDict.get(gid)
+            vals_list = value.split(",")
+            id_seq = vals_list[0]
+            return int(id_seq)
         else:
             return -2
  
