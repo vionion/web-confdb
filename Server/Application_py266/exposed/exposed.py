@@ -56,7 +56,8 @@ class Exposed(object):
         elements_dict = dict((x.id, x) for x in elements)
         
         seq = {}
-        lvlZeroSeq_Dict = {} 
+        lvlZeroSeq_Dict = {}
+        idpaes = {}  
         
         #Build all the sequences 
         for p in items:
@@ -65,7 +66,8 @@ class Exposed(object):
             if (item.paetype == 2):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)      
                 item.expanded = False
-                seq[item.id]=item
+                seq[item.gid]=item 
+                idpaes[item.gid]=p.id_pae  
                 if (item.lvl == 0): 
                     iid = item.id   
                     lvlZeroSeq_Dict[item.gid] = iid 
@@ -73,13 +75,24 @@ class Exposed(object):
             # It is a module
             else:
                 item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                seq[p.id_parent].children.insert(p.order, item)
+                id_par = p.id_parent 
+                
+                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]  
+
+                seq[lKey].children.insert(p.order, item)
+#                seq[p.id_parent].children.insert(p.order, item)
 
 #        seqs = seq.viewvalues()
         seqs = seq.values()
         for s in seqs:
             if (s.lvl != 0):
-                seq[s.id_parent].children.insert(s.order, s)
+                id_par = s.id_parent  
+                
+                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]  
+                
+                childs = seq[lKey].children 
+                childs.insert(s.order, s) 
+                childs.sort(key=lambda x: x.order, reverse=False) 
 
         #Retreive the lvl 0 of the path
         lista = queries.getLevelZeroPathItems(id_p, ver, db)
@@ -99,7 +112,7 @@ class Exposed(object):
 #        for ss in seq_values:
 #            pats.insert(ss.order, ss)
 
-        for lzseq in lvlZeroSeq_Dict.values(): #viewvalues()
+        for lzseq in lvlZeroSeq_Dict.keys(): #viewkeys() #viewvalues() 
             lzsequence = seq[lzseq] 
             pats.insert(lzsequence.order, lzsequence)  
             
@@ -147,6 +160,7 @@ class Exposed(object):
         
         seq = {}
         lvlZeroSeq_Dict = {} 
+        idpaes = {} 
         
         #Build all the sequences 
         for p in items:
@@ -155,7 +169,8 @@ class Exposed(object):
             if (item.paetype == 2):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl) 
                 item.expanded = False
-                seq[item.id]=item
+                seq[item.gid]=item 
+                idpaes[item.gid]=p.id_pae 
                 if (item.lvl == 0): 
                     iid = item.id   
                     lvlZeroSeq_Dict[item.gid] = iid 
@@ -163,12 +178,23 @@ class Exposed(object):
             # It is a module
             else:
                 item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                seq[p.id_parent].children.insert(p.order, item)
+                id_par = p.id_parent 
+                
+                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0] 
+
+                seq[lKey].children.insert(p.order, item) 
+#                seq[p.id_parent].children.insert(p.order, item)
 
         seqs = seq.values()# seq.viewvalues()
         for s in seqs:
             if (s.lvl != 0):
-                seq[s.id_parent].children.insert(s.order, s)
+                id_par = s.id_parent  
+                
+                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]   
+                
+                childs = seq[lKey].children 
+                childs.insert(s.order, s) 
+                childs.sort(key=lambda x: x.order, reverse=False)  
 
         #Retreive the lvl 0 of the path
         lista = queries.getLevelZeroPathItems(id_p, ver, db)
@@ -188,7 +214,7 @@ class Exposed(object):
 #        for ss in seq_v: #viewvalues():
 #            pats.insert(ss.order, ss)
          
-        for lzseq in lvlZeroSeq_Dict.values(): #viewvalues():
+        for lzseq in lvlZeroSeq_Dict.keys(): #viewkeys() #viewvalues():
             lzsequence = seq[lzseq] 
             pats.insert(lzsequence.order, lzsequence)    
         
