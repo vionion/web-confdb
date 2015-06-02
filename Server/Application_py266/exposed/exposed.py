@@ -56,6 +56,7 @@ class Exposed(object):
         elements_dict = dict((x.id, x) for x in elements)
         
         seq = {}
+        lvlZeroSeq_Dict = {} 
         
         #Build all the sequences 
         for p in items:
@@ -65,7 +66,10 @@ class Exposed(object):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)      
                 item.expanded = False
                 seq[item.id]=item
-
+                if (item.lvl == 0): 
+                    iid = item.id   
+                    lvlZeroSeq_Dict[item.gid] = iid 
+                    
             # It is a module
             else:
                 item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
@@ -91,9 +95,15 @@ class Exposed(object):
             pats.insert(item.order,item)
 
         #merge the sequences created
-        seq_values = seq.values() #seq.viewvalues()
-        for ss in seq_values:
-            pats.insert(ss.order, ss)
+#        seq_values = seq.values() #seq.viewvalues()
+#        for ss in seq_values:
+#            pats.insert(ss.order, ss)
+
+        for lzseq in lvlZeroSeq_Dict.values(): #viewvalues()
+            lzsequence = seq[lzseq] 
+            pats.insert(lzsequence.order, lzsequence)  
+            
+        pats.sort(key=lambda x: x.order, reverse=False)    
 
         resp.success = True
         resp.children = pats
@@ -136,6 +146,7 @@ class Exposed(object):
         elements_dict = dict((x.id, x) for x in elements)
         
         seq = {}
+        lvlZeroSeq_Dict = {} 
         
         #Build all the sequences 
         for p in items:
@@ -145,6 +156,9 @@ class Exposed(object):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl) 
                 item.expanded = False
                 seq[item.id]=item
+                if (item.lvl == 0): 
+                    iid = item.id   
+                    lvlZeroSeq_Dict[item.gid] = iid 
 
             # It is a module
             else:
@@ -170,10 +184,13 @@ class Exposed(object):
             pats.insert(item.order,item)
 
         #merge the sequences created
-        seq_v = seq.values()
-        for ss in seq_v: #viewvalues():
-            pats.insert(ss.order, ss)
-            
+#        seq_v = seq.values()
+#        for ss in seq_v: #viewvalues():
+#            pats.insert(ss.order, ss)
+         
+        for lzseq in lvlZeroSeq_Dict.values(): #viewvalues():
+            lzsequence = seq[lzseq] 
+            pats.insert(lzsequence.order, lzsequence)    
         
         outmodule = queries.getOumStreamid(id_p, db)
         if (outmodule != None):
@@ -188,6 +205,8 @@ class Exposed(object):
 
             pats.insert(oum.order, oum)    
 
+        pats.sort(key=lambda x: x.order, reverse=False)
+            
         resp.success = True
         resp.children = pats
         
