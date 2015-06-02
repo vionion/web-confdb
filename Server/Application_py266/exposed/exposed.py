@@ -75,11 +75,23 @@ class Exposed(object):
             # It is a module
             else:
                 item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                id_par = p.id_parent 
-                
-                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]  
+                id_par = item.id_parent 
+                idPae_values = idpaes.values()
+                lKeys = []
+                for key, value in idpaes.iteritems(): 
+                    if value == id_par:
+                        lKeys.append(key)
 
-                seq[lKey].children.insert(p.order, item)
+#                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]  
+
+                for lKey in lKeys:
+                    childs = seq[lKey].children
+                    isIn = False
+                    for c in childs:
+                        if c.id == item.id:
+                            isIn = True
+                    if not isIn:
+                        seq[lKey].children.insert(p.order, item) 
 #                seq[p.id_parent].children.insert(p.order, item)
 
 #        seqs = seq.viewvalues()
@@ -178,11 +190,23 @@ class Exposed(object):
             # It is a module
             else:
                 item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                id_par = p.id_parent 
-                
-                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0] 
+                id_par = item.id_parent 
+                idPae_values = idpaes.values()
+                lKeys = []
+                for key, value in idpaes.iteritems(): 
+                    if value == id_par:
+                        lKeys.append(key)
 
-                seq[lKey].children.insert(p.order, item) 
+#                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]  
+
+                for lKey in lKeys:
+                    childs = seq[lKey].children
+                    isIn = False
+                    for c in childs:
+                        if c.id == item.id:
+                            isIn = True
+                    if not isIn:
+                        seq[lKey].children.insert(p.order, item) 
 #                seq[p.id_parent].children.insert(p.order, item)
 
         seqs = seq.values()# seq.viewvalues()
