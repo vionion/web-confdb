@@ -12,8 +12,9 @@ class ModulesDict(object):
     
     def __init__(self):
         self.modDict = {}
-    
-    def put(self, counter, module, id_pathid, order,lvl):
+        
+    # Put for Path items
+    def putItem(self, counter, module, id_pathid, order,lvl):
         mid = module.id
         value = str(mid)+","+str(id_pathid)+","+str(order)+","+str(lvl)
         if (value in self.modDict.values()):
@@ -22,7 +23,27 @@ class ModulesDict(object):
             gid = counter.getNext()
             self.modDict[gid] = value
             return gid
+    
+    # Put for Modules module_id + -1 + 0 + 0
+    def putModule(self, counter, module):
+        mid = module.id
+        values = self.modDict.values()
+        new_gid = -3 
+        for key, value in self.modDict.iteritems():
+            vals_list = value.split(",")
+            id_mod = vals_list[0]
+            if id_mod == mid:
+                new_gid = key
+                break
+        new_value = str(mid)+","+str(-1)+","+str(0)+","+str(0)
+        if new_gid == -3:
+            gid = counter.getNext()
+            self.modDict[gid] = new_value
+            return gid
         
+        else:
+            return new_gid 
+    
     def get(self,gid):
         if self.modDict.has_key(gid):
             value = self.modDict.get(gid)

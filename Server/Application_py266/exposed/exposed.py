@@ -74,7 +74,7 @@ class Exposed(object):
                     
             # It is a module
             else:
-                item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = modsMap.putItem(idgen,elem,p.id_pathid,p.order,p.lvl)
                 id_par = item.id_parent 
                 idPae_values = idpaes.values()
                 lKeys = []
@@ -116,7 +116,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
-            item.gid = modsMap.put(idgen,elem,l.id_pathid,l.order,l.lvl)
+            item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
         #merge the sequences created
@@ -189,7 +189,7 @@ class Exposed(object):
 
             # It is a module
             else:
-                item.gid = modsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = modsMap.putItem(idgen,elem,p.id_pathid,p.order,p.lvl)
                 id_par = item.id_parent 
                 idPae_values = idpaes.values()
                 lKeys = []
@@ -230,7 +230,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
-            item.gid = modsMap.put(idgen,elem,l.id_pathid,l.order,l.lvl)
+            item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
         #merge the sequences created
@@ -785,7 +785,7 @@ class Exposed(object):
             if (templates_dict.has_key(m2t)):
                 temp = templates_dict.get(m2t) 
                 md = ModuleDetails(m.id, m.name, temp.id_mtype, "", temp.name)
-                md.gid = modsMap.put(idgen,md)                
+                md.gid = modsMap.putModule(idgen,md)                
                 
             else:
                 print "ERROR KEY"
