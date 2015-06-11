@@ -19,7 +19,7 @@ from operator import attrgetter
  #AddressUser #Module,
 import json
 #from schema import * #PathsSchema, ModuleSchema, ResponseSchema, ParameterSchema, ResponseParamsSchema, ResponsePathsSchema, ResponsePathTreeSchema, PathsTreeSchema, PathsItemSchema, ResponsePathItemsSchema, ResponsePathItemSchema, ResponseParamSchema, ParameterSchema
-from collections import OrderedDict
+from ordereddict import OrderedDict
 from utils import * #Counter, ModulesDict, SequencesDict, PathsDict
 
 #NEW IMPORT

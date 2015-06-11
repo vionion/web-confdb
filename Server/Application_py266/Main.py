@@ -17,7 +17,7 @@ from operator import attrgetter
  #AddressUser #Module,
 import json
 #from schema import * #PathsSchema, ModuleSchema, ResponseSchema, ParameterSchema, ResponseParamsSchema, ResponsePathsSchema, ResponsePathTreeSchema, PathsTreeSchema, PathsItemSchema, ResponsePathItemsSchema, ResponsePathItemSchema, ResponseParamSchema, ParameterSchema
-from collections import OrderedDict
+from ordereddict import OrderedDict
 from utils import * #Counter, ModulesDict, SequencesDict, PathsDict
 
 #NEW IMPORT
@@ -509,7 +509,7 @@ if __name__ == '__main__':
     #SAEnginePlugin(cherrypy.engine, 'oracle://cms_hlt_gdr:convertiMi!@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = int2r2-s.cern.ch)(PORT = 10121)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = int2r_nolb.cern.ch)))').subscribe()
     #'sqlite:///my.db' cmsr.cern.ch
 
-    SAEnginePlugin(cherrypy.engine, 'oracle://user:password@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = host)(PORT = port)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = servicename)))').subscribe()
+    SAEnginePlugin(cherrypy.engine, 'oracle://user:password@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = hostname)(PORT = port)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = servicename)))').subscribe()
     
     # Register the SQLAlchemy tool
     from sqlalchemy_plugin.satool import SATool

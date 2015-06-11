@@ -7,7 +7,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
-from collections import OrderedDict
+from ordereddict import OrderedDict
 import string        
   
 class ParamsBuilder():
