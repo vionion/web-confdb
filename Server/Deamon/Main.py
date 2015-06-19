@@ -509,8 +509,6 @@ if __name__ == '__main__':
     # Register the SQLAlchemy plugin
     from sqlalchemy_plugin.saplugin import SAEnginePlugin
     from cherrypy.process.plugins import DropPrivileges
-    #SAEnginePlugin(cherrypy.engine, 'oracle://cms_hlt_gdr:convertiMi!@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = int2r2-s.cern.ch)(PORT = 10121)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = int2r_nolb.cern.ch)))').subscribe()
-    #'sqlite:///my.db' cmsr.cern.ch
     
 #    dr = DropPrivileges(cherrypy.engine, uid=1000, gid=1000)
     dr = DropPrivileges(cherrypy.engine)

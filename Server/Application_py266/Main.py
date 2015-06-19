@@ -506,8 +506,6 @@ class Root(object):
 if __name__ == '__main__':
     # Register the SQLAlchemy plugin
     from sqlalchemy_plugin.saplugin import SAEnginePlugin
-    #SAEnginePlugin(cherrypy.engine, 'oracle://cms_hlt_gdr:convertiMi!@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = int2r2-s.cern.ch)(PORT = 10121)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = int2r_nolb.cern.ch)))').subscribe()
-    #'sqlite:///my.db' cmsr.cern.ch
 
     SAEnginePlugin(cherrypy.engine, 'oracle://user:password@(DESCRIPTION = (LOAD_BALANCE=on) (FAILOVER=ON) (ADDRESS = (PROTOCOL = TCP)(HOST = hostname)(PORT = port)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = servicename)))').subscribe()
     
