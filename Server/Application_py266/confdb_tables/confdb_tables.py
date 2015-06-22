@@ -544,7 +544,7 @@ class ESSource(Base):
 
     id = Column('id', Integer, primary_key=True)
     id_template = Column('id_template', Integer, ForeignKey('u_esstemplates.id'))
-
+    name = Column(String)
     
 class ConfToEss(Base):
     __tablename__ = 'u_conf2ess'

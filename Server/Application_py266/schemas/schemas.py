@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields, pprint
+#from collections import OrderedDict
 from ordereddict import OrderedDict
 
 
@@ -268,7 +269,7 @@ class VersionSchema(Schema):
     id = fields.Integer()
     name = fields.String()
     id_release = fields.String()
-    created = fields.Integer()
+    created = fields.String()
     version = fields.Integer()
     ver = fields.Method("get_ver")
     gid = fields.Method("get_gid")
@@ -407,6 +408,7 @@ class GlobalPsetSchema(Schema):
 class EDSourceSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
+    tclass = fields.String()
     icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
 
@@ -417,12 +419,13 @@ class EDSourceSchema(Schema):
         return False
     
     class Meta:
-        fields = ("gid", "name", "icon", "expandable")
+        fields = ("gid", "name", "tclass", "icon", "expandable")
         ordered = True
               
 class ESSourceSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
+    tclass = fields.String()
     icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
 
@@ -433,7 +436,7 @@ class ESSourceSchema(Schema):
         return False
     
     class Meta:
-        fields = ("gid", "name", "icon", "expandable")
+        fields = ("gid", "name", "tclass", "icon", "expandable")
         ordered = True
 
         
