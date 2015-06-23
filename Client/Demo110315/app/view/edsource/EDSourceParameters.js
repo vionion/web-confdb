@@ -14,7 +14,7 @@ Ext.define("Demo110315.view.edsource.EDSourceParameters",{
         store:'{edsourceparams}'
 //        selection: '{selectedModuleitem}'
     },
-    
+    bufferedRenderer: false,
     rootVisible: true,
     useArrows: true,
 //    singleExpand: true,

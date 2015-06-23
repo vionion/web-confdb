@@ -18,8 +18,10 @@ Ext.define("Demo110315.view.explorer.VersionsGrid",{
     
     columns: [
         { xtype: 'gridcolumn', header: 'Name', dataIndex: 'name', flex: 1 },
+        { xtype: 'gridcolumn', header: 'Created', dataIndex: 'created' },
         { xtype: 'gridcolumn', header: 'Author', dataIndex: 'creator' },
-        { xtype: 'gridcolumn', header: 'Version', dataIndex: 'ver' }
+        { xtype: 'gridcolumn', header: 'Version', dataIndex: 'ver' },
+        { xtype: 'gridcolumn', header: 'Release', dataIndex: 'rel' }
 
     ]
     

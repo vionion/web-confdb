@@ -24,9 +24,9 @@ Ext.define("Demo110315.view.explorer.Folders",{
 //    singleExpand: true,
     
     columns: [
-        { xtype: 'treecolumn', header: 'Name', dataIndex: 'new_name', flex: 1 },
-        { xtype: 'gridcolumn', header: 'id', dataIndex: 'gid' },
-        { xtype: 'gridcolumn', header: 'fit', dataIndex: 'fit' }
+        { xtype: 'treecolumn', header: 'Name', dataIndex: 'new_name', flex: 1 }
+//        { xtype: 'gridcolumn', header: 'id', dataIndex: 'gid' },
+//        { xtype: 'gridcolumn', header: 'fit', dataIndex: 'fit' }
     ],
     
     listeners: {

@@ -72,7 +72,7 @@ Ext.define("Demo110315.view.explorer.Explorer",{
         },
         {
             region: 'center',
-            flex: 1,
+            flex: 2,
             split: true,
             xtype: 'folders',
             height: '100%',
@@ -85,7 +85,7 @@ Ext.define("Demo110315.view.explorer.Explorer",{
             }
         }
         ,{
-            flex: 1,
+            flex: 3,
             region: 'east',
 //            layout: 'fit',
             xtype: 'versions',

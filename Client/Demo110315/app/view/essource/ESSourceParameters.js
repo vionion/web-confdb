@@ -14,7 +14,7 @@ Ext.define("Demo110315.view.essource.ESSourceParameters",{
         store:'{essourceparams}'
 //        selection: '{selectedModuleitem}'
     },
-    
+    bufferedRenderer: false,
     rootVisible: true,
     useArrows: true,
 //    singleExpand: true,

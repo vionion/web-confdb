@@ -3,6 +3,7 @@ Ext.define('Demo110315.model.Version', {
     
     fields: [
         { name: 'name', type: 'string' },
+        { name: 'created', type: 'string' },
         { name: 'creator', type: 'string' },
         { name: 'ver', type: 'int' },
         { name: 'description', type: 'string' }

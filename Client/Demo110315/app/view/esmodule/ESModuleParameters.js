@@ -13,7 +13,7 @@ Ext.define("Demo110315.view.esmodule.ESModuleParameters",{
         store:'{esmodparams}'
 //        selection: '{selectedModuleitem}'
     },
-    
+    bufferedRenderer: false,
     rootVisible: true,
     useArrows: true,
 //    singleExpand: true,

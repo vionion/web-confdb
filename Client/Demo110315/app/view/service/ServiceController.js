@@ -1,15 +1,4 @@
 
-//                                        val = parseInt(v);
-//                                        if(val == 0){
-//                                            metaData.tdCls = 'red-bg';
-//                                            return 'v';
-//                                        }else if(val == 1){
-//                                            return '<span style="color:green;">' + val + '%</span>';
-//                                        }else if(val > 1){
-//                                            return '<span style="color:yellow;">' + val + '%</span>';
-//                                        }
-//                                        else return val;
-
 Ext.define('Demo110315.view.service.ServiceController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.service-service',
@@ -93,7 +82,13 @@ Ext.define('Demo110315.view.service.ServiceController', {
             console.log("dockedLen");
             console.log(dockedLen);
             
-            if(dockedLen < 2){
+            var loaded = this.getViewModel().get('prescaleLoaded');
+            console.log("prescaleLoaded");
+            console.log(loaded);
+            
+//            if(dockedLen < 3 && parG_Cols < 2){
+                
+            if(!loaded){    
                 
                 function row(pathname) {
                         this.pathname = pathname;
@@ -137,7 +132,8 @@ Ext.define('Demo110315.view.service.ServiceController', {
 
                 //RETREIVE - EXTRACT THE LABELS AND BUILD THE COLUMNS
                 i = 0;
-                pathColumn = { xtype: 'gridcolumn', text: 'Path',  dataIndex: 'pathname' , autoSizeColumn: true, minWidth: 150, render: null };
+                pathColumn = {xtype: 'gridcolumn', text: 'Path',  dataIndex: 'pathname', locked: true, sortable: false, width: 150, minWidth: 150 };
+                // autoSizeColumn: true, width: 150 ,  
                 mycolumns.push(pathColumn);
                 
                 while((i<labelsLength) && (!gotAllLabels)){
@@ -158,7 +154,8 @@ Ext.define('Demo110315.view.service.ServiceController', {
                                 label = labels.slice(beginLabelIndex,i);
                                 gridLabels.push(label);
 
-                                newColumn = { xtype: 'gridcolumn', text: '',  dataIndex: '', autoSizeColumn: true, flex: 1, render: function(v, meta, rec){ return 'ciccio'}};
+                                newColumn = { xtype: 'gridcolumn', text: '',  dataIndex: '', width: 100, minWidth: 100};
+                                //flex: 1, autoSizeColumn: true, 
                                 newColumn.text = label;
                                 newColumn.dataIndex = label;
                                 newColumn.render = function(v, meta, rec){ return 'ciccio'};
@@ -239,30 +236,62 @@ Ext.define('Demo110315.view.service.ServiceController', {
                     }
                     
                 }
-                
-                var preGrid = Ext.create({
-                        xtype: 'grid',
+//                var preGrid = this.lookupReference("prescaleTab").lookupReference("prescaleGrid");
+//                preGrid.setVisible(false);
+//                preGrid.disable();
+                var preGrid = Ext.create('Ext.grid.Panel',{
+//                        xtype: 'grid',
                         reference: 'prescaleGrid',
-                        flex: 2,
-                        layout: 'fit',
+                        region: 'center',
+//                        flex: 1,
+//                        layout: 'fit',
                         loadMask: true,
-                        width: '100%',
-                        height: '75%',
-                        scrollable: true,
+//                        width: '100%',
+//                        height: '75%',
+//                        scrollable: true,
+                        columnLines: true,
+                        enableLocking: true,
                         columns:[],
                         store: {}
+//                        ,listeners:{
+//                                render: 'onPreGridRender',
+//                                beforeshow: 'onPreGridRender'
+//                        }
                     });
                 gridLabels.unshift("Path");
                 myStore.fields = gridLabels;
-                preGrid.reconfigure(myStore,mycolumns);
+//                preGrid.enableLocking = true;
                 
+                console.log('before reco');
+                preGrid.reconfigure(myStore,mycolumns);
+                console.log('after reco');
+                
+                Ext.resumeLayouts(true);
+                console.log('after res');
+//                preGrid.setConfig( 'scrollable', true ); 
+//                console.log('after setc');
+                
+//                preGrid = this.lookupReference("prescaleTab").lookupReference("prescaleGrid");
+//                console.log(preGrid);
+                
+//                preGrid.enable();
+//                preGrid.setVisible(true);
+                
+//                preGrid.reconfigure(myStore,null);
+                this.getViewModel().set('prescaleLoaded',true);
                 this.lookupReference("prescaleTab").insert(1,preGrid);
                 
             }
+
         }
         
         
     }
+    
+//    ,onPreGridRender: function(preGrid){
+//     
+//        preGrid.setConfig({ enableLocking:true}) ;
+//    }
     
     
 });

@@ -5,7 +5,8 @@ Ext.define('Demo110315.view.service.ServiceModel', {
         name: 'Demo110315',
         idVer: -1,
         idCnf: -1,
-        first: true
+        first: true,
+        prescaleLoaded: false
     },
     
     requires:['Demo110315.model.Service'

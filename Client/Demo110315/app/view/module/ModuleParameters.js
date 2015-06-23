@@ -13,7 +13,7 @@ Ext.define("Demo110315.view.module.ModuleParameters",{
         store:'{modparams}'
 //        selection: '{selectedModuleitem}'
     },
-    
+    bufferedRenderer: false,
     rootVisible: true,
     useArrows: true,
 //    singleExpand: true,

@@ -58,8 +58,10 @@ Ext.define("Demo110315.view.streamdataset.StreamDataset",{
             items:[
                 {
                     xtype: 'datasetpathspanel',
+                    reference: 'datasetpathsPanel',
                     title: 'Dataset Paths',
-                    loadMask: true
+                    loadMask: true,
+                    height: '100%'
                 }
                 ,{
                     xtype: 'evcopanel',

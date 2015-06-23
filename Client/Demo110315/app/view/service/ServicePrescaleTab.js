@@ -1,7 +1,9 @@
 
 Ext.define("Demo110315.view.service.ServicePrescaleTab",{
     extend: "Ext.panel.Panel",
-
+    
+    requires:['Demo110315.view.service.PrescaleGrid'],
+    
     alias: 'widget.prescaletab',
     
     reference: 'prescaleTab',
@@ -9,14 +11,16 @@ Ext.define("Demo110315.view.service.ServicePrescaleTab",{
     controller: "service-serviceprescaletab",
     
     layout: {
-        type: 'vbox',
-        align: 'stretch'
+//        type: 'vbox',
+//        align: 'stretch'
+        type: 'border'
     },
     title: 'Prescale Table',
+//    enableLocking: true,
     items: [
         {
             xtype: 'toolbar',
-//            region: 'north',
+            region: 'north',
             paddingLeft: 5,
             items:[ 
                     {
@@ -28,18 +32,7 @@ Ext.define("Demo110315.view.service.ServicePrescaleTab",{
                     }
                 ]
         }
-//        ,{
-//            xtype: 'grid',
-//            region: 'center',
-//            reference: 'prescaleGrid',
-//            columns: [
-//                    {
-//                        xtype: 'gridcolumn',
-//                        text: 'Path Name',
-//                        flex: 1,
-//                        dataIndex: 'name'
-//                    }
-//                ]
-//        }
+
     ]
 });
+

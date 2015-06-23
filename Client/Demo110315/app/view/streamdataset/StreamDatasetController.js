@@ -18,14 +18,38 @@ Ext.define('Demo110315.view.streamdataset.StreamDatasetController', {
         
         if(item_type == "dat"){
             
+            
             centralLayout.setActiveItem(0);
-
+            Ext.resumeLayouts(true);
             var dstid = record.get("gid");
 //
 //            console.log('in child, fwd event');
 //            console.log(strid);
+//            central.lookupReference('datasetpathsPanel')
+//            console.log('sdView.getReferences()');
+//            console.log(sdView.getReferences());
             
-            this.getViewModel().getStore('datasetpaths').load({params: {dstid: dstid, cnf: idc, ver: idv}});
+            pathtreepanel = sdView.lookupReference('datasetpathsPanel');
+//            
+//            console.log('pathtreepanel.getReferences()');
+//            console.log(pathtreepanel.getReferences());
+//            
+//            console.log('pathtreepanel');
+//            console.log(pathtreepanel);
+            
+            pathtree = pathtreepanel.lookupReference('datasetPathsTree');
+            
+            pathtree.setLoading( "Loading Paths" );
+            store = this.getViewModel().getStore('datasetpaths');
+            if (store.isLoaded()){
+                root = store.getRoot();
+                root.removeAll();
+            }
+            store.getProxy().startParam = 0;
+//            this.getViewModel().getStore('datasetpaths').
+            store.load({params: {dstid: dstid, cnf: idc, ver: idv}});
+            
+            console.log(store);
 
         }
         else if(item_type == "evc"){
@@ -66,7 +90,24 @@ Ext.define('Demo110315.view.streamdataset.StreamDatasetController', {
 //        this.getViewModel().getStore('pathitems').getRoot().expand()
         
         
+    },
+    
+    
+    onDatasetpathsLoad: function(store, records, successful, operation, node, eOpts) {
+//                            var id = operation.config.node.get('gid')
+//                            if (id == -1){
+//                               operation.config.node.expand() 
+        var sdView = this.getView();                     
+        pathtreepanel = sdView.lookupReference('datasetpathsPanel');
+        pathtree = pathtreepanel.lookupReference('datasetPathsTree');   
+        
+        if(pathtree.isMasked()){
+            pathtree.setLoading( false );
+//            this.lookupReference('pathTree').unmask();
+        }    
+        store.getRoot().expand();
     }
+    
     
     
     

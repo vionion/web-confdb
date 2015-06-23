@@ -27,8 +27,10 @@ Ext.define("Demo110315.view.streamdataset.PathsTreePanel",{
         },
         {
             xtype: 'datasetpaths',
+            reference: "datasetPathsTree",
             region: 'center',
-            loadMask: true
+            loadMask: true,
+            height: '100%'
         }
     ]
 });

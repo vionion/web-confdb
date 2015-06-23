@@ -2,7 +2,8 @@ Ext.define('Demo110315.model.EDSource', {
     extend: 'Demo110315.model.Base',
     
     fields: [
-        { name: 'name', type: 'string' }
+        { name: 'name', type: 'string' },
+        { name: 'tclass', type: 'string' }
 
     ],
     

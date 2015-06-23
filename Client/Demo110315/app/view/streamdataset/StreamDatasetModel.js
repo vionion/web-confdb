@@ -39,6 +39,9 @@ Ext.define('Demo110315.view.streamdataset.StreamDatasetModel', {
                 type:'tree',
                 model:'Demo110315.model.Datasetitem',
                 autoLoad:false,
+//                clearOnLoad : true,
+//                clearRemovedOnLoad : true,
+//                trackRemoved: false, 
                 root: {
                     expanded: false,
                     text: "Streams and Datasets",
@@ -47,12 +50,8 @@ Ext.define('Demo110315.view.streamdataset.StreamDatasetModel', {
                 },
             
                 listeners: {
-                    load: function(store, records, successful, operation, node, eOpts) {
-                            var id = operation.config.node.get('gid')
-                            if (id == -1){
-                               operation.config.node.expand() 
-                            }
-                    }
+                    load: 'onDatasetpathsLoad',
+                    scope: 'controller'
                 }
             },
         ecstats:{

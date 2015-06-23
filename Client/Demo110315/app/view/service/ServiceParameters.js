@@ -12,7 +12,7 @@ Ext.define("Demo110315.view.service.ServiceParameters",{
         store:'{srvparams}'
 //        selection: '{selectedModuleitem}'
     },
-    
+    bufferedRenderer: false,
     rootVisible: true,
     useArrows: true,
 //    singleExpand: true,

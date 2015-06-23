@@ -35,6 +35,12 @@ Ext.define("Demo110315.view.edsource.EDSourceGrid",{
             text: 'Name',
             flex: 2,
             dataIndex: 'name'
+        },
+        {
+            xtype: 'gridcolumn',
+            text: 'Class',
+            flex: 2,
+            dataIndex: 'tclass'
         }
 
     ]

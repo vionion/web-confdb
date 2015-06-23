@@ -16,7 +16,7 @@ Ext.define("Demo110315.view.endpath.EndPathParameters",{
     title: 'Parameters',
     rootVisible: true,
     useArrows: true,
-    
+    bufferedRenderer: false,
     columns: [
         { xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1 },
         { xtype: 'gridcolumn', header: 'Value', dataIndex: 'value' },

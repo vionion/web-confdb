@@ -15,11 +15,12 @@ Ext.define("Demo110315.view.streamdataset.PathsTree",{
     },
     header: false,
 //    title: "Paths",
-    rootVisible: true,
+    rootVisible: false,
     useArrows: true,
-    
+    scrollable: true,
+    bufferedRenderer: false,
     columns: [
-        { xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1 }
+        { xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1 , sortable: true}
 
     ]
 });

@@ -34,6 +34,12 @@ Ext.define("Demo110315.view.essource.ESSourceGrid",{
             text: 'Name',
             flex: 2,
             dataIndex: 'name'
+        },
+        {
+            xtype: 'gridcolumn',
+            text: 'Class',
+            flex: 2,
+            dataIndex: 'tclass'
         }
     ]
 });
