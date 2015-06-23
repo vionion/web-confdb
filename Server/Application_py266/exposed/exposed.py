@@ -789,19 +789,18 @@ class Exposed(object):
                     found = True
                 else:
                     i+=1
-                    print "i++"
-            if found:
-#                print "Labels Got"
-            else:
+#                    print "i++"
+            if not found:
                 log.error('ERROR: Prescale label not found') #print "labels not found"
+                
 #            print "Building Labels"
 
             labels = re.findall(r'"([^"]*)"', prescaleParams[i].value)
             
-            if len(labels):
-#                print "Labels Built"
-            else:
+            if len(labels) == 0:
                 log.error('WARNING: No Prescales label found') #print "labels empty"
+#            else:
+                
                 
 #            print "Getting Table"
 
