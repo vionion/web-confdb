@@ -45,6 +45,7 @@ class Root(object):
     seqsMap = SequencesDict()
     modsMap = ModulesDict()
     oumodsMap = OutputModulesDict()
+    allmodsMap = AllModulesDict()
     
     srvsMap = ServicesDict()
     
@@ -221,7 +222,7 @@ class Root(object):
         cnf = int(cnf)
         ver = int(ver)
         cnf = self.cnfMap.get(cnf)
-        data = self.funcs.getAllModules(cnf,ver,self.modsMap,self.idgen,db, self.log)
+        data = self.funcs.getAllModules(cnf,ver,self.allmodsMap,self.idgen,db, self.log)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allmodules - data returned null object')

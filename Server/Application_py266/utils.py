@@ -53,6 +53,26 @@ class ModulesDict(object):
         else:
             return -2
 
+class AllModulesDict(object):
+    
+    def __init__(self):
+        self.allmodDict = {}
+    
+    def put(self, counter, module):
+        mid = module.id
+        if (mid in self.allmodDict.values()):
+            return [k for k, v in self.allmodDict.iteritems() if v == mid][0]
+        else:
+            gid = counter.getNext()
+            self.allmodDict[gid] = mid
+            return gid
+        
+    def get(self,gid):
+        if self.allmodDict.has_key(gid):
+            return self.allmodDict.get(gid)
+        else:
+            return -2        
+        
 class OutputModulesDict(object):
     
     def __init__(self):

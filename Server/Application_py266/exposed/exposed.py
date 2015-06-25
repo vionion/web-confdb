@@ -939,7 +939,7 @@ class Exposed(object):
             if (templates_dict.has_key(m2t)):
                 temp = templates_dict.get(m2t) 
                 md = ModuleDetails(m.id, m.name, temp.id_mtype, "", temp.name)
-                md.gid = modsMap.putModule(idgen,md)                
+                md.gid = modsMap.put(idgen,md)                
                 
             else:
                 log.error('ERROR: Module key error') #print "ERROR KEY"
