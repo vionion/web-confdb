@@ -45,6 +45,7 @@ class Root(object):
     seqsMap = SequencesDict()
     modsMap = ModulesDict()
     oumodsMap = OutputModulesDict()
+    allmodsMap = AllModulesDict()
     
     srvsMap = ServicesDict()
     
@@ -137,18 +138,24 @@ class Root(object):
     
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allmoditems(self, _dc=101, length=1, node=1, mid=-2, pid=-2, epit = "" ):
+    def allmoditems(self, _dc=101, length=1, node=1, mid=-2, pid=-2, epit = "", allmod="false" ):
         db = cherrypy.request.db
         pid = int(pid)
         mid = int(mid)
+        
+        data = None
         
         if(epit == "oum"):
             id_oum = self.oumodsMap.get(mid)
             data = self.funcs.getOUModuleItems(id_oum, db, self.log)
         
         else:
-            id_p = self.modsMap.get(mid)        
-            data = self.funcs.getModuleItems(id_p, db, self.log)
+            if (allmod == 'true'):
+                id_p = self.allmodsMap.get(mid)        
+                data = self.funcs.getModuleItems(id_p, db, self.log)
+            else:
+                id_p = self.modsMap.get(mid)        
+                data = self.funcs.getModuleItems(id_p, db, self.log)
         
         
         if (data == None):
@@ -221,7 +228,7 @@ class Root(object):
         cnf = int(cnf)
         ver = int(ver)
         cnf = self.cnfMap.get(cnf)
-        data = self.funcs.getAllModules(cnf,ver,self.modsMap,self.idgen,db, self.log)
+        data = self.funcs.getAllModules(cnf,ver,self.allmodsMap,self.idgen,db, self.log)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allmodules - data returned null object')
