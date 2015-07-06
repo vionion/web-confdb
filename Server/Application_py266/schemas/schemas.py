@@ -20,6 +20,7 @@ class PathsTreeSchema(Schema):
     name = fields.String()
     isEndPath = fields.Integer()
     pit = fields.String()
+    order = fields.Integer()
     icon = icon = fields.Method("get_icon")
     
     def get_icon(self,obj):
@@ -29,7 +30,7 @@ class PathsTreeSchema(Schema):
             return 'resources/EndPath.ico'   
         
     class Meta:
-        fields = ("gid", "vid", "icon", "id_path", "name", "pit")
+        fields = ("gid", "vid", "icon", "id_path", "name", "order","pit")
         ordered = True
 
 class PathDetailsSchema(Schema):
@@ -53,10 +54,14 @@ class PathItemSchema(Schema):
     paetype = fields.Integer()
     id_parent = fields.Integer()
     pit = fields.Method("get_item_type")
+    order = fields.Method("get_order")
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
+     
+    def get_order(self,obj):
+        return obj.order
     
     def get_icon(self,obj):
         if obj.paetype == 1:
@@ -91,7 +96,7 @@ class PathItemSchema(Schema):
             return False
         
     class Meta:
-        fields = ("gid", "name", "id_pathid", "pit", "leaf", "icon","expanded","children")
+        fields = ("gid", "name", "id_pathid", "pit","order","id_parent","leaf", "icon","expanded","children")
         ordered = True    
         
 class PathsItemSchema(Schema):

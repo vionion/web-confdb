@@ -62,7 +62,15 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+        
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -159,6 +167,13 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1) :
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+
             item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
              
             params_mod_name_dict[item.name]=item
@@ -304,7 +319,14 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -405,7 +427,14 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -518,7 +547,14 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id_moe, elem.name, elem.value, elem.moetype, elem.paramtype, parent, p.lvl, p.order, elem.tracked)
+            parValue = None
+            if (elem.valuelob == None or elem.valuelob == "") and (elem.moetype == 1):
+                parValue = elem.value
+                
+            else:
+                parValue = elem.valuelob
+            
+            item = Parameter(p.id_moe, elem.name, parValue, elem.moetype, elem.paramtype, parent, p.lvl, p.order, elem.tracked)
              
             params_mod_name_dict[item.name]=item
             #Set default
@@ -664,7 +700,14 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -758,7 +801,12 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
              
             params_mod_name_dict[item.name]=item
             #Set default
@@ -901,7 +949,14 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             
             # It is a vpset
             if (item.moetype == 3):
@@ -1007,7 +1062,15 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+#            print "TYPE: ", type(elem.moetype), elem.moetype
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
              
 #            params_mod_name_dict[item.name]=item
 #            #Set default
@@ -1126,7 +1189,14 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+        
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -1219,7 +1289,14 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+            
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
              
             params_mod_name_dict[item.name]=item
             #Set default
@@ -1363,7 +1440,14 @@ class ParamsBuilder():
 #            print p.id
             parent = temp_parents.get(p.lvl)
             clvl = p.lvl+1
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+            
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
             item.default = True
             
 #            print item
@@ -1456,7 +1540,14 @@ class ParamsBuilder():
             parent = parents.get(p.lvl)
             clvl = p.lvl+1
 #            print "TYPE: ", type(elem.moetype), elem.moetype
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            parValue = None
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
+                parValue = p.value
+                
+            else:
+                parValue = p.valuelob
+
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
              
             params_mod_name_dict[item.name]=item
             #Set default

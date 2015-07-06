@@ -253,6 +253,57 @@ class ConfDbQueries(object):
     #         id_pae: id of Paelement table in the confDB
     #         db: database session object
     #
+    
+    def getPathContact(self,id_pathid=-2, id_ver=-2,db=None, log = None):
+        
+        if (id_pathid == -2 or db == None or id_ver==-2):
+#            print ("PARAMETERS EXCEPTION HERE")
+            log.error('ERROR: getPathName - input parameters error')
+            
+#
+        contact = db.query(Pathids).filter(Pathids.id==id_pathid).first()   
+    
+        return contact
+    
+    def getPathDescription(self,id_pathid=-2, id_ver=-2,db=None, log = None):
+        
+        if (id_pathid == -2 or db == None or id_ver==-2):
+#            print ("PARAMETERS EXCEPTION HERE")
+            log.error('ERROR: getPathName - input parameters error')
+            
+#        description = db.query(PathToVarVal).from_statement(text("SELECT u_path2varval.id, u_path2varval.id_var, u_path2varval.id_val  " #, u_pathids.description "
+#                      + "FROM  u_paths, u_pathids, u_pathid2conf, u_path2varval "
+#                      + "WHERE u_pathids.id = u_pathid2conf.id_pathid "
+##                      + "AND u_pathids.id_path=u_paths.id "
+#                      + "AND u_path2varval.id_path=u_pathids.id_path "
+#                      + "AND u_pathids.id=:id_pid "                                       
+#                      + "AND u_pathid2conf.id_confver=:idv ")).params(idv=id_ver, id_pid=id_pathid).all()
+        
+#        description = db.query(PathToVarVal).from_statement(text("SELECT u_pathid2varval.id, u_pathid2varval.id_var, u_pathid2varval.id_val  "
+#                      + "FROM  u_paths, u_pathids, u_pathid2conf, u_pathid2varval, u_values, u_variables "
+#                      + "WHERE u_pathids.id = u_pathid2conf.id_pathid "
+##                      + "AND u_pathids.id_path=u_paths.id "
+#                      + "AND u_variables.id=u_pathid2varval.id_var "
+#                      + "AND u_values.id=u_pathid2varval.id_val " 
+#                      + "AND u_variables.name='description' "     
+#                      + "AND u_pathid2varval.id_pathid=u_pathids.id "
+#                      + "AND u_pathids.id=:id_pid "                                       
+#                      + "AND u_pathid2conf.id_confver=:idv ")).params(idv=id_ver, id_pid=id_pathid).first()
+        
+        description = db.query(Pathids).filter(Pathids.id==id_pathid).first() 
+        
+#        description = db.query(Values).from_statement(text("SELECT u_values.id, u_values.value "
+#                      + "FROM  u_paths, u_pathids, u_pathid2conf, u_path2varval, u_values, u_variables "
+#                      + "WHERE u_pathids.id = u_pathid2conf.id_pathid "
+#                      + "AND u_variables.id=u_path2varval.id_var "
+#                      + "AND u_values.id=u_path2varval.id_val " 
+#                      + "AND u_variables.name='description' "                                            
+#                      + "AND u_path2varval.id_path=u_pathids.id_path "
+#                      + "AND u_pathids.id=:id_pid "                                       
+#                      + "AND u_pathid2conf.id_confver=:idv ")).params(idv=id_ver, id_pid=id_pathid, desc="description").all()
+#        
+        return description
+    
     def getTemplateFromPae(self,id_pae=-2, db=None, log = None):
         
         if (id_pae == -2 or db == None):
@@ -260,7 +311,7 @@ class ConfDbQueries(object):
             log.error('ERROR: getTemplateFromPae - input parameters error')
             
         template_id = db.query(ModToTemp).filter(ModToTemp.id_pae==id_pae).first()
-        print "TID:" ,template_id.id_templ
+        #print "TID:" ,template_id.id_templ
         template = db.query(ModTemplate).filter(ModTemplate.id==template_id.id_templ).first()
         
         return template
@@ -293,7 +344,7 @@ class ConfDbQueries(object):
         + " FROM u_pae2moe WHERE u_pae2moe.id_pae =:id_pae GROUP BY u_pae2moe.id_moe, u_pae2moe.id_pae ORDER BY u_pae2moe.id_moe) myPae2Moe "           
         + "ON u_pae2moe.id = myPae2Moe.maxid ORDER BY u_pae2moe.id_moe")).params(id_pae=id_pae)
     
-        print "QUERY: ", str(q)
+#        print "QUERY: ", str(q)
         items = q.all()     
         
 #        else:

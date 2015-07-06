@@ -38,6 +38,7 @@ class Pathids(Base):
     id = Column('id', Integer, primary_key=True)
     id_path = Column(ForeignKey('u_paths.id'))
     #isendpath = Column(Integer)
+    description = Column(CLOB)
     name = column_property(
         select([Paths.name]).where(Paths.id == id_path)
     )
@@ -70,6 +71,32 @@ class Paetypes(Base):
     id = Column('id', Integer, primary_key=True)
     name = Column(String) 
     
+class Variables(Base):
+    # nome della tabella
+    __tablename__ = 'u_variables'
+    id = Column('id', Integer, primary_key=True)    
+    name = Column(String)
+    
+class Values(Base):
+    # nome della tabella
+    __tablename__ = 'u_values'
+    id = Column('id', Integer, primary_key=True)
+    value = Column(String)
+    
+class PathToVarVal(Base):
+    # nome della tabella
+    __tablename__ = 'u_pathid2varval'
+    id = Column('id', Integer, primary_key=True)
+    id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
+    id_var = Column(Integer, ForeignKey('u_variables.id'))
+    id_val = Column(Integer, ForeignKey('u_values.id'))
+    name = column_property(
+        select([Variables.name]).where(Variables.id == id_var)
+    )
+    value = column_property(
+        select([Values.value]).where(Values.id == id_val)
+    )
+    
 #------------------ Module items: Pset, VPset, Params ---------------    
 class Modelement(Base):
      # nome della tabella
@@ -80,6 +107,7 @@ class Modelement(Base):
     moetype = Column(Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
     
 class Moduleitem(Base):
@@ -121,6 +149,7 @@ class ModTelement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
     
 class Moduletypes(Base):
@@ -188,6 +217,7 @@ class SrvTempElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
 class Service(Base):
@@ -214,6 +244,7 @@ class SrvElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
 
@@ -366,6 +397,7 @@ class ESMTempElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
     
 #-------------------- ES Module and elements ------------------    
@@ -397,6 +429,7 @@ class ESMElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
 
@@ -415,6 +448,7 @@ class OumElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
 #------------- Global PSET and Elements ---------------
@@ -444,6 +478,7 @@ class GpsetElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
 #-------------- ED SOURCE Templates and Elements --------
@@ -473,6 +508,7 @@ class EDSTempElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
     
@@ -505,6 +541,7 @@ class EDSElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
     
 #-------------- ES SOURCE Templates and Elements --------
@@ -534,6 +571,7 @@ class ESSTempElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)
 
     
@@ -566,4 +604,5 @@ class ESSElement(Base):
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
+    valuelob = Column(CLOB)
     tracked = Column(Integer)

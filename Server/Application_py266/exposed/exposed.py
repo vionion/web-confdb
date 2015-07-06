@@ -353,9 +353,12 @@ class Exposed(object):
 #        if (pats == None):
 #            return None
 
+        i = 0
         for p in pats:
             p.vid = ver_id
+            p.order = i
             p.gid = patsMap.put(idgen,p)
+            i = i+1
 
         resp.children = pats  
         
@@ -412,9 +415,12 @@ class Exposed(object):
 #        if (pats == None):
 #            return None
         
+        i = 0
         for p in pats:
             p.vid = ver_id
+            p.order = i
             p.gid = patsMap.put(idgen,p)
+            i = i+1
 
         resp.children = pats  
         
@@ -689,6 +695,7 @@ class Exposed(object):
         path = None
         prescaleTemplate = None
         prescale = None
+        description = None
         
         try:
             path = queries.getPathName(pat_id,ver_id,db, log)
@@ -699,9 +706,11 @@ class Exposed(object):
 
             prescale = queries.getConfPrescale(ver_id,prescaleTemplate.id,db, log)
 #            print "PRESCALE: ",prescale
-
+            
+            description = queries.getPathDescription(pat_id,ver_id,db, log)
+            
         except:
-            log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale Error')
+            log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale/getPathDescription Error')
             return None
             
 #        if (path == None or prescaleTemplate == None or prescale == None):
@@ -773,11 +782,26 @@ class Exposed(object):
                     log.error('ERROR: Prescale rown NOT SAME CARDINALITY')
 #                    print "ERROR NOT SAME CARDINALITY"
 
-                pd = PathDetails(path.id, path.name, labels, values, "", "")
+#                pd = PathDetails(path.id, path.name, labels, values, "", "")
+                pd = None
+                if (description is not None):
+                    #description.value
+                    pd = PathDetails(path.id, path.name, labels, values, "", description.description)
+
+                else: 
+                    pd = PathDetails(path.id, path.name, labels, values, "", "")
+                    
             else: 
                 labels_len = len (labels) 
                 vals = [1] * labels_len 
-                pd = PathDetails(path.id, path.name, labels, vals, "", "") 
+#                pd = PathDetails(path.id, path.name, labels, vals, "", "")
+                pd = None
+                if (description is not None):
+                    #description.value
+                    pd = PathDetails(path.id, path.name, labels, vals, "", description.description)
+
+                else: 
+                    pd = PathDetails(path.id, path.name, labels, vals, "", "")
             
         else:
             prescaleParams = self.params_builder.serviceTemplateParamsBuilder(prescaleTemplate.id, self.queries, db,log)
@@ -811,7 +835,14 @@ class Exposed(object):
 #                print "LABELS LEN: ",len(labels)
 #                print "ERROR NOT SAME CARDINALITY"
 
-            pd = PathDetails(path.id, path.name, labels, values, "", "")
+            #            pd = PathDetails(path.id, path.name, labels, values, "", "")
+            pd = None
+            if (description is not None):
+                #description.value
+                pd = PathDetails(path.id, path.name, labels, values, "", description.description)
+            
+            else: 
+                pd = PathDetails(path.id, path.name, labels, values, "", "")
         
     
         resp.success = True
@@ -1017,7 +1048,7 @@ class Exposed(object):
             if (srv != None):
                 resp.children.append(srv)
         
-        print "len: ", len(resp.children)
+#        print "len: ", len(resp.children)
         resp.success = True
         
         output = schema.dump(resp)
@@ -1510,7 +1541,7 @@ class Exposed(object):
             else:
                 log.error('ERROR: GPSets Error Key') #print "ERROR GPSET" 
         
-        print "len: ", len(resp.children)
+#        print "len: ", len(resp.children)
         resp.success = True
         
         output = schema.dump(resp)
