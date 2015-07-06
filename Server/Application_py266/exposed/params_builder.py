@@ -174,7 +174,7 @@ class ParamsBuilder():
             else:
                 parValue = p.valuelob
 
-            item = Parameter(p.id, p.name, p.value, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
              
             params_mod_name_dict[item.name]=item
             #Set default
@@ -807,7 +807,9 @@ class ParamsBuilder():
                 
             else:
                 parValue = p.valuelob
-             
+            
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)  
+            
             params_mod_name_dict[item.name]=item
             #Set default
             if (temp_params_name_dict.has_key(item.name)):
