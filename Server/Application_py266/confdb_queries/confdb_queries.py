@@ -322,7 +322,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getTemplateParams - input parameters error')
             
-        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).all()  
+        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).order_by(ModTelement.id).all()  
         
         return tempelements
     
@@ -596,7 +596,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getSrvTemplateParams - input parameters error')
             
-        tempelements = db.query(SrvTempElement).filter(SrvTempElement.id_srvtemplate==id_templ).all()  
+        tempelements = db.query(SrvTempElement).filter(SrvTempElement.id_srvtemplate==id_templ).order_by(SrvTempElement.id).all()  
         
         return tempelements
     
@@ -851,7 +851,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getESMTemplateParams - input parameters error')
             
-        esmtempelements = db.query(ESMTempElement).filter(ESMTempElement.id_esmtemplate==id_templ).all()  
+        esmtempelements = db.query(ESMTempElement).filter(ESMTempElement.id_esmtemplate==id_templ).order_by(ESMTempElement.id).all()  
         
         return esmtempelements
     
@@ -861,7 +861,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getESModParams - input parameters error')
             
-        esmtempelements = db.query(ESMElement).filter(ESMElement.id_esmodule==id_esm).all()  
+        esmtempelements = db.query(ESMElement).filter(ESMElement.id_esmodule==id_esm).order_by(ESMElement.id).all()  
         
         return esmtempelements
     
@@ -1007,7 +1007,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getEDSTemplateParams - input parameters error')
             
-        edstempelements = db.query(EDSTempElement).filter(EDSTempElement.id_edstemplate==id_templ).all()  
+        edstempelements = db.query(EDSTempElement).filter(EDSTempElement.id_edstemplate==id_templ).order_by(EDSTempElement.id).all()  
         
         return edstempelements
     def getEDSourceParams(self,id_eds=-2, db=None, log = None):
@@ -1016,7 +1016,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getEDSourceParams - input parameters error')
             
-        edstempelements = db.query(EDSElement).filter(EDSElement.id_edsource==id_eds).all()  
+        edstempelements = db.query(EDSElement).filter(EDSElement.id_edsource==id_eds).order_by(EDSElement.id).all()  
         
         return edstempelements 
     
@@ -1076,7 +1076,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getESSTemplateParams - input parameters error')
             
-        esstempelements = db.query(ESSTempElement).filter(ESSTempElement.id_esstemplate==id_templ).all()  
+        esstempelements = db.query(ESSTempElement).filter(ESSTempElement.id_esstemplate==id_templ).order_by(ESSTempElement.id).all()  
         
         return esstempelements
     
@@ -1086,7 +1086,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")s
             log.error('ERROR: getESSourceParams - input parameters error')
             
-        esstempelements = db.query(ESSElement).filter(ESSElement.id_essource==id_eds).all()  
+        esstempelements = db.query(ESSElement).filter(ESSElement.id_essource==id_eds).order_by(ESSElement.id).all()  
         
         return esstempelements 
     
