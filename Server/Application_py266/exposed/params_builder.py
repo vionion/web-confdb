@@ -8,7 +8,7 @@ from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from marshmallow.ordereddict import OrderedDict
+from ordereddict import OrderedDict
 import string        
   
 class ParamsBuilder():
@@ -407,7 +407,9 @@ class ParamsBuilder():
         except:
             log.error('ERROR: Query getTemplateFromPae/getTemplateParams Error')
             return None
-
+	
+	tempelements.sort(key=lambda par: par.id)
+		
         tempelements_dict = dict((x.id, x) for x in tempelements)
 #        print "TEMPLATE ELEMENTS LEN: ", len(tempelements)
         
@@ -807,9 +809,9 @@ class ParamsBuilder():
                 
             else:
                 parValue = p.valuelob
-            
-            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)  
-            
+                
+            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)      
+             
             params_mod_name_dict[item.name]=item
             #Set default
             if (temp_params_name_dict.has_key(item.name)):
@@ -1199,6 +1201,7 @@ class ParamsBuilder():
                 parValue = p.valuelob
         
             item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            item.default = True
             item.default = True
             
 #            print item

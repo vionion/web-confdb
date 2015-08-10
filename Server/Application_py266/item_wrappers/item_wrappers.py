@@ -84,4 +84,36 @@ class ESSource(object):
         self.tclass = tclass
         self.order = order 
         
+class SummaryColumn(object): 
+
+    def __init__(self, gid=-1, name="", order = -1):
+        self.gid = gid
+        self.name = name
+        self.order = order         
         
+class SummaryValue(object): 
+
+    def __init__(self, label="", value = ""):
+        self.label = label
+        self.value = value        
+        
+class Summaryitem(object): 
+
+    def __init__(self, id=0, name="", sit="", leaf = False, icon = ""):
+        self.id = id
+        self.gid = -1
+        self.name = name
+        self.sit = sit
+        self.leaf = leaf
+        self.icon = icon
+        self.children = []
+        self.values = []
+
+class ListContainer(object): 
+    def __init__(self):
+        self.children = []
+        
+class SmartPrescale(object): 
+    def __init__(self,stream=-1):
+        self.stream = stream
+        self.children = {}        

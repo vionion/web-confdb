@@ -64,7 +64,8 @@ class ConfDbQueries(object):
                         + "u_pathid2pae.id_pae, "                                       
                         + "u_pathid2pae.id_parent,"
                         + "u_pathid2pae.lvl, " 
-                        + "u_pathid2pae.ord "                                            
+                        + "u_pathid2pae.ord, "
+                        + "u_pathid2pae.operator "                                         
                         + "FROM u_pathid2pae,u_paelements, u_pathid2conf  "
                         + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid " 
                         + "and u_pathid2pae.id_pathid=:node "
@@ -137,7 +138,8 @@ class ConfDbQueries(object):
                         + "u_pathid2pae.id_pae, "                                       
                         + "u_pathid2pae.id_parent,"
                         + "u_pathid2pae.lvl, " 
-                        + "u_pathid2pae.ord "                                           
+                        + "u_pathid2pae.ord, "
+                        + "u_pathid2pae.operator "                                        
                         + "FROM u_pathid2pae,u_paelements, u_pathid2conf  "
                         + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid " 
                         + "and u_pathid2pae.id_pathid=:node "
@@ -247,13 +249,6 @@ class ConfDbQueries(object):
         
         return patname
     
-    
-    #Returns the template from the module (Paelement) id
-    #@params: 
-    #         id_pae: id of Paelement table in the confDB
-    #         db: database session object
-    #
-    
     def getPathContact(self,id_pathid=-2, id_ver=-2,db=None, log = None):
         
         if (id_pathid == -2 or db == None or id_ver==-2):
@@ -304,6 +299,12 @@ class ConfDbQueries(object):
 #        
         return description
     
+    
+    #Returns the template from the module (Paelement) id
+    #@params: 
+    #         id_pae: id of Paelement table in the confDB
+    #         db: database session object
+    #
     def getTemplateFromPae(self,id_pae=-2, db=None, log = None):
         
         if (id_pae == -2 or db == None):
@@ -311,7 +312,7 @@ class ConfDbQueries(object):
             log.error('ERROR: getTemplateFromPae - input parameters error')
             
         template_id = db.query(ModToTemp).filter(ModToTemp.id_pae==id_pae).first()
-        #print "TID:" ,template_id.id_templ
+        print "TID:" ,template_id.id_templ
         template = db.query(ModTemplate).filter(ModTemplate.id==template_id.id_templ).first()
         
         return template
@@ -322,7 +323,7 @@ class ConfDbQueries(object):
 #            print ("PARAMETERS EXCEPTION HERE")
             log.error('ERROR: getTemplateParams - input parameters error')
             
-        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).order_by(ModTelement.id).all()  
+        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).all()  
         
         return tempelements
     
@@ -344,7 +345,7 @@ class ConfDbQueries(object):
         + " FROM u_pae2moe WHERE u_pae2moe.id_pae =:id_pae GROUP BY u_pae2moe.id_moe, u_pae2moe.id_pae ORDER BY u_pae2moe.id_moe) myPae2Moe "           
         + "ON u_pae2moe.id = myPae2Moe.maxid ORDER BY u_pae2moe.id_moe")).params(id_pae=id_pae)
     
-#        print "QUERY: ", str(q)
+        print "QUERY: ", str(q)
         items = q.all()     
         
 #        else:
@@ -386,7 +387,17 @@ class ConfDbQueries(object):
 
         directory = db.query(Directory).filter(Directory.name == name).first()
 
-        return directory 
+        return directory
+    
+    def getChildDirectories(self,dir_id=-2,db=None, log = None):
+
+        if (db == None or dir_id==-2):
+#                print ("PARAMETERS EXCEPTION HERE")
+                log.error('ERROR: getDirectoryByName - input parameters error')
+
+        directories = db.query(Directory).filter(Directory.id_parentdir == dir_id).all()
+
+        return directories 
     
     def getConfigsInDir(self,id_parent=-2,db=None, log = None):
 
@@ -1090,4 +1101,104 @@ class ConfDbQueries(object):
         
         return esstempelements 
     
+    def getPrescaleTemplate(self,id_release=-2,db=None, log = None):
+        if (db == None or id_release == -2):
+#                print ("PARAMETERS EXCEPTION HERE")
+                log.error('ERROR: getSrvTemplateBySrv - input parameters error')
+
+        prescaleTemplate = db.query(SrvTemplate).filter(SrvTemplate.name == 'PrescaleService' ).filter(Srvt2Rele.id_srvtemplate == SrvTemplate.id).filter(Srvt2Rele.id_release == id_release).first()
+
+        return prescaleTemplate
+    
+    def getPrescale(self,id_ver=-2, id_preTemp = -2, db=None, log = None):
+        if (db == None or id_ver == -2 or id_preTemp == -2):
+#                print ("PARAMETERS EXCEPTION HERE")
+                log.error('ERROR: getPrescale - input parameters error')
+    
+        prescale = db.query(Service).filter(Service.id_template == id_preTemp ).filter(Conf2Srv.id_confver == id_ver).filter(Conf2Srv.id_service == Service.id).first()
+
+        return prescale
+    
+    def getPrescalelabels(self,id_prescale=-2,db=None, log = None):
+        if (db == None or id_prescale == -2):
+#                print ("PARAMETERS EXCEPTION HERE")
+                log.error('ERROR: getPrescalelabels - input parameters error')
+
+        prescaleLabels = db.query(SrvElement).filter(SrvElement.name == 'lvl1Labels').filter(SrvElement.id_service == id_prescale).first()
+
+        return prescaleLabels
+    
+    def getAllDatsPatsRels(self,ver=-2, idis = None ,db=None, log = None):
+
+        if (db == None or ver == -2 or idis == None):
+#                print ("PARAMETERS EXCEPTION HERE")
+                log.error('ERROR: getAllDatsPatsRels - input parameters error')
+
+        dprels = db.query(PathidToStrDst).filter(PathidToStrDst.id_datasetid.in_(idis)).all()
+
+        return dprels
+    
+    def getL1SeedsPathItems(self, idis = None ,db=None, log = None):
+
+        if (db == None or idis == None):
+                log.error('ERROR: getL1SeedsPathItems - input parameters error')
+
+        l1s_items = db.query(Pathitems).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'HLTLevel1GTSeed').filter(ModToTemp.id_pae == Pathitems.id_pae).filter(Pathitems.id_pathid.in_(idis)).order_by(Pathitems.id_pathid).all()
+
+        return l1s_items
+    
+    
+    def getL1SeedsParams(self, idis = None ,db=None, log = None):
+
+        if (db == None or idis == None):
+                log.error('ERROR: getL1SeedsParams - input parameters error')
+
+        l1s_params = db.query(Moduleitem).filter(Moduleitem.id_moe == Modelement.id).filter(or_(Modelement.name == 'L1SeedsLogicalExpression', Modelement.name == 'L1TechTriggerSeeding')).filter(Moduleitem.id_pae.in_(idis)).all()
+
+        return l1s_params
+    
+    
+    def getL1SeedsTemplate(self, id_rel = None ,db=None, log = None):
+
+        if (db == None or id_rel == None):
+                log.error('ERROR: getL1SeedsTemplate - input parameters error')
+
+        l1s_temp = db.query(ModTemplate).filter(ModTemplate.name == 'HLTLevel1GTSeed').filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).first()
+
+        return l1s_temp
+    
+    
+    def getL1SeedsTempParams(self, id_temp = -2 ,db=None, log = None):
+
+        if (db == None or id_temp == -2):
+                log.error('ERROR: getL1SeedsTempParams - input parameters error')
+
+        l1s_temp_params = db.query(ModTelement).filter(or_(ModTelement.name == 'L1SeedsLogicalExpression', ModTelement.name == 'L1TechTriggerSeeding')).filter(ModTelement.id_modtemp == id_temp).all()
+
+        return l1s_temp_params
+    
+    def getPathidToOum(self, streams = None ,db=None, log = None):
+
+        if (db == None or streams == None):
+                log.error('ERROR: getPathidToOum - input parameters error')
+    
+        pidToum = db.query(PathidToOutM).filter(PathidToOutM.id_streamid.in_(streams)).all()
+        
+        return pidToum
+    
+    def getSmartPrescaleModule(self, paths = None ,db=None, log = None):
+        if (db == None or paths == None):
+                log.error('ERROR: getSmartPrescaleModule - input parameters error')
+                
+        smMods = db.query(Pathitems).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').all()
+        
+        return smMods        
+                
+    def getSmartPrescaleExpressions(self, mods = None ,db=None, log = None):
+        if (db == None or mods == None):
+                log.error('ERROR: getSmartPrescaleExpressions - input parameters error')
+                
+        smExps = db.query(Moduleitem).filter(Moduleitem.id_pae.in_(mods)).filter(Moduleitem.id_moe == Modelement.id).filter(Modelement.name == 'triggerConditions').all()
+        
+        return smExps  
     

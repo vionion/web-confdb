@@ -32,8 +32,14 @@ class SATool(cherrypy.Tool):
         Attaches a session to the request's scope by requesting
         the SA plugin to bind a session to the SA engine.
         """
-        session = cherrypy.engine.publish('bind-session').pop()
-        cherrypy.request.db = session
+#        session = cherrypy.engine.publish('bind-session').pop()
+#        cherrypy.request.db = session
+
+        session_online = cherrypy.engine.publish('bind-online-session').pop()
+        session_offline = cherrypy.engine.publish('bind-offline-session').pop()
+        
+        cherrypy.request.db_online = session_online
+        cherrypy.request.db_offline = session_offline 
  
     def commit_transaction(self):
         """
@@ -41,8 +47,15 @@ class SATool(cherrypy.Tool):
         if an error occurs. Removes the session handle
         from the request's scope.
         """
-        if not hasattr(cherrypy.request, 'db'):
-            return
-        cherrypy.request.db = None
-        cherrypy.engine.publish('commit-session')
+#        if not hasattr(cherrypy.request, 'db'):
+#            return
+#        cherrypy.request.db = None
+#        cherrypy.engine.publish('commit-session')
  
+        if ((not hasattr(cherrypy.request, 'db_offline')) and (not hasattr(cherrypy.request, 'db_online'))):
+            return
+        cherrypy.request.db_online = None
+        cherrypy.request.db_offline = None
+
+        cherrypy.engine.publish('commit-online-session')
+        cherrypy.engine.publish('commit-offline-session')

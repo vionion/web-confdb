@@ -14,8 +14,9 @@ from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from marshmallow.ordereddict import OrderedDict
+from ordereddict import OrderedDict
 from params_builder import ParamsBuilder
+from summary_builder import SummaryBuilder
 import string
 import re
 
@@ -23,6 +24,7 @@ class Exposed(object):
     
     queries = ConfDbQueries()
     params_builder = ParamsBuilder()
+    summary_builder = SummaryBuilder()
     
     #Returns the path items (Sequences and Modules)
     #@params: patsMap: map of paths database ids
@@ -76,7 +78,7 @@ class Exposed(object):
         #Build all the sequences 
         for p in items:
             elem = elements_dict[p.id_pae]
-            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
+            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
 
             if (item.paetype == 2):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
@@ -131,7 +133,7 @@ class Exposed(object):
             
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
-            item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
+            item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
             item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
                 
@@ -205,7 +207,7 @@ class Exposed(object):
         #Build all the sequences 
         for p in items:
             elem = elements_dict[p.id_pae]
-            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
+            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator) 
             
             if (item.paetype == 2):
                 item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl) 
@@ -259,7 +261,7 @@ class Exposed(object):
 
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
-            item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
+            item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator) 
             item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
@@ -503,84 +505,201 @@ class Exposed(object):
     #         db: database session object
     #     
     
-    def getDirectories(self, folMap = None, idfolgen = None, cnfMap = None, db = None, log = None):
+    def getChildrenDirectories(self, id_parent=-2, folMap = None, idfolgen = None, cnfMap = None, db = None, log = None):
+        #params check
+        if (id_parent == -2 or folMap == None or cnfMap == None or idfolgen == None or db == None):
+            log.error('ERROR: getDirectories - input parameters error')
+        
+        queries = self.queries
+        resp = Response()
+        resp.children = []
+        schema = ResponseFolderitemSchema()
+        
+        #DB Queries
+        child_directories = None
+        configs = None
+        
+        dir_id = folMap.get(id_parent)
+        
+        try:
+            #get Child directories
+            child_directories = queries.getChildDirectories(dir_id,db, log)
+            
+            #get Child configurations
+            configs = queries.getConfigsInDir(dir_id,db)
+
+        except Exception as e:
+            msg = 'ERROR: Query getChildDirectories/getConfigsInDir Error: ' + e.args[0]
+            log.error(msg)
+            return None
+        
+        
+        
+        for d in child_directories:
+            f = FolderItem(d.id, d.name, "fol",d.id_parentdir, d.created)
+            f.cmpv = 1
+            c_names = f.name.split('/')
+            c_names_len = len(c_names)
+            c_names_len = c_names_len-1
+            f.new_name = c_names[c_names_len] 
+            
+            dir_childs = []
+            cnf_childs = []
+            try:
+                #get Child directories
+                dir_childs = queries.getChildDirectories(d.id,db, log)
+
+                #get Child configurations
+                cnf_childs = queries.getConfigsInDir(d.id,db)
+
+            except Exception as e:
+                msg = 'ERROR: Query getChildDirectories/getConfigsInDir Error: ' + e.args[0]
+                log.error(msg)
+#                log.error('ERROR: Query getChildDirectories/getConfigsInDir Error')
+                return None
+            
+            if (len(dir_childs)==0 and len(cnf_childs)==0):
+                f.expandable = False
+            else:    
+                f.expandable = True
+                
+            f.gid = folMap.put(idfolgen,f)  
+            
+            resp.children.append(f)
+            
+        resp.children.sort(key=lambda par: par.new_name)
+        
+        if (len(configs) > 0):
+            for c in configs:
+                cnf = FolderItem(c.id, c.name, "cnf",dir_id, None)
+                cnf.gid = cnfMap.put(idfolgen, cnf)
+                cnf.cmpv = 2
+                c_names = cnf.name.split('/')
+                c_names_len = len(c_names)
+                c_names_len = c_names_len-1
+                cnf.new_name = c_names[c_names_len] 
+                
+                resp.children.append(cnf)
+                
+        resp.children.sort(key=lambda par: par.new_name)
+        
+        resp.success = True
+        output = schema.dump(resp)
+#        assert isinstance(output.data, OrderedDict)
+
+        return output.data
+        
+    
+    def getRootDirectory(self, folMap = None, idfolgen = None, cnfMap = None ,folMap_online = None, db = None, log = None):
         
         #params check
-        if (folMap == None or cnfMap == None or idfolgen == None or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
+        if (folMap == None or cnfMap == None or idfolgen == None or folMap_online == None or db == None):
             log.error('ERROR: getDirectories - input parameters error')
         
         queries = self.queries
         resp = Response()
         schema = ResponseFolderitemSchema()
+        resp.children = []
         
-        #DB Queries
         directories = None
         fRoot = None
         
+        child_directories = None
+        configs = None
+        
+        #DB Queries
         try:
-            directories =  queries.getAllDirectories(db, log)
             #finding Root
             fRoot = queries.getDirectoryByName("/",db, log)
 
-        except:
-            log.error('ERROR: Query getAllDirectories/getDirectoryByName Error')
+        except Exception as e:
+            msg = 'ERROR: Query getDirectoryByName Error: ' + e.args[0]
+            log.error(msg)
             return None
-            
-        if (directories == None or fRoot == None):
-            return None
-
-        folder_items_dict ={}
                 
-        if (fRoot == None):
-            log.error('ERROR: No Root Node present') #print "NO ROOT!!!!!!"
+        if (fRoot is None):
+            log.error('ERROR: No Root Found Error')
+            return None
         
-        for d in directories:
+        rootFol = FolderItem(fRoot.id, "Root/", "fol",fRoot.id_parentdir, fRoot.created) 
+        rootFol.cmpv = 1
+        rootFol.new_name = 'Root'
+        rootFol.expandable = True
+        
+        rootFol.gid = folMap.put(idfolgen,rootFol)
+        
+        try:
+            #get Child directories
+            child_directories = queries.getChildDirectories(fRoot.id,db, log)
+
+            #get Child configurations
+            configs = queries.getConfigsInDir(fRoot.id,db)
+
+        except Exception as e:
+            msg = 'ERROR: Query getChildDirectories/getConfigsInDir Error: ' + e.args[0]
+            log.error(msg)
+            return None
+        
+        for d in child_directories:
             f = FolderItem(d.id, d.name, "fol",d.id_parentdir, d.created)
             f.cmpv = 1
-            f.gid = folMap.put(idfolgen,f)
+            c_names = f.name.split('/')
+            c_names_len = len(c_names)
+            c_names_len = c_names_len-1
+            f.new_name = c_names[c_names_len] 
             
-            configs = queries.getConfigsInDir(d.id,db)          
+            dir_childs = []
+            cnf_childs = []
+            
+            try:
+                #get Child directories
+                dir_childs = queries.getChildDirectories(d.id,db, log)
 
-            if (len(configs) > 0):
-                for c in configs:
-                    cnf = FolderItem(c.id, c.name, "cnf",d.id, None)
-                    cnf.gid = cnfMap.put(idfolgen, cnf)
-                    cnf.cmpv = 2
-                    nam = f.name+"/"
-                    cnf.new_name = cnf.name.replace(nam,"")
-                    f.children.append(cnf)
+                #get Child configurations
+                cnf_childs = queries.getConfigsInDir(d.id,db)
+
+            except Exception as e:
+                msg = 'ERROR: Query getChildDirectories/getConfigsInDir Error: ' + e.args[0]
+                log.error(msg)
+                return None
+            
+            if (len(dir_childs)==0 and len(cnf_childs)==0):
+                f.expandable = False
+            else:    
+                f.expandable = True
                 
-            folder_items_dict[f.id] = f
+            if f.new_name == 'cdaq' or f.new_name == 'minidaq':
+                f.gid = folMap_online.put(idfolgen,f)
+            
+            else:    
+                f.gid = folMap.put(idfolgen,f)  
+            
+            resp.children.append(f)
         
-        #Nesting folders
-#        folKeys = folder_items_dict.viewkeys()
-        folKeys = folder_items_dict.keys()
-        for fk in folKeys:
-            if (not(fk == fRoot.id)):
-                fi = folder_items_dict.get(fk)
-                parent_f = folder_items_dict.get(fi.id_parent)
-                if(parent_f.id==fRoot.id):
-                    parent_f.new_name = "/"
-                nam = parent_f.name+"/"
-                fi.new_name = fi.name.replace(nam,"") 
-                fi_c = parent_f.children
-                fi_c.append(fi)
-                fi_c.sort(key=lambda par: par.name)
+        resp.children.sort(key=lambda par: par.new_name)
+        
+        if (len(configs) > 0):
+            for c in configs:
+                cnf = FolderItem(c.id, c.name, "cnf",dir_id, None)
+                cnf.gid = cnfMap.put(idfolgen, cnf)
+                cnf.cmpv = 2
+                c_names = cnf.name.split('/')
+                c_names_len = len(c_names)
+                c_names_len = c_names_len-1
+                cnf.new_name = c_names[c_names_len] 
+#                print 'cnf.new_name: ',cnf.new_name
                 
-
-        #Append Root
+                resp.children.append(cnf)
+        
         resp.success = True
-        rootFol = folder_items_dict.get(fRoot.id)
-        rootFol.expanded = True
-        resp.children = []
-        resp.children.append(rootFol)
+        
+#        resp.children = []
+#        resp.children.append(rootFol)
         
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
+#        assert isinstance(output.data, OrderedDict)
 
         return output.data
-    
     
     
     #Returns the versions of a given Configurations
@@ -606,8 +725,9 @@ class Exposed(object):
         try:
             versions = queries.getConfVersions(conf_id,db, log)
 
-        except:
-            log.error('ERROR: Query getConfVersions Error')
+        except Exception as e:
+            msg = 'ERROR: Query getConfVersions Error: ' + e.args[0]
+            log.error(msg)
             return None
             
 #        if (versions == None):
@@ -696,7 +816,6 @@ class Exposed(object):
         prescaleTemplate = None
         prescale = None
         description = None
-        
         try:
             path = queries.getPathName(pat_id,ver_id,db, log)
 #            print "PATH: ",path
@@ -708,7 +827,6 @@ class Exposed(object):
 #            print "PRESCALE: ",prescale
             
             description = queries.getPathDescription(pat_id,ver_id,db, log)
-            
         except:
             log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale/getPathDescription Error')
             return None
@@ -835,7 +953,7 @@ class Exposed(object):
 #                print "LABELS LEN: ",len(labels)
 #                print "ERROR NOT SAME CARDINALITY"
 
-            #            pd = PathDetails(path.id, path.name, labels, values, "", "")
+#            pd = PathDetails(path.id, path.name, labels, values, "", "")
             pd = None
             if (description is not None):
                 #description.value
@@ -1048,7 +1166,7 @@ class Exposed(object):
             if (srv != None):
                 resp.children.append(srv)
         
-#        print "len: ", len(resp.children)
+        print "len: ", len(resp.children)
         resp.success = True
         
         output = schema.dump(resp)
@@ -1541,7 +1659,7 @@ class Exposed(object):
             else:
                 log.error('ERROR: GPSets Error Key') #print "ERROR GPSET" 
         
-#        print "len: ", len(resp.children)
+        print "len: ", len(resp.children)
         resp.success = True
         
         output = schema.dump(resp)
@@ -1804,11 +1922,329 @@ class Exposed(object):
             version = queries.getVersion(ver_id,db, log)
 #            print version
 
-        elif(ver != -2):
+        elif(ver != -2 and ver != -1):
             ver_id = ver
             version = queries.getVersion(ver,db, log)
 #            print version
             
         return version
     
+    def getSummaryColumns(self, ver=-2, cnf=-2, db = None, log = None): 
+        
+        #params check
+        if (ver==-2 or cnf==-2 or db == None):
+            log.error('ERROR: getSummaryColumns - input parameters error')
+        
+        resp = ResponseTree()
+        schema = ResponseSummaryColumnSchema()
+        
+        version = self.getRequestedVersion(ver,cnf,db,log)    
+        columns = self.summary_builder.getPrescaleColumns(version, self.queries, db, log)
+        
+        resp.children = columns  
+        
+        resp.success = True
+        output = schema.dump(resp)
+        
+        return output.data
+    
+    def getSummaryItems(self, idsumgen, sumMap, ver=-2, cnf=-2, db = None, log = None): 
+    
+        #params check
+        if (ver==-2 or cnf==-2 or db == None):
+#            print ("PARAMETERS EXCEPTION HERE")
+            log.error('ERROR: getStreamsItems - input parameters error')
+        
+        version = None
+        version = self.getRequestedVersion(ver, cnf, db, log)
+        if (version == None):
+            return None
+        ver_id = version.id
+        id_rel = version.id_release 
+        columns = self.summary_builder.getPrescaleColumns(version, self.queries, db, log)
+        
+        #Retreive the Prescale
+        prescaleTemplate = None
+        prescale = None
+        
+        try:
+            prescaleTemplate = self.queries.getConfPrescaleTemplate(id_rel,db, log)
+
+            prescale = self.queries.getConfPrescale(ver_id,prescaleTemplate.id,db, log)
+
+        except:
+            log.error('ERROR: Query getConfPrescaleTemplate/getConfPrescale Error')
+            return None
+        
+        prescaleParams = []
+        labels = None
+        found = False
+        preRows = None
+        values = None
+        i = 0
+        ppLen = 0
+        pd = None
+
+        if prescale:
+#            print "PRESCALE: ",prescale, " ", type(prescale)
+            prescaleParams = self.params_builder.serviceParamsBuilder(prescale.id, self.queries, db, log)
+
+            ppLen = len(prescaleParams)
+#            print "PARAMS BUILT"
+
+#            print "Getting Labels"
+            while (not(found) and i<ppLen):
+                if (prescaleParams[i].name == "lvl1Labels"):
+                    found = True
+                else:
+                    i+=1
+#                    print "i++"
+
+#            print "Labels Got"
+#            print "Building Labels"
+
+            labels = re.findall(r'"([^"]*)"', prescaleParams[i].value)
+
+#            print "Labels Built"
+#            print "Getting Table"
+            i = 0
+            found = False
+            while (not(found) and i<ppLen):
+                if (prescaleParams[i].name == "prescaleTable"):
+                    found = True
+                else:
+                    i+=1
+
+            preRows = prescaleParams[i].children
+            
+#            print "Got Table row"
+    
+        preRows_dict = {}
+        row_i = 0
+        
+        for row in preRows:
+            pn = row.children[0].value.translate(None,'"')
+            preRows_dict[pn] = row_i
+            row_i = row_i+1
+        
+        #Retreive the strams and datasets
+        streams = None
+        datasets = None
+        relations = None
+        pats = None
+        dprels = None
+        one_values = []
+        
+        try:
+            streams = self.queries.getConfStreams(ver_id,db, log)
+            datasets = self.queries.getConfDatasets(ver_id,db, log)
+            relations = self.queries.getConfStrDatRels(ver_id,db, log)
+
+        except:
+            log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
+            return None
+        
+        dats_dict = dict((x.id, x) for x in datasets)
+        idis = dats_dict.keys()
+        
+#        print "Got stream dat rel"
+        
+        pats = None
+        dprels = None
+        
+        try:
+            
+            pats = self.queries.getPaths(ver_id,db, log)
+#            print "Got paths"
+        
+            dprels = self.queries.getAllDatsPatsRels(ver_id, idis, db, log)
+#            print "Got paths dat rels"
+        
+        except:
+            log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
+            return None
+
+        relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
+        streams_dict = dict((x.id, x) for x in streams)
+        pats_dict = dict((x.id, x) for x in pats)
+        dprels_dict = {}
+        
+#        print "Got dicts"
+        
+        for x in dprels:
+#            print 'ID_DSID:', str(x.id_datasetid)
+            if x.id_datasetid in dprels_dict.keys():
+                dprels_dict[x.id_datasetid].children.append(x.id_pathid)
+                
+            else:
+                lc = ListContainer()
+                lc.children.append(x.id_pathid)
+                dprels_dict[x.id_datasetid] = lc
+        
+#        print "Got dprels_dict"
+        
+    
+        #---- Get l1 Seeds --------------------------------
+        
+        l1seeds = self.summary_builder.getL1Seeds(pats_dict.keys(), id_rel, self.queries,db,log)
+        
+        if l1seeds is None:
+            log.error('ERROR: Seeds None')
+        
+        
+        #---- Get Smart Prescales --------------------------------
+        smartPre = self.summary_builder.getSmartPrescales(streams_dict.keys(), self.queries,db,log)
+            
+        if smartPre is None:
+            log.error('ERROR: Seeds None')
+        
+        #------ Building default 1-values row ----------
+        
+        labels_len = len (labels)
+        one_values = [1] * labels_len 
+        
+        #---- Building streams and datasets
+        evcoOut = []
+        streams_dict = {}
+        for s in streams:
+            si = Summaryitem(s.id,s.name,"str",False,'resources/Stream.ico')
+            streams_dict[s.id] = si
+                
+            si.gid = sumMap.put(idsumgen,si,"str")
+        
+#        print "Built stream"
+        
+        for d in datasets:
+            if (d.id == -1):
+                print "Unassigned Paths"
+            else:
+                si = Summaryitem(d.id,d.name,"dat",False, 'resources/Dataset.ico')
+    
+                paths = {}
+                streamid = relations_dict.get(d.id)
+            
+                #-------------------- Getting Smart Prescale ---------------------
+                
+                smart_p = None
+                smart_paths = None
+                hasSmartPrescale = False
+                if smartPre.has_key(streamid):
+                    smart_p = smartPre[streamid]
+                    smart_paths = smart_p.children
+                    hasSmartPrescale = True
+
+                #-------------------- Getting datasets paths ---------------------                
+                if(dprels_dict.has_key(d.id)):
+                    
+                    dst_paths = dprels_dict[d.id].children
+                    
+                    for dprel in dst_paths:
+                    
+                        p = pats_dict[dprel]
+                        
+                        if hasSmartPrescale:
+                            if smart_paths.has_key(p.name):
+
+                                pat_id = str(d.id) + "pat"
+                                pat = Summaryitem(p.id,(p.name),"pat",True,'resources/Path_3.ico')
+                                pat.gid = sumMap.put(idsumgen,pat,pat_id)
+
+                                if not paths.has_key(pat.gid):
+
+                                    if(preRows_dict.has_key(p.name)):
+                                        r_i = preRows_dict.get(p.name)
+                                        param_values = preRows[r_i].children[1].value
+                                        values = map(int, re.findall('\d+', param_values)) 
+
+                #                        print "GOt values"
+
+                                        if(not(len(labels) == len(values))):
+                                            log.error("ERROR NOT SAME CARDINALITY")
+                #                                print "ERROR NOT SAME CARDINALITY"
+
+                                    else:
+                                        values = one_values
+
+                                    i2 = 0
+                                    for c in columns:
+
+                                        sp_value = smart_paths[p.name]
+                                        pre_value = int(values[i2])
+                        
+                                        new_value = sp_value*pre_value
+                                        
+                                        sv = c.name + "###" + str(new_value) #str(values[i2])
+                                        pat.values.append(sv)
+                                        i2 = i2 + 1
+
+                                    #----- Include l1 seeds ----------------------
+                                    if l1seeds is not None:
+                                        if l1seeds.has_key(p.id):
+                                            seeds_val = l1seeds.get(p.id)
+                                            pat.values.append(seeds_val)
+
+                                    paths[pat.gid] = pat
+                        else:
+                            pat_id = str(d.id) + "pat"
+                            pat = Summaryitem(p.id,p.name,"pat",True,'resources/Path_3.ico')
+                            pat.gid = sumMap.put(idsumgen,pat,pat_id)
+
+                            if not paths.has_key(pat.gid):
+
+                                if(preRows_dict.has_key(p.name)):
+                                    r_i = preRows_dict.get(p.name)
+                                    param_values = preRows[r_i].children[1].value
+                                    values = map(int, re.findall('\d+', param_values)) 
+
+            #                        print "GOt values"
+
+                                    if(not(len(labels) == len(values))):
+                                        log.error("ERROR NOT SAME CARDINALITY")
+            #                                print "ERROR NOT SAME CARDINALITY"
+
+                                else:
+                                    values = one_values
+
+                                i2 = 0
+                                for c in columns:
+
+                                    sv = c.name + "###" + str(values[i2])
+                                    pat.values.append(sv)
+                                    i2 = i2 + 1
+
+                                #----- Include l1 seeds ----------------------
+    #                            print 'str(len(pat.values)) ', str(len(pat.values))
+                                if l1seeds is not None:
+                                    if l1seeds.has_key(p.id):
+                                        seeds_val = l1seeds.get(p.id)
+                                        pat.values.append(seeds_val)
+
+                                paths[pat.gid] = pat
+                    
+                    
+                    if len(paths) > 0:
+                        si.children.extend(paths.values())
+                
+#                si.children.extend(paths)
+                si.gid = sumMap.put(idsumgen,si,"dat")
+            
+                streams_dict.get(streamid).children.append(si)
+        
+        #---------- Response ---------------------------------
+    
+        resp = Response()
+        
+        resp.children = streams_dict.values()
+        resp.children.sort(key=lambda par: par.name)
+        
+        schema = ResponseSummaryItemSchema()
+        
+        resp.success = True
+
+        output = schema.dump(resp)
+#        assert isinstance(output.data, OrderedDict)
+        
+        print "got schema dump "
+
+        return output.data
     

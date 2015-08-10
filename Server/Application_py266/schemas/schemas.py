@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from marshmallow.ordereddict import OrderedDict
+from ordereddict import OrderedDict
 
 
 class PathsSchema(Schema):
@@ -18,10 +18,14 @@ class PathsTreeSchema(Schema):
     id_path = fields.Integer()
     vid = fields.Integer()
     name = fields.String()
+    Name = fields.Method("get_Name")
     isEndPath = fields.Integer()
     pit = fields.String()
     order = fields.Integer()
     icon = icon = fields.Method("get_icon")
+    
+    def get_Name(self,obj):
+        return obj.name
     
     def get_icon(self,obj):
         if obj.isEndPath == 0:
@@ -30,7 +34,7 @@ class PathsTreeSchema(Schema):
             return 'resources/EndPath.ico'   
         
     class Meta:
-        fields = ("gid", "vid", "icon", "id_path", "name", "order","pit")
+        fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
         ordered = True
 
 class PathDetailsSchema(Schema):
@@ -53,13 +57,27 @@ class PathItemSchema(Schema):
     id_pathid = fields.String()
     paetype = fields.Integer()
     id_parent = fields.Integer()
+    operator = fields.Integer()
     pit = fields.Method("get_item_type")
     order = fields.Method("get_order")
     leaf = fields.Method("get_leaf")
+    Name = fields.Method("get_Name")
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
-     
+    
+    def get_Name(self,obj):
+        if obj.paetype == 1:
+            if obj.operator == 0: 
+                return obj.name
+            elif obj.operator == 2:
+                return "(Ignored) "+obj.name
+            elif obj.operator == 1:
+                return "(Negate) "+obj.name
+        
+        else:
+            return obj.name
+    
     def get_order(self,obj):
         return obj.order
     
@@ -96,7 +114,7 @@ class PathItemSchema(Schema):
             return False
         
     class Meta:
-        fields = ("gid", "name", "id_pathid", "pit","order","id_parent","leaf", "icon","expanded","children")
+        fields = ("gid", "Name", "id_pathid", "pit","order","id_parent","leaf", "icon","expanded","children", "operator")
         ordered = True    
         
 class PathsItemSchema(Schema):
@@ -204,8 +222,27 @@ class ParameterSchema(Schema):
     mit = fields.Method("get_item_type")
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
+    rendervalue = fields.Method("get_rendervalue")
+    isDefault = fields.Method("get_isDefault")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
+    
+    def get_isDefault(self,obj):
+        if obj.default == 1:
+            return 'True'
+        else:
+            return 'False'
+    
+    def get_rendervalue(self,obj): 
+        if obj.paramtype == 'bool':
+            if obj.value == '1':
+                return 'True'
+            elif obj.value == '0':
+                return 'False'
+            else:
+                return obj.value
+        else:
+            return obj.value
     
     def get_icon(self,obj):
         if obj.moetype == 1:
@@ -237,7 +274,7 @@ class ParameterSchema(Schema):
             return False
     
     class Meta:
-        fields = ("gid", "name", "value", "order", "lvl", "mit", "paramtype", "icon", "default", "tracked", "leaf", "expanded","children")
+        fields = ("gid", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
         ordered = True
 
 #-----------------------------------Folder and Version Schemas -------------------------    
@@ -251,7 +288,9 @@ class FolderitemSchema(Schema):
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
-    children = fields.Nested('self', many=True)
+    expandable = fields.Boolean() 
+    loaded = fields.Boolean() 
+#    children = fields.Nested('self', many=True)
     
     def get_icon(self,obj):
         if obj.fit == "cnf":
@@ -266,7 +305,7 @@ class FolderitemSchema(Schema):
             return False
     
     class Meta:
-        fields = ("gid", "new_name", "created", "leaf", "fit", "icon", "expanded", "children")
+        fields = ("gid", "name", "new_name", "created", "leaf", "fit", "icon", "expandable")
         ordered = True
 
 
@@ -281,6 +320,7 @@ class VersionSchema(Schema):
     creator = fields.String()
     processname = fields.String()
     description = fields.String()
+    releasetag = fields.String()
     
     def get_gid(self,obj):
         return obj.id
@@ -289,7 +329,7 @@ class VersionSchema(Schema):
         return obj.version
     
     class Meta:
-        fields = ("gid", "name", "ver", "created", "creator", "id_release", "processname", "description")
+        fields = ("gid", "name", "ver", "created", "creator", "id_release", "processname", "description", "releasetag")
         ordered = True 
     
 #-----------------------------------Services Schemas ------------------------- 
@@ -467,4 +507,36 @@ class DstPathsTreeSchema(Schema):
         
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "name", "pit", "expandable")
-        ordered = True        
+        ordered = True  
+        
+        
+#----------------------- Summary Schemas -------------------------        
+class SummaryColumnSchema(Schema):
+    gid = fields.Integer()
+    name = fields.String()        
+    order =  fields.Integer()
+    
+    class Meta:
+        fields = ("gid", "name", "order") 
+        ordered = True 
+
+class SummaryValueSchema(Schema):
+    label = fields.String()        
+    value =  fields.String()
+    
+    class Meta:
+        fields = ("label", "value") 
+        ordered = True         
+        
+class SummaryItemSchema(Schema):
+    gid = fields.Integer()
+    name = fields.String()        
+    leaf = fields.Boolean() #fields.Method("get_leaf")
+    icon = fields.String() #fields.Method("get_icon")
+    values = fields.List(fields.String()) #Nested(SummaryValueSchema, many=True)
+    children = fields.Nested('self', many=True)
+    
+    class Meta:
+        fields = ("gid", "name", "leaf", "icon", "values", "children") #"order", "sit", 
+        ordered = True
+        

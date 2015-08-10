@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from marshmallow.ordereddict import OrderedDict
+from ordereddict import OrderedDict
 from schemas import *
 
 class ResponseSchema(Schema):
@@ -145,4 +145,17 @@ class ResponseDstPathsTreeSchema(Schema):
         fields = ("success", "children")
         ordered = True        
         
+#------------------ Summary Responses ------------------        
+class ResponseSummaryColumnSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(SummaryColumnSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
         
+class ResponseSummaryItemSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(SummaryItemSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True      

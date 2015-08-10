@@ -13,5 +13,6 @@ class FolderItem(object):
         self.fit = fitype
         self.id_parent = id_parent
         self.created = created
-        self.expanded = False
+#        self.expanded = False
+        self.expandable = False
         self.children = []

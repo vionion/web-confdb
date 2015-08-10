@@ -53,6 +53,7 @@ class ModulesDict(object):
         else:
             return -2
 
+        
 class AllModulesDict(object):
     
     def __init__(self):
@@ -312,4 +313,42 @@ class GpsetsDict(object):
             return self.gpsDict.get(gid)
         else:
             return -2
+
+        
+#-----------------------------------------------------------------
+class SummaryItemCounter(object):
+    
+    def __init__(self):
+        self.counter = 0
+    
+    def getNext(self):
+        self.counter += 1
+        return self.counter
+
+
+
+class SummaryitemsDict(object):
+    
+    def __init__(self):
+        self.sumDict = {}
+    
+    def put(self, counter, item, sit):
+        sid = item.id
+        value = sit + "_" + str(sid)
+        if (value in self.sumDict.values()):
+            return [k for k, v in self.sumDict.iteritems() if v == value][0]
+        else:
+            gid = counter.getNext()
+            self.sumDict[gid] = value
+            return gid
+        
+    def get(self,gid):
+        if self.sumDict.has_key(gid):
+            val = self.sumDict.get(gid)
+            vals_list = value.split("_")
+            id_sid = vals_list[1]
+            return int(id_sid)
+        else:
+            return -2
+        
         

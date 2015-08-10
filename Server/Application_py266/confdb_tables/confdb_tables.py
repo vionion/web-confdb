@@ -14,6 +14,14 @@ from sqlalchemy.sql import text, literal_column
 
 Base = automap_base()
 
+#---------------- SoftRelease ------------  
+class Release(Base):
+    # nome della tabella
+    __tablename__ = 'u_softreleases'
+
+    id = Column('id', Integer, primary_key=True)
+    releasetag = Column(String)
+
 #---------------- Path items: Paths, Paths in Version, Sequences, Moduels ------------  
 class Pathidconf(Base):
     # nome della tabella
@@ -37,7 +45,7 @@ class Pathids(Base):
 
     id = Column('id', Integer, primary_key=True)
     id_path = Column(ForeignKey('u_paths.id'))
-    #isendpath = Column(Integer)
+    #isendpath = Column(Integer
     description = Column(CLOB)
     name = column_property(
         select([Paths.name]).where(Paths.id == id_path)
@@ -60,7 +68,10 @@ class Pathitems(Base):
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_parent = Column(Integer)
-#    pathelement = relationship("Pathelement", backref=backref("u_pathid2pae"))
+    operator = Column(Integer)  
+    name = column_property( 
+        select([Pathelement.name]).where(Pathelement.id == id_pae)
+    )
     lvl = Column(Integer) #1, 'mod', 2, 'seq', 3, 'oum', 'Undefined'
     order = Column('ord', Integer)    
 
@@ -96,7 +107,7 @@ class PathToVarVal(Base):
     value = column_property(
         select([Values.value]).where(Values.id == id_val)
     )
-    
+        
 #------------------ Module items: Pset, VPset, Params ---------------    
 class Modelement(Base):
      # nome della tabella
@@ -117,6 +128,15 @@ class Moduleitem(Base):
     id = Column('id', Integer, primary_key=True)
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
+    name = column_property(
+        select([Modelement.name]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
+    value = column_property(
+        select([Modelement.value]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
+    valuelob = column_property(
+        select([Modelement.valuelob]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
     lvl = Column(Integer)
     order = Column('ord',Integer)
     
@@ -158,6 +178,15 @@ class Moduletypes(Base):
     id = Column('id', Integer, primary_key=True)
     mtype = Column('type', String)
     
+class ModTemp2Rele(Base):
+    # nome della tabella
+    __tablename__ = 'u_modt2rele'
+
+    id = Column('id', Integer, primary_key=True)
+    id_modtemp = Column('id_modtemplate', Integer, ForeignKey('u_moduletemplates.id'))
+    id_release = Column(Integer)
+        
+    
 #------------ Directories and directory items --------------------
 
 class Directory(Base):
@@ -182,12 +211,15 @@ class Version(Base):
     id_config = Column('id_config', Integer, ForeignKey('u_configurations.id'))
     id_parentdir = Column('id_parentdir', Integer, ForeignKey('u_directories.id'))
     name = Column(String)
-    id_release = Column(Integer)
+    id_release = Column('id_release', Integer, ForeignKey('u_softreleases.id'))
     version = Column(Integer)   
     created = Column(DateTime)
     creator = Column(String)
     processname = Column(String)
     description = Column(CLOB)
+    releasetag = column_property(
+        select([Release.releasetag]).where(Release.id == id_release)
+    )
 
     
 #------------ Service and Service Templates (plus items) --------------------   
