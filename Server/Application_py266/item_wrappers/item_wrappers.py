@@ -117,3 +117,63 @@ class SmartPrescale(object):
     def __init__(self,stream=-1):
         self.stream = stream
         self.children = {}        
+        
+class UrlString(object): 
+    def __init__(self,gid=0,url=""):
+        self.gid = gid
+        self.url = url
+
+#-------------------- Added By Husam ----------------------
+class PathObj(object):
+    def __init__(self, id=-1, id_path=-1, name="", pit = ""):
+        self.id = id
+        self.id_path = id_path
+        self.name = name
+        self.pit = pit
+
+class FileModuleDetails(object):
+    def __init__(self, id=0, name="", mt="", mclass = ""):
+        self.id = id
+        self.gid = -1
+        self.name = name
+        self.mt = mt
+        self.mclass = mclass
+       
+class FilePathitem(object):
+    def __init__(self, id=0, name="", id_pathid= 0, paetype = -1, order = -1, operator = 0):
+        self.id = id
+        self.gid = -2
+        self.name = name
+        self.id_pathid = id_pathid
+        self.paetype = paetype
+        self.order = order
+        self.operator = operator
+        self.expanded = False
+        self.children = []
+
+class FileParameter(object):
+    def __init__(self, id=0, name="", value="", paetype = -1, partype="", order = -1, track=False):
+        self.id = id
+        self.name = name
+        self.value = value
+        self.moetype = paetype
+        self.paramtype = partype
+        self.order = order
+        self.expanded = False
+        self.tracked = track
+        self.default = False
+        self.children = []
+
+class FileEvcoParameter(object):
+    def __init__(self, id=0, statement_type="", class_name="", module_element="", extra_name="", process_name=""):
+        self.id = id
+        self.classn = class_name
+        self.modulel = module_element
+        self.extran = extra_name
+        self.processn = process_name
+        self.statementtype = statement_type
+
+class FileVersion(object):
+    def __init__(self, id=0, name=""):
+        self.id = id
+        self.name = name

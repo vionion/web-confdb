@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from ordereddict import OrderedDict
+#from ordereddict import OrderedDict
+from marshmallow.ordereddict import OrderedDict
 from schemas import *
 
 class ResponseSchema(Schema):
@@ -158,4 +159,77 @@ class ResponseSummaryItemSchema(Schema):
     children = fields.Nested(SummaryItemSchema, many=True)
     class Meta:
         fields = ("success", "children")
-        ordered = True      
+        ordered = True
+        
+#------------ Url Response Schema -------------------------        
+class ResponseUrlStringSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(UrlStringSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True        
+
+#----------- Added By Husam ------------------------------
+class ResponseFileEndPathsTreeSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileEndPathsTreeSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
+
+class ResponseFilePathsTreeSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FilePathsTreeSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
+
+class ResponseFileModulesSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileModulesSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
+
+class ResponseFilePathItemSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FilePathItemSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True  
+
+class ResponseFileParamSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileParameterSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True    
+
+class ResponseFileDstPathsTreeSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileDstPathsTreeSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True        
+
+        
+class ResponseFileEvcStatementSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileEvcStatementSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True       
+
+class ResponseFileModuleDetailsSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileModuleDetailsSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
+
+class ResponseFileVersionSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(FileVersionSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True 

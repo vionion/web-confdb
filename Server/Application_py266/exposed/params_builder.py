@@ -8,7 +8,8 @@ from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from ordereddict import OrderedDict
+#from ordereddict import OrderedDict
+from marshmallow.ordereddict import OrderedDict
 import string        
   
 class ParamsBuilder():
@@ -407,10 +408,9 @@ class ParamsBuilder():
         except:
             log.error('ERROR: Query getTemplateFromPae/getTemplateParams Error')
             return None
-	
-	tempelements.sort(key=lambda par: par.id)
-		
-        tempelements_dict = dict((x.id, x) for x in tempelements)
+
+        tempelements.sort(key=lambda par: par.id)
+        #tempelements_dict = dict((x.id, x) for x in tempelements) 
 #        print "TEMPLATE ELEMENTS LEN: ", len(tempelements)
         
         #Build template parameters
@@ -424,7 +424,7 @@ class ParamsBuilder():
         temp_params = []
         temp_params_dict = {}
         temp_params_name_dict = {}
-        
+
         for p in tempelements:
 #            print p.id
             parent = temp_parents.get(p.lvl)
@@ -516,7 +516,7 @@ class ParamsBuilder():
         moeIds = []
         for it in items:
             moeIds.append(int(it.id_moe))
-            print it.id, it.id_pae, it.id_moe, it.lvl, it.order 
+            #print it.id, it.id_pae, it.id_moe, it.lvl, it.order 
             
         moeIdsLen = len(moeIds)
         
@@ -556,7 +556,7 @@ class ParamsBuilder():
             else:
                 parValue = elem.valuelob
             
-            item = Parameter(p.id_moe, elem.name, parValue, elem.moetype, elem.paramtype, parent, p.lvl, p.order, elem.tracked)
+            item = Parameter(p.id_moe, elem.name, parValue, elem.moetype, elem.paramtype, parent, p.lvl, p.ord, elem.tracked)
              
             params_mod_name_dict[item.name]=item
             #Set default

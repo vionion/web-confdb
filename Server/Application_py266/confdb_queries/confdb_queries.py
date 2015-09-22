@@ -1201,4 +1201,47 @@ class ConfDbQueries(object):
         smExps = db.query(Moduleitem).filter(Moduleitem.id_pae.in_(mods)).filter(Moduleitem.id_moe == Modelement.id).filter(Modelement.name == 'triggerConditions').all()
         
         return smExps  
-    
+
+    def getModules(self,id_ver=-2, db=None, log = None):
+
+        if (id_ver == -2 or db == None):
+            log.error('ERROR: getModules - input parameters error')
+
+        query = db.query(Pathelement).filter(Pathelement.paetype == 1).filter(Pathelement.id == Pathitems.id_pae).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == id_ver)
+
+        elements = query.all()
+
+        return elements
+
+    def getModuleElements(self,id_ver=-2, db=None, log = None):
+
+        if (id_ver == -2 or db == None):
+            log.error('ERROR: getModuleElements - input parameters error')
+
+        query = db.query(Moduleitem1).filter(Moduleitem1.id_pae == Pathitems.id_pae).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == id_ver)
+
+        elements = query.all()
+
+        return elements
+
+    def getModuleTemplateParameters(self, id_rel=-2, db=None, log = None):
+
+        if (id_rel == -2 or db == None):
+            log.error('ERROR: getModuleTemplateParameters - input parameters error')
+
+        query = db.query(ModTelement).filter(ModTelement.id_modtemp == ModTemp2Rele.id_modtemp).filter(ModTemp2Rele.id_release == id_rel)
+
+        elements = query.all()
+
+        return elements
+
+    def getRelease(self, id_rel=-2, db=None, log = None):
+
+        if (id_rel == -2 or db == None):
+            log.error('ERROR: getRelease - input parameters error')
+
+        query = db.query(Release).filter(Release.id == id_rel)
+
+        elements = query.first()
+
+        return elements

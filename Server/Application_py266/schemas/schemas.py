@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, pprint
 #from collections import OrderedDict
-from ordereddict import OrderedDict
+#from ordereddict import OrderedDict
+from marshmallow.ordereddict import OrderedDict
 
 
 class PathsSchema(Schema):
@@ -22,7 +23,7 @@ class PathsTreeSchema(Schema):
     isEndPath = fields.Integer()
     pit = fields.String()
     order = fields.Integer()
-    icon = icon = fields.Method("get_icon")
+    icon = fields.Method("get_icon")
     
     def get_Name(self,obj):
         return obj.name
@@ -493,7 +494,7 @@ class DstPathsTreeSchema(Schema):
     name = fields.String()
     isEndPath = fields.Integer()
     pit = fields.String()
-    icon = icon = fields.Method("get_icon")
+    icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
     
     def get_exp(self,obj):
@@ -539,4 +540,254 @@ class SummaryItemSchema(Schema):
     class Meta:
         fields = ("gid", "name", "leaf", "icon", "values", "children") #"order", "sit", 
         ordered = True
+
+#------------ Url Schema -------------------------
+class UrlStringSchema(Schema):
+    gid = fields.Integer()
+    url = fields.String()
+    
+    class Meta:
+        fields = ("gid", "url")
+        ordered = True        
+
+#--------------- Added By Husam -------------------
+
+class FileEndPathsTreeSchema(Schema):
+    gid = fields.Integer()
+    id_path = fields.Integer()
+    vid = fields.Integer()
+    name = fields.String()
+    Name = fields.Method("get_Name")
+    pit = fields.String()
+    order = fields.Integer()
+    icon = fields.Method("get_icon")
+    
+    def get_Name(self,obj):
+        return obj.name
+    
+    def get_icon(self,obj):
+            return 'resources/EndPath.ico'   
         
+    class Meta:
+        fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
+        ordered = True
+
+class FilePathsTreeSchema(Schema):
+    gid = fields.Integer()
+    id_path = fields.Integer()
+    vid = fields.Integer()
+    name = fields.String()
+    Name = fields.Method("get_Name")
+    pit = fields.String()
+    order = fields.Integer()
+    icon = fields.Method("get_icon")
+    
+    def get_Name(self,obj):
+        return obj.name
+    
+    def get_icon(self,obj):
+            return 'resources/Path_3.ico'   
+        
+    class Meta:
+        fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
+        ordered = True
+
+class FileDstPathsTreeSchema(Schema):
+    gid = fields.Integer()
+    id_path = fields.Integer()
+    vid = fields.Integer()
+    name = fields.String()
+    pit = fields.String()
+    order = fields.Integer()
+    icon = fields.Method("get_icon")
+    expandable = fields.Method("get_exp")
+    
+    def get_exp(self,obj):
+        return False
+    
+    def get_Name(self,obj):
+        return obj.name
+    
+    def get_icon(self,obj):
+        return 'resources/Path_3.ico'   
+        
+    class Meta:
+        fields = ("gid", "vid", "icon", "id_path", "name", "order", "pit", "expandable")
+        ordered = True
+
+class FileModulesSchema(Schema):
+    gid = fields.Integer()
+    name = fields.String()
+    mt = fields.String()
+    mclass = fields.String()
+ 
+    class Meta:
+        fields = ("gid", "name", "mt", "mclass")
+        ordered = True
+
+class FilePathItemSchema(Schema):
+    gid = fields.Integer()
+    name = fields.String()
+    id_pathid = fields.String()
+    paetype = fields.Integer()
+    operator = fields.Integer()
+    pit = fields.Method("get_item_type")
+    order = fields.Method("get_order")
+    leaf = fields.Method("get_leaf")
+    Name = fields.Method("get_Name")
+    icon = fields.Method("get_icon")
+    expanded = fields.Boolean()
+    children = fields.Nested('self', many=True)
+    
+    def get_Name(self,obj):
+        if obj.paetype == 1:
+            if obj.operator == 0: 
+                return obj.name
+            elif obj.operator == 2:
+                return "(Ignored) "+obj.name
+            elif obj.operator == 1:
+                return "(Negate) "+obj.name
+        
+        else:
+            return obj.name
+    
+    def get_order(self,obj):
+        return obj.order
+    
+    def get_icon(self,obj):
+        if obj.paetype == 1:
+            return 'resources/Module_3.ico'
+        elif obj.paetype == 2:
+            return 'resources/Sequence_2.ico'
+        elif obj.paetype == 3:
+            return 'resources/OutputModule2.ico'
+        else:
+            return 'resources/Module_3.ico'
+    
+    def get_item_type(self, obj):
+        if obj.paetype == 1:
+            return 'mod'
+        elif obj.paetype == 2:
+            return 'seq'
+        elif obj.paetype == 3:
+            return 'oum'
+        else:
+            return 'und'
+        
+    def get_leaf(self, obj):
+        if obj.paetype == 1:
+            return True
+        else: 
+            return False
+        
+    class Meta:
+        fields = ("gid", "Name", "id_pathid", "pit","order","leaf", "icon","expanded","children", "operator")
+        ordered = True    
+
+class FileParameterSchema(Schema):
+    id = fields.Integer()
+    name = fields.String()
+    moetype = fields.Integer()
+    paramtype = fields.String()
+    value = fields.String()
+    order = fields.Integer()
+    default = fields.Integer()
+    tracked = fields.Integer()
+    gid = fields.Method("get_gid")
+    mit = fields.Method("get_item_type")
+    leaf = fields.Method("get_leaf")
+    icon = fields.Method("get_icon")
+    rendervalue = fields.Method("get_rendervalue")
+    isDefault = fields.Method("get_isDefault")
+    expanded = fields.Boolean()
+    children = fields.Nested('self', many=True)
+    
+    def get_isDefault(self,obj):
+        if obj.default == 1:
+            return 'True'
+        else:
+            return 'False'
+    
+    def get_rendervalue(self,obj): 
+        return obj.value
+    
+    def get_icon(self,obj):
+        if obj.moetype == 1:
+            return 'resources/param_2.ico'
+        if obj.moetype == 2:
+            return 'resources/PSet_2.ico'
+        elif obj.moetype == 3:
+            return 'resources/Vpset_2.ico'
+        else:
+            return ''
+    
+    def get_gid(self,obj):
+        return obj.id
+    
+    def get_item_type(self, obj):
+        if obj.moetype == 1:
+            return 'par'
+        elif obj.moetype == 2:
+            return 'pas'
+        elif obj.moetype == 3:
+            return 'vps'
+        else:
+            return 'und'
+        
+    def get_leaf(self, obj):
+        if obj.moetype == 1:
+            return True
+        else: 
+            return False
+    
+    class Meta:
+        fields = ("gid", "name", "rendervalue", "order", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
+        ordered = True
+
+class FileEvcStatementSchema(Schema):
+    id = fields.Integer()
+    gid = fields.Method("get_gid")
+    classn = fields.String()
+    modulel = fields.String()
+    extran = fields.String()
+    processn = fields.String()
+    statementtype = fields.String()
+    stype = fields.Method("get_stype")
+    statementrank = fields.Integer()
+    
+    def get_gid(self,obj):
+        return obj.id
+    
+    def get_stype(self,obj):
+        return obj.statementtype
+
+    class Meta:
+        fields = ("gid", "classn", "modulel", "extran", "processn", "stype", "statementrank")
+        ordered = True
+
+class FileModuleDetailsSchema(Schema):
+    gid = fields.Integer()
+    name = fields.String()
+    mti = fields.String()
+    mt =  fields.Method("get_item_type")   
+    author = fields.String()
+    mclass = fields.String()
+    
+    def get_item_type(self, obj):
+        return obj.mti
+ 
+    class Meta:
+        fields = ("gid", "name", "mt", "author", "mclass")
+        ordered = True
+
+class FileVersionSchema(Schema):
+    id = fields.Integer()
+    name = fields.String()
+    gid = fields.Method("get_gid")
+
+    def get_gid(self,obj):
+        return obj.id
+ 
+    class Meta:
+        fields = ("id", "name")
+        ordered = True

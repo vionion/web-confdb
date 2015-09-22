@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import cherrypy
+import os
+from os import unlink
 
 __all__ = ['SATool']
 
 class SATool(cherrypy.Tool):
-    def __init__(self):
+    def __init__(self,current_dir="",log=None):
         """
         The SA tool is responsible for associating a SA session
         to the SA engine and attaching it to the current request.
@@ -17,6 +19,8 @@ class SATool(cherrypy.Tool):
         a requests starts and commits/rollbacks whenever
         the request terminates.
         """
+	self.current_dir = current_dir
+	self.log = log
         cherrypy.Tool.__init__(self, 'on_start_resource',
                                self.bind_session,
                                priority=20)
@@ -26,7 +30,9 @@ class SATool(cherrypy.Tool):
         cherrypy.request.hooks.attach('on_end_resource',
                                       self.commit_transaction,
                                       priority=80)
- 
+        cherrypy.request.hooks.attach('on_end_resource',
+                                      self.cleanup_files,
+                                      priority=80)
     def bind_session(self):
         """
         Attaches a session to the request's scope by requesting
@@ -59,3 +65,25 @@ class SATool(cherrypy.Tool):
 
         cherrypy.engine.publish('commit-online-session')
         cherrypy.engine.publish('commit-offline-session')
+
+    def cleanup_files(self):
+        
+        "Remove the generated file after the download"
+#        print "path_info: ", cherrypy.request.path_info
+#        print "params: ", cherrypy.request.params
+        path_info = cherrypy.request.path_info
+
+        path = ""
+        
+        if "download" in path_info:
+#            print "FILEPATH: ", cherrypy.request.params['filepath']
+            # path = self.current_dir + "/exported/" + cherrypy.request.params['filepath'] + '.py' 
+ 	    # folder = os.environ['STATEDIR']
+	    folder = os.environ.get('STATEDIR')
+            path = folder + "/" + cherrypy.request.params['filepath'] + '.py'	       
+        if os.path.exists(path):
+            #print "nothing"
+	    log_msg = "DELETING FILE: "+path
+            self.log.error(log_msg)
+	    unlink(path)
+

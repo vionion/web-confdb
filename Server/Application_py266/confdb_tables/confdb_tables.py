@@ -23,6 +23,31 @@ class Release(Base):
     releasetag = Column(String)
 
 #---------------- Path items: Paths, Paths in Version, Sequences, Moduels ------------  
+class Moduletypes(Base):
+    __tablename__ = 'u_moduletypes'
+
+    id = Column('id', Integer, primary_key=True)
+    mtype = Column('type', String)
+
+class ModTemplate(Base):
+     # nome della tabella
+    __tablename__ = 'u_moduletemplates'
+
+    id = Column('id', Integer, primary_key=True)
+    name = Column(String)
+    id_mtype = Column('id_mtype', Integer) #ForeignKey('u_moduletypes.id')
+    mtype = column_property(
+        select([Moduletypes.mtype]).where(Moduletypes.id == id_mtype)
+    )
+
+class ModToTemp(Base):
+     # nome della tabella
+    __tablename__ = 'u_mod2templ'
+
+    id = Column('id', Integer, primary_key=True)
+    id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
+    id_templ = Column('id_templ', Integer, ForeignKey('u_moduletemplates.id'))
+
 class Pathidconf(Base):
     # nome della tabella
     __tablename__ = 'u_pathid2conf'
@@ -60,6 +85,15 @@ class Pathelement(Base):
     id = Column('id', Integer, primary_key=True)
     name = Column(String)
     paetype = Column(Integer)
+    id_templ = column_property(
+        select([ModToTemp.id_templ]).where(ModToTemp.id_pae == id)
+    )
+    temp_name = column_property(
+        select([ModTemplate.name]).where(and_(ModTemplate.id == ModToTemp.id_templ, ModToTemp.id_pae == id))
+    )
+    mtype = column_property(
+        select([Moduletypes.mtype]).where(and_(Moduletypes.id == ModTemplate.id_mtype, ModTemplate.id == ModToTemp.id_templ, ModToTemp.id_pae == id))
+    )
     
 class Pathitems(Base):
     __tablename__ = 'u_pathid2pae'
@@ -70,6 +104,12 @@ class Pathitems(Base):
     id_parent = Column(Integer)
     operator = Column(Integer)  
     name = column_property( 
+        select([Pathelement.name]).where(Pathelement.id == id_pae)
+    )
+    paetype = column_property(
+        select([Pathelement.paetype]).where(Pathelement.id == id_pae)
+    ) 
+    temp_name = column_property(
         select([Pathelement.name]).where(Pathelement.id == id_pae)
     )
     lvl = Column(Integer) #1, 'mod', 2, 'seq', 3, 'oum', 'Undefined'
@@ -128,6 +168,17 @@ class Moduleitem(Base):
     id = Column('id', Integer, primary_key=True)
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
+    lvl = Column(Integer)
+    ord = Column('ord',Integer)
+    moetype = column_property(
+        select([Modelement.moetype]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
+    paramtype = column_property(
+        select([Modelement.paramtype]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
+    tracked = column_property(
+        select([Modelement.tracked]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
+    )
     name = column_property(
         select([Modelement.name]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
     )
@@ -137,26 +188,37 @@ class Moduleitem(Base):
     valuelob = column_property(
         select([Modelement.valuelob]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
     )
-    lvl = Column(Integer)
-    order = Column('ord',Integer)
-    
-#-------------------- ED Template and elements ------------------
-class ModTemplate(Base):
-     # nome della tabella
-    __tablename__ = 'u_moduletemplates'
 
-    id = Column('id', Integer, primary_key=True)
-    name = Column(String)
-    id_mtype = Column('id_mtype', Integer) #ForeignKey('u_moduletypes.id')
-        
-class ModToTemp(Base):
+class Moduleitem1(Base):
      # nome della tabella
-    __tablename__ = 'u_mod2templ'
+    __table_args__ = {'extend_existing': True}
+    __tablename__ = 'u_pae2moe'
 
     id = Column('id', Integer, primary_key=True)
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
-    id_templ = Column('id_templ', Integer, ForeignKey('u_moduletemplates.id'))
- 
+    id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
+    lvl = Column(Integer)
+    ord = Column('ord',Integer)
+    moetype = column_property(
+        select([Modelement.moetype]).where(Modelement.id == id_moe)
+    )
+    paramtype = column_property(
+        select([Modelement.paramtype]).where(Modelement.id == id_moe)
+    )
+    tracked = column_property(
+        select([Modelement.tracked]).where(Modelement.id == id_moe)
+    )
+    name = column_property(
+        select([Modelement.name]).where(Modelement.id == id_moe)
+    )
+    value = column_property(
+        select([Modelement.value]).where(Modelement.id == id_moe)
+    )
+    valuelob = column_property(
+        select([Modelement.valuelob]).where(Modelement.id == id_moe)
+    )
+
+#-------------------- ED Template and elements ------------------
 class ModTelement(Base):
      # nome della tabella
     __tablename__ = 'u_modtelements'
@@ -171,12 +233,6 @@ class ModTelement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-    
-class Moduletypes(Base):
-    __tablename__ = 'u_moduletypes'
-
-    id = Column('id', Integer, primary_key=True)
-    mtype = Column('type', String)
     
 class ModTemp2Rele(Base):
     # nome della tabella
@@ -216,6 +272,7 @@ class Version(Base):
     created = Column(DateTime)
     creator = Column(String)
     processname = Column(String)
+    config = Column(String)
     description = Column(CLOB)
     releasetag = column_property(
         select([Release.releasetag]).where(Release.id == id_release)
