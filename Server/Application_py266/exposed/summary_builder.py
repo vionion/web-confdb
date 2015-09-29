@@ -347,6 +347,7 @@ class SummaryBuilder():
                     prescale = 1
 
                     for e in expressions:
+                        prescale = 1
                         parts = e.split('/')
 
                         if len(parts) == 2:
