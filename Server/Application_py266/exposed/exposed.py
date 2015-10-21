@@ -2369,3 +2369,24 @@ class Exposed(object):
 
         return output.data
     
+    def getRoutedConfig(self, cnfMap = None, name = "", db = None, log = None):
+        
+        queries = self.queries
+        
+        #params check
+        if (cnfMap == None or name == "" or db == None):
+            log.error('ERROR: getRoutedConfig - input parameters error')
+            return -1
+        
+        confVer_id = -1
+        
+        try:
+            #get Config by Name
+            confVer_id = queries.getConfigurationByName(name, db, log)
+
+        except Exception as e:
+            msg = 'ERROR: Query getConfigurationByName Error: ' + e.args[0]
+            log.error(msg)
+            return -1
+        
+        return confVer_id

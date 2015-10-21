@@ -298,7 +298,7 @@ class SummaryBuilder():
         try:
             
             #get Smart Prescale modules
-            triggResFilters = queries.getSmartPrescaleModule(pathidsToOum_dict.keys(),db, log) 
+            triggResFilters = queries.getSmartPrescaleModule(ver_id, id_rel, pathidsToOum_dict.keys(),db, log) 
 
         except:
             log.error('ERROR: Query getSmartPrescaleModule Error')
@@ -327,46 +327,47 @@ class SummaryBuilder():
                 if pathidsToOum_dict.has_key(t.id_pathid):
                     stream = pathidsToOum_dict[t.id_pathid]
 
-                    tc = triggerConditions_dict[t.id_pae]
+		    if triggerConditions_dict.has_key(t.id_pae):
+                    	tc = triggerConditions_dict[t.id_pae]
 
-                    sp = SmartPrescale(stream)
+                    	sp = SmartPrescale(stream)
 
-                    trf_expression = ""
-                    if tc.valuelob is not None:
-                        val = tc.valuelob
-                    else:
-                        val = tc.value
-                    trf_expression = val
-                    trf_expression = trf_expression.translate(None,'"{}')
+                    	trf_expression = ""
+                    	if tc.valuelob is not None:
+                            val = tc.valuelob
+                    	else:
+                            val = tc.value
+                    	trf_expression = val
+                    	trf_expression = trf_expression.translate(None,'"{}')
 #                    trf_expression = trf_expression.strip('"')
 #                    trf_expression = trf_expression.strip('{')
 #                    trf_expression = trf_expression.strip('}')
     
-                    expressions = trf_expression.split(',')
+                    	expressions = trf_expression.split(',')
 
-                    prescale = 1
+                    	prescale = 1
 
-                    for e in expressions:
-                        prescale = 1
-                        parts = e.split('/')
+                    	for e in expressions:
+                            prescale = 1
+			    parts = e.split('/')
 
-                        if len(parts) == 2:
-                            pre_str = parts[1]
-                            pre_str = pre_str.translate(None,' "')
-                            prescale = int(pre_str)
+                            if len(parts) == 2:
+                            	pre_str = parts[1]
+                            	pre_str = pre_str.translate(None,' "')
+                            	prescale = int(pre_str)
 
-                        part_one = parts[0]
-                        part_one = part_one.translate(None,'()"')
-#                        part_one = part_one.strip('"')
-                        terms = part_one.split(' OR ')
+                            part_one = parts[0]
+                            part_one = part_one.translate(None,'()"')
+#                           part_one = part_one.strip('"')
+                            terms = part_one.split(' OR ')
 
-                        for ter in terms:
+                            for ter in terms:
                             
-                            ter = ter.translate(None,' () "')
+                            	ter = ter.translate(None,' () "')
 #                            print "TERM: ",ter,"PRE: ",prescale 
-                            sp.children[ter] = prescale
+                            	sp.children[ter] = prescale
 
-                    smart_prescales_dict[stream] = sp   
+                    	smart_prescales_dict[stream] = sp   
         
         return smart_prescales_dict
                 

@@ -153,7 +153,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 patsMap = self.patsMap_online
                 seqsMap = self.seqsMap_online
@@ -210,7 +210,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 patsMap = self.patsMap_online
                 cnfMap = self.cnfMap_online
@@ -264,7 +264,7 @@ class Root(object):
             return data 
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 modsMap = self.modsMap_online
                 oumodsMap = self.oumodsMap_online
@@ -315,7 +315,7 @@ class Root(object):
         idfolgen = self.idfolgen
         cnfMap = None
         
-        if online == 'True':
+        if online == 'True' or online == 'true':
             db = db_online
             folMap = self.folMap_online
             cnfMap = self.cnfMap_online
@@ -356,7 +356,7 @@ class Root(object):
         
         cnfMap = None
         
-        if online == 'True':
+        if online == 'True' or online == 'true':
             db = db_online
             cnfMap = self.cnfMap_online
             
@@ -397,7 +397,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 modsMap = self.modsMap_online
                 patsMap = self.patsMap_online
@@ -446,7 +446,7 @@ class Root(object):
 
         else:
             
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 cnfMap = self.cnfMap_online
                 allmodsMap = self.allmodsMap_online
@@ -493,7 +493,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 cnfMap = self.cnfMap_online
                 srvsMap = self.srvsMap_online
@@ -536,7 +536,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 srvsMap = self.srvsMap_online
                 
@@ -582,7 +582,7 @@ class Root(object):
             return data
         
         else: 
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 evcMap = self.evcMap_online
                 idstrgen = self.idstrgen_online
@@ -631,7 +631,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 evcMap = self.evcMap_online
                 
@@ -672,7 +672,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online 
                 cnfMap = self.cnfMap_online
                 
@@ -717,7 +717,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 cnfMap = self.cnfMap_online
                 
@@ -756,7 +756,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online 
                 
             else:
@@ -788,7 +788,7 @@ class Root(object):
         idgen = None
         cnfMap = None
             
-        if online == 'True':
+        if online == 'True' or online == 'true':
             db = db_online
             
             seqsMap = self.seqsMap_online  
@@ -846,7 +846,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 
                 patsMap = self.patsMap_online
@@ -904,7 +904,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 oumodsMap = self.oumodsMap_online
                 patsMap = self.patsMap_online
@@ -950,7 +950,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 cnfMap = self.cnfMap_online
                 gpsMap = self.gpsMap_online
@@ -994,7 +994,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 gpsMap = self.gpsMap_online
                 
@@ -1034,7 +1034,7 @@ class Root(object):
             return data
         
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online 
                 cnfMap = self.cnfMap_online 
                 
@@ -1072,7 +1072,7 @@ class Root(object):
                 cherrypy.HTTPError(500, "Error in retreiving the ED Source Parameters")
             return data 
         
-        if online == 'True':
+        if online == 'True' or online == 'true':
             db = db_online 
             
         else:
@@ -1110,7 +1110,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online 
                 cnfMap = self.cnfMap_online
                 
@@ -1147,7 +1147,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online 
                 
             else:
@@ -1187,7 +1187,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 
                 datMap = self.datMap_online
@@ -1238,7 +1238,7 @@ class Root(object):
             return data
 
         else: 
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 cnfMap = self.cnfMap_online
                 
@@ -1278,7 +1278,7 @@ class Root(object):
             return data
 
         else:
-            if online == 'True':
+            if online == 'True' or online == 'true':
                 db = db_online
                 
                 cnfMap = self.cnfMap_online
@@ -1316,7 +1316,7 @@ class Root(object):
         
         cnfMap = None
         
-        if online == 'True':
+        if online == 'True' or online == 'true':
             db = db_online
             cnfMap = self.cnfMap_online
             
@@ -1383,7 +1383,53 @@ class Root(object):
         #assert isinstance(output.data, OrderedDict)
 
         return output.data
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def confname(self, _dc=101, name=""):
+        
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        
+        cnfMap = None
+        db = None
+        online = False
+        
+        tokens = name.split('=')
+        path_tokens = tokens[1].split('/')
+        firstFolder = path_tokens[1]
+        
+        if firstFolder == 'cdaq' or firstFolder == 'minidaq':
 
+            db = db_online
+            cnfMap = self.cnfMap_online
+            online = 'true'
+            
+        else:
+            db = db_offline
+            cnfMap = self.cnfMap
+            online = 'false'
+        
+        config_id = self.funcs.getRoutedConfig(cnfMap, tokens[1], db, self.log)    
+
+        resp = Response()
+        schema = ResponseUrlStringSchema()
+        
+        if config_id == -1 or config_id == None:
+            resp.success = False
+            
+        else:
+            resp.success = True
+        
+        resp.children = []
+        
+        urlString = str(config_id) + "_" + online
+        url = UrlString(0,urlString)
+        resp.children.append(url)
+        
+        output = schema.dump(resp)
+        #assert isinstance(output.data, OrderedDict)
+
+        return output.data	
 class Download:
 
     def index(self, filepath):

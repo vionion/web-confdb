@@ -1186,12 +1186,14 @@ class ConfDbQueries(object):
         
         return pidToum
     
-    def getSmartPrescaleModule(self, paths = None ,db=None, log = None):
-        if (db == None or paths == None):
+    def getSmartPrescaleModule(self, ver_id=-1, id_rel=-1, paths=None, db=None, log = None):
+        if (db == None or paths == None or ver_id == -1 or id_rel == -1):
                 log.error('ERROR: getSmartPrescaleModule - input parameters error')
                 
-        smMods = db.query(Pathitems).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').all()
-        
+        #smMods = db.query(Pathitems).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').all()
+ 	
+	smMods = db.query(Pathitems).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == ver_id ).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).all()       
+
         return smMods        
                 
     def getSmartPrescaleExpressions(self, mods = None ,db=None, log = None):
@@ -1245,3 +1247,16 @@ class ConfDbQueries(object):
         elements = query.first()
 
         return elements
+
+    def getConfigurationByName(self, name = "", db=None, log = None):
+        if (db == None or name == ""):
+                log.error('ERROR: getConfigurationByName - input parameters error')
+                return None
+        
+        #print "NAME IN QUERY "+name
+        
+        confVer = db.query(Version).filter(Version.name == name).first()
+        
+        #print "RESULT VER: " + str(confVer)
+        
+        return confVer.id 
