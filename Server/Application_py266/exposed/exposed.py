@@ -2183,7 +2183,7 @@ class Exposed(object):
         
         
         #---- Get Smart Prescales --------------------------------
-        smartPre = self.summary_builder.getSmartPrescales(streams_dict.keys(), self.queries,db,log)
+        smartPre = self.summary_builder.getSmartPrescales(ver_id, id_rel, streams_dict.keys(), self.queries,db,log)
             
         if smartPre is None:
             log.error('ERROR: Seeds None')

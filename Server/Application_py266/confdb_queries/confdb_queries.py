@@ -1186,7 +1186,8 @@ class ConfDbQueries(object):
         
         return pidToum
     
-    def getSmartPrescaleModule(self, ver_id=-1, id_rel=-1, paths=None, db=None, log = None):
+    def getSmartPrescaleModule(self, ver_id = -1, id_rel = -1, paths=None, db=None, log = None):
+	
         if (db == None or paths == None or ver_id == -1 or id_rel == -1):
                 log.error('ERROR: getSmartPrescaleModule - input parameters error')
                 

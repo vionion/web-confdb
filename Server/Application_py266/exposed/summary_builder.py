@@ -271,7 +271,7 @@ class SummaryBuilder():
                     
 #                   
             
-    def getSmartPrescales(self, streams = None, queries=None, db=None, log = None):
+    def getSmartPrescales(self, ver_id = -1, id_rel = -1, streams = None, queries=None, db=None, log = None):
         if (db == None or queries == None or streams == None):
             log.error('ERROR: getSmartPrescaler - input parameters error')
             
@@ -299,9 +299,10 @@ class SummaryBuilder():
             
             #get Smart Prescale modules
             triggResFilters = queries.getSmartPrescaleModule(ver_id, id_rel, pathidsToOum_dict.keys(),db, log) 
-
-        except:
-            log.error('ERROR: Query getSmartPrescaleModule Error')
+	    
+        except Exception as e:
+            msg = 'ERROR: Query getSmartPrescaleModule Error: ' + e.args[0]
+	    log.error(msg)
             return None
         
         tr_list = []
@@ -313,7 +314,7 @@ class SummaryBuilder():
             
             #get Smart Prescale Expression
             triggerConditions = queries.getSmartPrescaleExpressions(tr_list,db, log) 
-
+	
         except:
             log.error('ERROR: Query getSrvTemplateBySrv/getSrvTemplateParams Error')
             return None
@@ -366,7 +367,9 @@ class SummaryBuilder():
                             	ter = ter.translate(None,' () "')
 #                            print "TERM: ",ter,"PRE: ",prescale 
                             	sp.children[ter] = prescale
-
+			
+				#logmsg = "SMART PRESCALE: " + str(ter) + " " + str(prescale) 
+				#log.error(logmsg)
                     	smart_prescales_dict[stream] = sp   
         
         return smart_prescales_dict
