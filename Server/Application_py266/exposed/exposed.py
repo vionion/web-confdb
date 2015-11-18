@@ -2259,8 +2259,13 @@ class Exposed(object):
 
                                     else:
                                         values = one_values
-
+				
                                     i2 = 0
+				                    
+                                    sp_value = smart_paths[p.name]
+				                    smpr = "smart_pre" + "###" + str(sp_value) 
+				                    pat.values.append(smpr)
+
                                     for c in columns:
 
                                         sp_value = smart_paths[p.name]

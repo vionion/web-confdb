@@ -525,39 +525,53 @@ class DataBuilder(object):
         idgen = Counter()
         result = ""
 
-        lvlZeroSeq_Dict = {}
+        elements = None
+        items = None
+        lista = None
+        lvlzelems = None
 
         for path in global_endPaths:
             result = result + "process." + path.name + " = " + "cms.EndPath( "
 
-            elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
-            if(len(elements)!=0):
+            try:
+                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
                 items = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
+            except Exception as e:
+                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                log.error(msg)
+                return result  
 
-                elements_dict = dict((x.id, x) for x in elements)
+            elements_dict = dict((x.id, x) for x in elements)
             
-                seq = {} 
+            seq = {} 
+            lvlZeroSeq_Dict = {}
             
-                for p in items:
-                    elem = elements_dict[p.id_pae]
-                    item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
+            for p in items:
+                elem = elements_dict[p.id_pae]
+                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
 
-                    if (item.paetype == 2):
-                        item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                        seq[item.gid]=item  
-                        if (item.lvl == 0): 
-                            iid = item.id   
-                            lvlZeroSeq_Dict[item.gid] = iid 
+                if (item.paetype == 2):
+                    item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
+                    seq[item.gid]=item  
+                    if (item.lvl == 0): 
+                        iid = item.id   
+                        lvlZeroSeq_Dict[item.gid] = iid 
 
-            lista = queries.getLevelZeroPathItems(path.id, ver_id, db, log)
-            lvlzelems = queries.getLevelZeroPaelements(path.id, ver_id, db, log)
+            try:
+                lista = queries.getLevelZeroPathItems(path.id, ver_id, db, log)
+                lvlzelems = queries.getLevelZeroPaelements(path.id, ver_id, db, log)
+
+            except Exception as e:
+                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                log.error(msg)
+                return result              
 
             lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
             pats = []
                 
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order)
+                item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
                 item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
                 pats.insert(item.order,item)
             
@@ -578,7 +592,12 @@ class DataBuilder(object):
                 pats.insert(oum.order, oum) 
 
             for pat in pats:
-                result = result + "process." + pat.name + " + "
+                if pat.operator == 0: 
+                    result = result + "process." + pat.name + " + "
+                elif pat.operator == 2:
+                    result = result + "cms.ignore(process." + pat.name + ")" + " + "
+                elif pat.operator == 1:
+                    result = result + "~process." + pat.name + " + "
             
             result = result[:-2] + ")\n"
 
@@ -755,7 +774,7 @@ class DataBuilder(object):
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     

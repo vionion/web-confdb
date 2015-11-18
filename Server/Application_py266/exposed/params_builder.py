@@ -227,7 +227,7 @@ class ParamsBuilder():
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     
@@ -607,7 +607,7 @@ class ParamsBuilder():
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     
@@ -861,12 +861,12 @@ class ParamsBuilder():
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     
                     else:
-                        log.error('ERROR: ES Module Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
+                        log.error('ERROR: ESProducer Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
         
         #complete Pset construction
         psets = pset.values() 
@@ -1352,12 +1352,12 @@ class ParamsBuilder():
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     
                     else:
-                        log.error('ERROR: ED Source Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
+                        log.error('ERROR: EDSource Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
         
         #complete Pset construction
         psets = pset.values() 
@@ -1603,12 +1603,12 @@ class ParamsBuilder():
                         if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
                             vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
 
-                    if (n.id_parent in temp_pset.keys()):
+                    elif (n.id_parent in temp_pset.keys()):
                         if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
                             pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
                     
                     else:
-                        log.error('ERROR: Es Source Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
+                        log.error('ERROR: ESSource Parameter Error Key') #print "DOVE?: ", n.name," " ,n.id, " ",n.id_parent
         
         #complete Pset construction
         psets = pset.values() 
