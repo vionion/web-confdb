@@ -169,7 +169,7 @@ class Moduleitem(Base):
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
     lvl = Column(Integer)
-    ord = Column('ord',Integer)
+    order = Column('ord',Integer)
     moetype = column_property(
         select([Modelement.moetype]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
     )
@@ -189,34 +189,22 @@ class Moduleitem(Base):
         select([Modelement.valuelob]).where(Modelement.id == id_moe).correlate(Modelement.__table__)
     )
 
-class Moduleitem1(Base):
-     # nome della tabella
-    __table_args__ = {'extend_existing': True}
-    __tablename__ = 'u_pae2moe'
+class ModuleitemFull(Base):
+    __tablename__ = 'u_pae2moe, u_moelements'
 
-    id = Column('id', Integer, primary_key=True)
-    id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
-    id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
-    lvl = Column(Integer)
-    ord = Column('ord',Integer)
-    moetype = column_property(
-        select([Modelement.moetype]).where(Modelement.id == id_moe)
-    )
-    paramtype = column_property(
-        select([Modelement.paramtype]).where(Modelement.id == id_moe)
-    )
-    tracked = column_property(
-        select([Modelement.tracked]).where(Modelement.id == id_moe)
-    )
-    name = column_property(
-        select([Modelement.name]).where(Modelement.id == id_moe)
-    )
-    value = column_property(
-        select([Modelement.value]).where(Modelement.id == id_moe)
-    )
-    valuelob = column_property(
-        select([Modelement.valuelob]).where(Modelement.id == id_moe)
-    )
+    # u_pae2moe
+    id        = Column('id',        Integer, primary_key=True)
+    id_pae    = Column('id_pae',    Integer, ForeignKey('u_paelements.id'))
+    id_moe    = Column('id_moe',    Integer, ForeignKey('u_moelements.id'))
+    lvl       = Column('lvl',       Integer)
+    order     = Column('ord',       Integer)
+    # u_moelements
+    name      = Column('name',      String)
+    moetype   = Column('moetype',   Integer)
+    paramtype = Column('paramtype', String)
+    tracked   = Column('tracked',   Integer)
+    value     = Column('value',     String)
+    valuelob  = Column('valuelob',  CLOB)
 
 #-------------------- ED Template and elements ------------------
 class ModTelement(Base):
