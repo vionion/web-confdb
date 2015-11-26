@@ -16,7 +16,7 @@ from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
 import re
-from utils import * 
+from utils import *
 
 class Parser_Functions(object):
     summaryItemCounter = Counter()
@@ -34,11 +34,11 @@ class Parser_Functions(object):
                 resp.children.append(gpset)
 
         schema = ResponseGlobalPsetSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getGPsetsItemsFromFile(self, config_id, gPsetId, config_dict=None):
@@ -51,11 +51,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = gpsetItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getStreamsFromFile(self, config_id, config_dict=None):
@@ -68,25 +68,25 @@ class Parser_Functions(object):
             streams_data[config_obj.streams_dict[key].id] = stream_obj
             for event in config_obj.eventContent_dict:
                 if config_obj.eventContent_dict[event].name.replace("hltEventContent","") == config_obj.streams_dict[key].name:
-                    event_obj = Streamitem(config_obj.eventContent_dict[event].id,-1,config_obj.eventContent_dict[event].name,"evc")   
+                    event_obj = Streamitem(config_obj.eventContent_dict[event].id,-1,config_obj.eventContent_dict[event].name,"evc")
                     event_obj.gid = config_obj.eventContent_dict[event].id
                     streams_data.get(config_obj.streams_dict[key].id).children.append(event_obj)
             for param in config_obj.streams_dict[key].children:
                 if param in config_obj.datasets_dict:
-                    dataset_obj = Streamitem(config_obj.datasets_dict[param].id,-1,config_obj.datasets_dict[param].name,"dat")   
+                    dataset_obj = Streamitem(config_obj.datasets_dict[param].id,-1,config_obj.datasets_dict[param].name,"dat")
                     dataset_obj.gid = config_obj.datasets_dict[param].id
                     streams_data.get(config_obj.streams_dict[key].id).children.append(dataset_obj)
 
         resp = Response()
-        
+
         resp.children = streams_data.values()
         resp.children.sort(key=lambda par: par.name)
         schema = ResponseStreamItemSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getDataSetItemsFromFile(self, config_id, dataSet_id,config_dict=None):
@@ -108,17 +108,17 @@ class Parser_Functions(object):
                 path.gid = path_object.id
 
             if (path is not None):
-                paths.append(path) 
+                paths.append(path)
 
         paths.sort(key=lambda par: par.order)
         resp = Response()
         resp.children = paths
         schema = ResponseFileDstPathsTreeSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEvcoStatementsFromFile(self, config_id, evco_id, config_dict=None):
@@ -143,18 +143,18 @@ class Parser_Functions(object):
                 statements.append(statement)
 
         statements.sort(key=lambda par: par.statementrank)
-        
+
         resp = Response()
         resp.children = statements
         schema = ResponseFileEvcStatementSchema()
-        
+
         resp.success = True
-         #params 
+         #params
 
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
-        
-        return output.data 
+
+        return output.data
 
 
     def getEdSourceFromFile(self, config_id, config_dict=None):
@@ -165,19 +165,19 @@ class Parser_Functions(object):
             ed_source = EDSource(config_obj.edSources_dict[key].id, config_obj.edSources_dict[key].template, "Source", config_obj.edSources_dict[key].name)
             ed_source.gid = config_obj.edSources_dict[key].id
             if (ed_source != None):
-                edSources.append(ed_source) 
-            
+                edSources.append(ed_source)
+
         edSources.sort(key=lambda par: par.order)
         resp = Response()
-        resp.children = [] 
-        
+        resp.children = []
+
         resp.children.extend(edSources)
         schema = ResponseEDSourceSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEdSourceItemsFromFile(self, config_id, source_id, config_dict=None):
@@ -190,11 +190,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = edSourceItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEsSourcesFromFile(self, config_id, config_dict=None):
@@ -206,19 +206,19 @@ class Parser_Functions(object):
             es_source.gid = config_obj.esSources_dict[key].id
 
             if (es_source != None):
-                esSources.append(es_source) 
+                esSources.append(es_source)
 
         esSources.sort(key=lambda par: par.order)
         resp = Response()
-        resp.children = [] 
-        
+        resp.children = []
+
         resp.children.extend(esSources)
         schema = ResponseESSourceSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEsSourceItemsFromFile(self, config_id, esSource_id, config_dict=None):
@@ -231,11 +231,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = esSourceItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEsModulesFromFile(self, config_id, config_dict=None):
@@ -247,19 +247,19 @@ class Parser_Functions(object):
             es_module.gid = config_obj.esModules_dict[key].id
 
             if (es_module != None):
-                esModules.append(es_module) 
+                esModules.append(es_module)
 
         esModules.sort(key=lambda par: par.order)
         resp = Response()
-        resp.children = [] 
-        
+        resp.children = []
+
         resp.children.extend(esModules)
         schema = ResponseESModuleDetailsSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEsModulesItemsFromFile(self, config_id, esModule_id, config_dict=None):
@@ -272,11 +272,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = esModuleItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getServiceFromFile(self, config_id, config_dict=None):
@@ -288,18 +288,18 @@ class Parser_Functions(object):
             service.gid = config_obj.services_dict[key].id
 
             if (service != None):
-                services.append(service) 
+                services.append(service)
 
         resp = Response()
-        resp.children = [] 
-        
+        resp.children = []
+
         resp.children.extend(services)
         schema = ResponseServiceSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getServiceItemsFromFile(self, config_id, service_id, config_dict=None):
@@ -312,11 +312,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = serviceItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getModulesFromFile(self, config_id, config_dict=None):
@@ -325,21 +325,21 @@ class Parser_Functions(object):
 
         for key in config_obj.modules_dict:
             module = FileModuleDetails(config_obj.modules_dict[key].id, config_obj.modules_dict[key].name, config_obj.modules_dict[key].module_type, config_obj.modules_dict[key].template)
-            module.gid = config_obj.modules_dict[key].id 
+            module.gid = config_obj.modules_dict[key].id
 
             if (module != None):
-                modules.append(module) 
+                modules.append(module)
 
         resp = Response()
-        resp.children = [] 
-        
+        resp.children = []
+
         resp.children.extend(modules)
         schema = ResponseFileModulesSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getModDetailsFromFile(self, config_id, module_id, config_dict=None):
@@ -356,7 +356,7 @@ class Parser_Functions(object):
         resp.success = True
         resp.children = []
         resp.children.append(moduleDetail)
-        
+
         output = schema.dump(resp)
 
         return output.data
@@ -375,11 +375,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = moduleItems
         schema = ResponseFileParamSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEndPathsFromFile(self, config_id, config_dict=None):
@@ -394,17 +394,17 @@ class Parser_Functions(object):
             endPath.gid = config_obj.endPaths_dict[key].id
             i = i+1
             if (endPath != None):
-                endPaths.append(endPath) 
+                endPaths.append(endPath)
 
         endPaths.sort(key=lambda par: par.order)
         resp = Response()
         resp.children = endPaths
         schema = ResponseFileEndPathsTreeSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getEndPathItemsFromFile(self, config_id, endPath_id=-1, config_dict=None):
@@ -428,7 +428,7 @@ class Parser_Functions(object):
                 endPathItem.children, i = self.buildPathItemChildren(config_obj.sequences_dict.get(child[0]).children, i, config_id, endPath_id)
                 endPathItem.gid = config_obj.sequences_dict.get(child[0]).id
 
-            endPathItem.vid = config_id    
+            endPathItem.vid = config_id
             i = i+1
 
             if endPathItem is not None:
@@ -439,11 +439,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children= endPathItems
         schema = ResponseFilePathItemSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getOutmodDetails(self, config_id, outputModule_id, config_dict=None):
@@ -460,7 +460,7 @@ class Parser_Functions(object):
         resp.success = True
         resp.children = []
         resp.children.append(outputModuleDetail)
-        
+
         output = schema.dump(resp)
 
         return output.data
@@ -510,7 +510,7 @@ class Parser_Functions(object):
                 moduleItems.append(moduleItem)
 
         return moduleItems, i
-    
+
     def getPathsFromFile(self, config_id, config_dict=None):
         config_obj = config_dict.get(int(config_id))
         paths = []
@@ -523,17 +523,17 @@ class Parser_Functions(object):
             path.gid = config_obj.paths_dict[key].id
             i = i+1
             if (path is not None):
-                paths.append(path) 
+                paths.append(path)
 
         paths.sort(key=lambda par: par.order)
         resp = Response()
         resp.children = paths
         schema = ResponseFilePathsTreeSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getPathItemsFromFile(self, config_id, path_id=-1, config_dict=None):
@@ -554,7 +554,7 @@ class Parser_Functions(object):
                 pathItem.children, i = self.buildPathItemChildren(config_obj.sequences_dict.get(child[0]).children, i, config_id, path_id)
                 pathItem.gid = config_obj.sequences_dict.get(child[0]).id
 
-            pathItem.vid = config_id    
+            pathItem.vid = config_id
             i = i+1
 
             if pathItem is not None:
@@ -565,11 +565,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children= pathItems
         schema = ResponseFilePathItemSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getPathDetailsFromFile(self, config_id, path_id=-1, config_dict=None):
@@ -610,11 +610,11 @@ class Parser_Functions(object):
         resp.children = []
         resp.children.append(pathDetail)
         schema = ResponsePathDetailsSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def buildPathItemChildren(self, children, i, config_id, path_id, config_dict=None):
@@ -664,11 +664,11 @@ class Parser_Functions(object):
         resp = Response()
         resp.children = columns
         schema = ResponseSummaryColumnSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def getSummaryItemsFromFile(self, config_id, config_dict=None):
@@ -758,7 +758,7 @@ class Parser_Functions(object):
                             else:
                                 LV1_value = self.checkPathChildren(path.children,LV1_value,1, config_obj)
                                 LV1_value = "Level_1_Seeds_Expression###" + LV1_value
-                            
+
                             if trigger_path == {}:
                                 if path.name in prescale_table:
                                     values = prescale_table.get(path.name)
@@ -803,18 +803,18 @@ class Parser_Functions(object):
 
         resp.children.sort(key=lambda par: par.name)
         schema = ResponseSummaryItemSchema()
-        
+
         resp.success = True
 
         output = schema.dump(resp)
-            
+
         return output.data
 
     def checkPathChildren(self, children, LV1_value, count, config_obj):
         L1TechTrigger = False
         for m in children:
             if m[0] in config_obj.modules_dict and m[1] == 'mod':
-                module = config_obj.modules_dict.get(m[0]) 
+                module = config_obj.modules_dict.get(m[0])
                 if module.template == "HLTLevel1GTSeed":
                     for c in module.children:
                         moduleParamChild = config_obj.parameters_dict.get(c)
@@ -832,25 +832,25 @@ class Parser_Functions(object):
                                 L1TechTrigger
             elif m[0] in config_obj.sequences_dict and m[1] == 'seq':
                 sequence = config_obj.sequences_dict.get(m[0])
-                self.checkPathChildren(sequence.children,LV1_value,count, config_obj)       
+                self.checkPathChildren(sequence.children,LV1_value,count, config_obj)
 
         if L1TechTrigger == False:
             return LV1_value
         else:
             # PUT CODE FOR LEVEL1_SEED_EXPRESSION
-            return LV1_value 
+            return LV1_value
 
     def getCnfDetailsFromFile(self, config_id, config_dict=None):
         config_obj = config_dict.get(int(config_id))
 
         version = FileVersion(config_id, config_obj.config_name)
-        
+
         resp = Response()
         schema = ResponseFileVersionSchema()
         resp.success = True
         resp.children = []
         resp.children.append(version)
-        
+
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
 

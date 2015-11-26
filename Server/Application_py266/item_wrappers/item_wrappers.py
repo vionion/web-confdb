@@ -1,5 +1,5 @@
 # File Item_wrappers.py Description:
-# This contains the wrapper class of the several system entity. 
+# This contains the wrapper class of the several system entity.
 #
 # Class: Service
 # The Service class represents the Service modules
@@ -13,8 +13,8 @@ class Service(object):
         self.release_id = release_id
         self.name = name
         self.s_type = s_type
-        
-        
+
+
 class PathDetails(object):
 
     def __init__(self, id=0, name="", labels=None, values=[],author="", description=""):
@@ -24,7 +24,7 @@ class PathDetails(object):
         self.values = values
         self.author = author
         self.desc = description
-        
+
 class Streamitem(object):
 
     def __init__(self, id=0, fractodisk = -1, name="", s_type=""):
@@ -34,7 +34,7 @@ class Streamitem(object):
         self.fractodisk = fractodisk
         self.s_type = s_type
         self.children = []
-        
+
 class ESModuleDetails(object):
 
     def __init__(self, id=0, id_templ = -1, name="", mclass = "", order = -1):
@@ -42,9 +42,9 @@ class ESModuleDetails(object):
         self.gid = -1
         self.id_templ = id_templ
         self.name = name
-        self.mclass = mclass 
-        self.order = order 
-            
+        self.mclass = mclass
+        self.order = order
+
 class OutputModuleDetails(object):
 
     def __init__(self, id=0, name="", mclass = "", author="", stream="", streamid = -1):
@@ -55,7 +55,7 @@ class OutputModuleDetails(object):
         self.author = author
         self.stream = stream
         self.streamid = streamid
-        
+
 class GlobalPset(object):
 
     def __init__(self, id=0, name="", tracked = -1):
@@ -63,7 +63,7 @@ class GlobalPset(object):
         self.gid = -1
         self.name = name
         self.tracked = tracked
-        
+
 class EDSource(object):
 
     def __init__(self, id=0, id_templ = -1, name="", tclass= "", order = -1):
@@ -72,8 +72,8 @@ class EDSource(object):
         self.id_templ = id_templ
         self.name = name
         self.tclass = tclass
-        self.order = order     
-          
+        self.order = order
+
 class ESSource(object):
 
     def __init__(self, id=0, id_templ = -1, name="", tclass = "", order = -1):
@@ -82,22 +82,22 @@ class ESSource(object):
         self.id_templ = id_templ
         self.name = name
         self.tclass = tclass
-        self.order = order 
-        
-class SummaryColumn(object): 
+        self.order = order
+
+class SummaryColumn(object):
 
     def __init__(self, gid=-1, name="", order = -1):
         self.gid = gid
         self.name = name
-        self.order = order         
-        
-class SummaryValue(object): 
+        self.order = order
+
+class SummaryValue(object):
 
     def __init__(self, label="", value = ""):
         self.label = label
-        self.value = value        
-        
-class Summaryitem(object): 
+        self.value = value
+
+class Summaryitem(object):
 
     def __init__(self, id=0, name="", sit="", leaf = False, icon = ""):
         self.id = id
@@ -109,16 +109,16 @@ class Summaryitem(object):
         self.children = []
         self.values = []
 
-class ListContainer(object): 
+class ListContainer(object):
     def __init__(self):
         self.children = []
-        
-class SmartPrescale(object): 
+
+class SmartPrescale(object):
     def __init__(self,stream=-1):
         self.stream = stream
-        self.children = {}        
-        
-class UrlString(object): 
+        self.children = {}
+
+class UrlString(object):
     def __init__(self,gid=0,url=""):
         self.gid = gid
         self.url = url
@@ -138,7 +138,7 @@ class FileModuleDetails(object):
         self.name = name
         self.mt = mt
         self.mclass = mclass
-       
+
 class FilePathitem(object):
     def __init__(self, id=0, name="", id_pathid= 0, paetype = -1, order = -1, operator = 0):
         self.id = id

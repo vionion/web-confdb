@@ -14,17 +14,17 @@ class SATool(cherrypy.Tool):
         we use the scoped_session that will create a session
         on a per thread basis so that you don't worry about
         concurrency on the session object itself.
- 
+
         This tools binds a session to the engine each time
         a requests starts and commits/rollbacks whenever
         the request terminates.
         """
-	self.current_dir = current_dir
-	self.log = log
+        self.current_dir = current_dir
+        self.log = log
         cherrypy.Tool.__init__(self, 'on_start_resource',
                                self.bind_session,
                                priority=20)
- 
+
     def _setup(self):
         cherrypy.Tool._setup(self)
         cherrypy.request.hooks.attach('on_end_resource',
@@ -43,10 +43,10 @@ class SATool(cherrypy.Tool):
 
         session_online = cherrypy.engine.publish('bind-online-session').pop()
         session_offline = cherrypy.engine.publish('bind-offline-session').pop()
-        
+
         cherrypy.request.db_online = session_online
-        cherrypy.request.db_offline = session_offline 
- 
+        cherrypy.request.db_offline = session_offline
+
     def commit_transaction(self):
         """
         Commits the current transaction or rolls back
@@ -57,7 +57,7 @@ class SATool(cherrypy.Tool):
 #            return
 #        cherrypy.request.db = None
 #        cherrypy.engine.publish('commit-session')
- 
+
         if ((not hasattr(cherrypy.request, 'db_offline')) and (not hasattr(cherrypy.request, 'db_online'))):
             return
         cherrypy.request.db_online = None
@@ -67,23 +67,23 @@ class SATool(cherrypy.Tool):
         cherrypy.engine.publish('commit-offline-session')
 
     def cleanup_files(self):
-        
+
         "Remove the generated file after the download"
 #        print "path_info: ", cherrypy.request.path_info
 #        print "params: ", cherrypy.request.params
         path_info = cherrypy.request.path_info
 
         path = ""
-        
+
         if "download" in path_info:
 #            print "FILEPATH: ", cherrypy.request.params['filepath']
-            # path = self.current_dir + "/exported/" + cherrypy.request.params['filepath'] + '.py' 
- 	    # folder = os.environ['STATEDIR']
-	    folder = os.environ.get('STATEDIR')
-            path = folder + "/" + cherrypy.request.params['filepath'] + '.py'	       
+            # path = self.current_dir + "/exported/" + cherrypy.request.params['filepath'] + '.py'
+            # folder = os.environ['STATEDIR']
+            folder = os.environ.get('STATEDIR')
+            path = folder + "/" + cherrypy.request.params['filepath'] + '.py'
         if os.path.exists(path):
             #print "nothing"
-	    log_msg = "DELETING FILE: "+path
+            log_msg = "DELETING FILE: "+path
             self.log.error(log_msg)
-	    unlink(path)
+            unlink(path)
 

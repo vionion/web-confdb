@@ -1,9 +1,9 @@
 # File Pathitem.py Description:
 # This contains the wrapper class of the Pathitem entity (Sequences and Modules)
 #
-# Class: Pathitem    
-    
-       
+# Class: Pathitem
+
+
 class Pathitem(object):
 
     def __init__(self, id=0,name="", id_pathid= 0, paetype = -1, id_parent = -1, lvl = -1, order = -1, operator = 0):
