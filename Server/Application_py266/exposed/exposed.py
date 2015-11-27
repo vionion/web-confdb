@@ -2261,10 +2261,9 @@ class Exposed(object):
                                         values = one_values
 				
                                     i2 = 0
-				                    
                                     sp_value = smart_paths[p.name]
-				                    smpr = "smart_pre" + "###" + str(sp_value) 
-				                    pat.values.append(smpr)
+                                    smpr = "smart_pre" + "###" + str(sp_value) 
+                                    pat.values.append(smpr)
 
                                     for c in columns:
 
@@ -2292,7 +2291,10 @@ class Exposed(object):
                                 pat.gid = sumMap.put(idsumgen,pat,pat_id)
                                 
                                 values = zero_values
-                                
+				
+                                smpr = "smart_pre" + "###" + str(0)
+                                pat.values.append(smpr)
+
                                 i2 = 0
                                 for c in columns:
 

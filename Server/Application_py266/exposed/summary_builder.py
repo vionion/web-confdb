@@ -350,7 +350,7 @@ class SummaryBuilder():
 
                     	for e in expressions:
                             prescale = 1
-			    parts = e.split('/')
+			                parts = e.split('/')
 
                             if len(parts) == 2:
                             	pre_str = parts[1]

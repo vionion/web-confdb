@@ -934,7 +934,14 @@ class ConfDbQueries(object):
 #                print ("PARAMETERS EXCEPTION HERE")
                 log.error('ERROR: getOUMElements - input parameters error')
 
-        elements = db.query(OumElement).filter(OumElement.id_streamid == oumId).order_by(OumElement.id).all()  
+        # elements = db.query(OumElement).filter(OumElement.id_streamid == oumId).order_by(OumElement.id).all()  
+	
+        elements = db.query(OumElement).from_statement(text("select u_outmelements.* from "
+                + "u_outmelements, "
+                + "(select max(id) as id from u_outmelements group by name, lvl, id_streamid) unique_id "
+                + "where u_outmelements.id_streamid = :streamid "
+                + "and u_outmelements.id = unique_id.id "
+                + "order by u_outmelements.id ")).params(streamid=oumId).all()
 
         return elements
     
@@ -1192,8 +1199,8 @@ class ConfDbQueries(object):
                 log.error('ERROR: getSmartPrescaleModule - input parameters error')
                 
         #smMods = db.query(Pathitems).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').all()
- 	
-	smMods = db.query(Pathitems).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == ver_id ).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).all()       
+ 	      
+        smMods = db.query(Pathitems).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == ver_id ).filter(Pathitems.id_pathid.in_(paths)).filter(Pathitems.id_pae == ModToTemp.id_pae).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'TriggerResultsFilter').filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).all()       
 
         return smMods        
                 

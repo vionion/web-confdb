@@ -518,6 +518,7 @@ class DataBuilder(object):
         return result + "\n"
 
     def getEndPaths(self, ver_id, id_rel, db = None, log=None):
+        
         queries = self.queries
         modsMap = ModulesDict()
         seqsMap = SequencesDict()
@@ -529,7 +530,7 @@ class DataBuilder(object):
         items = None
         lista = None
         lvlzelems = None
-
+        
         for path in global_endPaths:
             result = result + "process." + path.name + " = " + "cms.EndPath( "
 
@@ -542,10 +543,10 @@ class DataBuilder(object):
                 return result  
 
             elements_dict = dict((x.id, x) for x in elements)
-            
+
             seq = {} 
             lvlZeroSeq_Dict = {}
-            
+
             for p in items:
                 elem = elements_dict[p.id_pae]
                 item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
@@ -568,13 +569,13 @@ class DataBuilder(object):
 
             lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
             pats = []
-                
+
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
                 item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
                 item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
                 pats.insert(item.order,item)
-            
+
             lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
             for lzseq in lvlZeroSeq_Dict_keys:
                 lzsequence = seq[lzseq] 
@@ -583,7 +584,7 @@ class DataBuilder(object):
             outmodule = queries.getOumStreamid(path.id, db, log)
             if (outmodule != None):
                 stream = queries.getStreamid(outmodule.id_streamid, db, log)
-            
+
                 oumName = "hltOutput"+stream.name
                 oum = Pathitem(outmodule.id_streamid, oumName, outmodule.id_pathid, 3, -1, 0, outmodule.order)
 
@@ -598,11 +599,11 @@ class DataBuilder(object):
                     result = result + "cms.ignore(process." + pat.name + ")" + " + "
                 elif pat.operator == 1:
                     result = result + "~process." + pat.name + " + "
-            
+
             result = result[:-2] + ")\n"
 
         return result + "\n"
-
+ 
     def getSchedule(self):
 
         if global_paths_str + global_endpaths_str == "":
