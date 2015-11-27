@@ -1,5 +1,5 @@
 # File Parameter.py Description:
-# This contains the wrapper class of the Parameter entity. 
+# This contains the wrapper class of the Parameter entity.
 # The Parameter class represents the parameter of the modules
 #
 # Class: Parameter

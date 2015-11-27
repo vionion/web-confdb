@@ -1,20 +1,20 @@
 # File exposed.py Description:
 # This files contains the definitions of the classes mapping the tables in the DB
-# 
+#
 # Class: Pathidconf, Paths, Pathids, Pathelement, Pathitem, Pathitems, Paetypes,
 #       Modelement, Moduleitem, ModTemplate, ModToTemp, ModTelement, Moduletypes
 #       Directory, Configuration, Version
 
 
 from sqlalchemy import Sequence
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, select, DateTime, case, and_, func, join, CLOB 
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, select, DateTime, case, and_, func, join, CLOB
 from sqlalchemy.orm import relationship, backref, column_property, object_session
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql import text, literal_column
 
 Base = automap_base()
 
-#---------------- SoftRelease ------------  
+#---------------- SoftRelease ------------
 class Release(Base):
     # nome della tabella
     __tablename__ = 'u_softreleases'
@@ -22,7 +22,7 @@ class Release(Base):
     id = Column('id', Integer, primary_key=True)
     releasetag = Column(String)
 
-#---------------- Path items: Paths, Paths in Version, Sequences, Moduels ------------  
+#---------------- Path items: Paths, Paths in Version, Sequences, Moduels ------------
 class Moduletypes(Base):
     __tablename__ = 'u_moduletypes'
 
@@ -55,7 +55,7 @@ class Pathidconf(Base):
     id = Column('id', Integer, primary_key=True)
     id_confver = Column(ForeignKey('u_confversions.id'))
     id_pathid = Column(ForeignKey('u_pathids.id'))
- 
+
 class Paths(Base):
     # nome della tabella
     __tablename__ = 'u_paths'
@@ -77,7 +77,7 @@ class Pathids(Base):
     )
     isEndPath = Column('isendpath', Integer)
     pit = "pat"
-  
+
 class Pathelement(Base):
     # nome della tabella
     __tablename__ = 'u_paelements'
@@ -94,7 +94,7 @@ class Pathelement(Base):
     mtype = column_property(
         select([Moduletypes.mtype]).where(and_(Moduletypes.id == ModTemplate.id_mtype, ModTemplate.id == ModToTemp.id_templ, ModToTemp.id_pae == id))
     )
-    
+
 class Pathitems(Base):
     __tablename__ = 'u_pathid2pae'
 
@@ -102,38 +102,38 @@ class Pathitems(Base):
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_parent = Column(Integer)
-    operator = Column(Integer)  
-    name = column_property( 
+    operator = Column(Integer)
+    name = column_property(
         select([Pathelement.name]).where(Pathelement.id == id_pae)
     )
     paetype = column_property(
         select([Pathelement.paetype]).where(Pathelement.id == id_pae)
-    ) 
+    )
     temp_name = column_property(
         select([Pathelement.name]).where(Pathelement.id == id_pae)
     )
     lvl = Column(Integer) #1, 'mod', 2, 'seq', 3, 'oum', 'Undefined'
-    order = Column('ord', Integer)    
+    order = Column('ord', Integer)
 
 class Paetypes(Base):
      # nome della tabella
     __tablename__ = 'u_paetypes'
 
     id = Column('id', Integer, primary_key=True)
-    name = Column(String) 
-    
+    name = Column(String)
+
 class Variables(Base):
     # nome della tabella
     __tablename__ = 'u_variables'
-    id = Column('id', Integer, primary_key=True)    
+    id = Column('id', Integer, primary_key=True)
     name = Column(String)
-    
+
 class Values(Base):
     # nome della tabella
     __tablename__ = 'u_values'
     id = Column('id', Integer, primary_key=True)
     value = Column(String)
-    
+
 class PathToVarVal(Base):
     # nome della tabella
     __tablename__ = 'u_pathid2varval'
@@ -147,8 +147,8 @@ class PathToVarVal(Base):
     value = column_property(
         select([Values.value]).where(Values.id == id_val)
     )
-        
-#------------------ Module items: Pset, VPset, Params ---------------    
+
+#------------------ Module items: Pset, VPset, Params ---------------
 class Modelement(Base):
      # nome della tabella
     __tablename__ = 'u_moelements'
@@ -160,7 +160,7 @@ class Modelement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-    
+
 class Moduleitem(Base):
      # nome della tabella
     __tablename__ = 'u_pae2moe'
@@ -226,14 +226,14 @@ class ModTelement(Base):
     id = Column('id', Integer, primary_key=True)
     id_modtemp = Column('id_modtemplate', Integer, ForeignKey('u_moduletemplates.id'))
     moetype = Column(Integer)
-    name = Column(String)    
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-    
+
 class ModTemp2Rele(Base):
     # nome della tabella
     __tablename__ = 'u_modt2rele'
@@ -241,23 +241,23 @@ class ModTemp2Rele(Base):
     id = Column('id', Integer, primary_key=True)
     id_modtemp = Column('id_modtemplate', Integer, ForeignKey('u_moduletemplates.id'))
     id_release = Column(Integer)
-        
-    
+
+
 #------------ Directories and directory items --------------------
 
 class Directory(Base):
     __tablename__ = 'u_directories'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_parentdir = Column(Integer)
-    name = Column(String)    
+    name = Column(String)
     created = Column(DateTime)
-    
+
 class Configuration(Base):
     __tablename__ = 'u_configurations'
-    
+
     id = Column('id', Integer, primary_key=True)
-    name = Column(String)    
+    name = Column(String)
 
 class Version(Base):
     # nome della tabella
@@ -268,7 +268,7 @@ class Version(Base):
     id_parentdir = Column('id_parentdir', Integer, ForeignKey('u_directories.id'))
     name = Column(String)
     id_release = Column('id_release', Integer, ForeignKey('u_softreleases.id'))
-    version = Column(Integer)   
+    version = Column(Integer)
     created = Column(DateTime)
     creator = Column(String)
     processname = Column(String)
@@ -278,30 +278,30 @@ class Version(Base):
         select([Release.releasetag]).where(Release.id == id_release)
     )
 
-    
-#------------ Service and Service Templates (plus items) --------------------   
+
+#------------ Service and Service Templates (plus items) --------------------
 
 class SrvTemplate(Base):
     __tablename__ = 'u_srvtemplates'
-    
+
     id = Column('id', Integer, primary_key=True)
-    name = Column(String)    
+    name = Column(String)
 
 
 class Srvt2Rele(Base):
     __tablename__ = 'u_srvt2rele'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_srvtemplate = Column('id_srvtemplate', Integer, ForeignKey('u_srvtemplates.id'))
     id_release = Column(Integer)
 
 class SrvTempElement(Base):
     __tablename__ = 'u_srvtelements'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_srvtemplate = Column('id_srvtemplate', Integer, ForeignKey('u_srvtemplates.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -311,24 +311,24 @@ class SrvTempElement(Base):
 
 class Service(Base):
     __tablename__ = 'u_services'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_template = Column('id_template', Integer, ForeignKey('u_srvtemplates.id'))
-      
+
 class Conf2Srv(Base):
     __tablename__ = 'u_conf2srv'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
-    id_service = Column('id_service', Integer, ForeignKey('u_services.id'))  
+    id_service = Column('id_service', Integer, ForeignKey('u_services.id'))
 
 class SrvElement(Base):
     __tablename__ = 'u_srvelements'
-    
+
     id = Column('id', Integer, primary_key=True)
-    id_service = Column('id_service', Integer, ForeignKey('u_services.id')) 
+    id_service = Column('id_service', Integer, ForeignKey('u_services.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -342,76 +342,76 @@ class SrvElement(Base):
 
 
 
-#------------ Streams ------------------------------------------------------------ 
+#------------ Streams ------------------------------------------------------------
 
 
 class Stream(Base):
     __tablename__ = 'u_streams'
-    
+
     id = Column('id', Integer, primary_key=True)
-    name = Column(String) 
+    name = Column(String)
 
 class StreamId(Base):
     __tablename__ = 'u_streamids'
-    
+
     id = Column('id', Integer, primary_key=True)
-    id_stream = Column('id_stream', Integer, ForeignKey('u_streams.id')) 
+    id_stream = Column('id_stream', Integer, ForeignKey('u_streams.id'))
     fractodisk = Column(Integer)
     name = column_property(
         select([Stream.name]).where(Stream.id == id_stream)
     )
-    
+
 class PathidToOutM(Base):
     __tablename__ = 'u_pathid2outm'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
     order = Column('ord',Integer)
-    
-#------------ Datasets ------------------------------------------------------------       
+
+#------------ Datasets ------------------------------------------------------------
 class Dataset(Base):
     __tablename__ = 'u_datasets'
-    
+
     id = Column('id', Integer, primary_key=True)
     name = Column(String)
-    
+
 class DatasetId(Base):
     __tablename__ = 'u_datasetids'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_dataset = Column('id_dataset', Integer, ForeignKey('u_datasets.id'))
     name = column_property(
         select([Dataset.name]).where(Dataset.id == id_dataset)
-    )    
-    
+    )
+
 class PathidToStrDst(Base):
     __tablename__ = 'u_pathid2strdst'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
     id_datasetid = Column('id_datasetid', Integer, ForeignKey('u_datasetids.id'))
 
-    
+
 class ConfToStrDat(Base):
     __tablename__ = 'u_conf2strdst'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_datasetid = Column('id_datasetid', Integer, ForeignKey('u_datasetids.id'))
-    id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))    
-    
-#------------ Event Contents (with statements) ----------------------------------------       
+    id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
+
+#------------ Event Contents (with statements) ----------------------------------------
 class EventContent(Base):
     __tablename__ = 'u_eventcontents'
-    
+
     id = Column('id', Integer, primary_key=True)
     name = Column(String)
-    
+
 class EventContentId(Base):
     __tablename__ = 'u_eventcontentids'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_evco = Column('id_evco', Integer, ForeignKey('u_eventcontents.id'))
     name = column_property(
@@ -420,15 +420,15 @@ class EventContentId(Base):
 
 class ConfToEvCo(Base):
     __tablename__ = 'u_conf2evco'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_evcoid = Column('id_evcoid', Integer, ForeignKey('u_eventcontentids.id'))
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
 
-    
+
 class EvCoStatement(Base):
     __tablename__ = 'u_evcostatements'
-    
+
     id = Column('id', Integer, primary_key=True)
     classn = Column(String)
     modulel = Column(String)
@@ -441,25 +441,25 @@ class EvCoStatement(Base):
 
 class EvCoToStat(Base):
     __tablename__ = 'u_evco2stat'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_evcoid = Column('id_evcoid', Integer, ForeignKey('u_eventcontentids.id'))
     id_stat = Column('id_stat', Integer, ForeignKey('u_evcostatements.id'))
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
-    statementrank = Column(Integer)    
+    statementrank = Column(Integer)
 
 
 class EvCoToStream(Base):
     __tablename__ = 'u_evco2stream'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_evcoid = Column('id_evcoid', Integer, ForeignKey('u_eventcontentids.id'))
     id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
 
 
 
-    
-#-------------------- ES Template and elements ------------------    
+
+#-------------------- ES Template and elements ------------------
 class ESModTemplate(Base):
      # nome della tabella
     __tablename__ = 'u_esmtemplates'
@@ -469,7 +469,7 @@ class ESModTemplate(Base):
 
 class EsmtToRele(Base):
     __tablename__ = 'u_esmt2rele'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_esmtemplate = Column('id_esmtemplate', Integer, ForeignKey('u_esmtemplates.id'))
     id_release = Column(Integer)
@@ -479,17 +479,17 @@ class ESMTempElement(Base):
     __tablename__ = 'u_esmtelements'
 
     id = Column('id', Integer, primary_key=True)
-    id_esmtemplate = Column('id_esmtemplate', Integer, ForeignKey('u_esmtemplates.id'))   
+    id_esmtemplate = Column('id_esmtemplate', Integer, ForeignKey('u_esmtemplates.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-    
-#-------------------- ES Module and elements ------------------    
+
+#-------------------- ES Module and elements ------------------
 class ESModule(Base):
      # nome della tabella
     __tablename__ = 'u_esmodules'
@@ -500,7 +500,7 @@ class ESModule(Base):
 
 class ConfToEsm(Base):
     __tablename__ = 'u_conf2esm'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_esmodule = Column('id_esmodule', Integer, ForeignKey('u_esmodules.id'))
@@ -513,7 +513,7 @@ class ESMElement(Base):
     id = Column('id', Integer, primary_key=True)
     id_esmodule = Column('id_esmodule', Integer, ForeignKey('u_esmodules.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -523,8 +523,8 @@ class ESMElement(Base):
 
 
 
-    
-#-------------------- Output Module elements ------------------ 
+
+#-------------------- Output Module elements ------------------
 class OumElement(Base):
      # nome della tabella
     __tablename__ = 'u_outmelements'
@@ -532,7 +532,7 @@ class OumElement(Base):
     id = Column('id', Integer, primary_key=True)
     id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -543,14 +543,14 @@ class OumElement(Base):
 #------------- Global PSET and Elements ---------------
 class Globalpset(Base):
     __tablename__ = 'u_globalpsets'
-    
+
     id = Column('id', Integer, primary_key=True)
     name = Column(String)
     tracked = Column(Integer)
-      
+
 class Conf2Gpset(Base):
     __tablename__ = 'u_conf2gpset'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_gpset = Column('id_gpset', Integer, ForeignKey('u_globalpsets.id'))
@@ -558,11 +558,11 @@ class Conf2Gpset(Base):
 
 class GpsetElement(Base):
     __tablename__ = 'u_gpsetelements'
-    
+
     id = Column('id', Integer, primary_key=True)
-    id_gpset = Column('id_gpset', Integer, ForeignKey('u_globalpsets.id')) 
+    id_gpset = Column('id_gpset', Integer, ForeignKey('u_globalpsets.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -580,7 +580,7 @@ class EDSourceTemplate(Base):
 
 class EdstToRele(Base):
     __tablename__ = 'u_edst2rele'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_edstemplate = Column('id_edstemplate', Integer, ForeignKey('u_edstemplates.id'))
     id_release = Column(Integer)
@@ -590,9 +590,9 @@ class EDSTempElement(Base):
     __tablename__ = 'u_edstelements'
 
     id = Column('id', Integer, primary_key=True)
-    id_edstemplate = Column('id_edstemplate', Integer, ForeignKey('u_edstemplates.id'))   
+    id_edstemplate = Column('id_edstemplate', Integer, ForeignKey('u_edstemplates.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -600,7 +600,7 @@ class EDSTempElement(Base):
     valuelob = Column(CLOB)
     tracked = Column(Integer)
 
-    
+
 #------------ ED SOURCE and Elements -----------------
 class EDSource(Base):
      # nome della tabella
@@ -609,10 +609,10 @@ class EDSource(Base):
     id = Column('id', Integer, primary_key=True)
     id_template = Column('id_template', Integer, ForeignKey('u_edstemplates.id'))
 
-    
+
 class ConfToEds(Base):
     __tablename__ = 'u_conf2eds'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_edsource = Column('id_edsource', Integer, ForeignKey('u_edsources.id'))
@@ -625,14 +625,14 @@ class EDSElement(Base):
     id = Column('id', Integer, primary_key=True)
     id_edsource = Column('id_edsource', Integer, ForeignKey('u_edsources.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-    
+
 #-------------- ES SOURCE Templates and Elements --------
 class ESSourceTemplate(Base):
      # nome della tabella
@@ -643,7 +643,7 @@ class ESSourceTemplate(Base):
 
 class EsstToRele(Base):
     __tablename__ = 'u_esst2rele'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_esstemplate = Column('id_esstemplate', Integer, ForeignKey('u_esstemplates.id'))
     id_release = Column(Integer)
@@ -653,9 +653,9 @@ class ESSTempElement(Base):
     __tablename__ = 'u_esstelements'
 
     id = Column('id', Integer, primary_key=True)
-    id_esstemplate = Column('id_esstemplate', Integer, ForeignKey('u_esstemplates.id'))   
+    id_esstemplate = Column('id_esstemplate', Integer, ForeignKey('u_esstemplates.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)
@@ -663,7 +663,7 @@ class ESSTempElement(Base):
     valuelob = Column(CLOB)
     tracked = Column(Integer)
 
-    
+
 #------------ ES SOURCE and Elements -----------------
 class ESSource(Base):
      # nome della tabella
@@ -672,10 +672,10 @@ class ESSource(Base):
     id = Column('id', Integer, primary_key=True)
     id_template = Column('id_template', Integer, ForeignKey('u_esstemplates.id'))
     name = Column(String)
-    
+
 class ConfToEss(Base):
     __tablename__ = 'u_conf2ess'
-    
+
     id = Column('id', Integer, primary_key=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_essource = Column('id_essource', Integer, ForeignKey('u_essources.id'))
@@ -688,7 +688,7 @@ class ESSElement(Base):
     id = Column('id', Integer, primary_key=True)
     id_essource = Column('id_essource', Integer, ForeignKey('u_essources.id'))
     moetype = Column(Integer)
-    name = Column(String) 
+    name = Column(String)
     lvl = Column(Integer)
     order = Column('ord',Integer)
     paramtype = Column(String)

@@ -1,5 +1,5 @@
 # File converter.py Description:
-# 
+#
 # Class: Converter
 
 from confdb_queries.confdb_queries import ConfDbQueries
@@ -25,7 +25,7 @@ import os.path
 current_dir_log = os.path.dirname(os.path.abspath(__file__))
 
 class Converter(object):
-    
+
     data_builder = DataBuilder()
     queries = ConfDbQueries()
 
@@ -59,7 +59,7 @@ class Converter(object):
 
         #Adding Global Psets
         gpsets = self.data_builder.getGlobalPsets(version.id, db, log)
-        
+
         # Adding Streams
         streams = 'process.streams = cms.PSet(\n' + self.data_builder.getStreams(version.id, db)
 
@@ -68,7 +68,7 @@ class Converter(object):
 
         # Adding ED-Sources
         edSources = self.data_builder.getEDSources(version.id, version.id_release, db)
-        
+
         # Adding ES-Sources
         esSources = self.data_builder.getESSource(version.id, version.id_release, db, log)
 
@@ -101,23 +101,23 @@ class Converter(object):
 
         try:
             id_file = str(counter.getNext())
-           # file_name = 'exported/Config' + id_file + '.py' 
-           # file_name = '/data/srv/HG1509j-comp4/apps/confdb/Application_py266/exported/Config'	+ id_file + '.py'
-	    folder = ''
-	    if os.environ.get('STATEDIR') is None:
-	    	log.error('STATEDIR IS NULL')
-	    else:
-	    	folder = os.environ.get('STATEDIR')	
-	    # folder = os.environ['STATEDIR']
-	    file_name = folder + '/Config' + id_file + '.py'
-	    #file_name = current_dir + '/exported/Config' + id_file + '.py'
-	    log.error('STATE FOLDER DIRECTORY LOGGED----------------------------')
-	    log.error(folder)
-	    log.error('CURRENT DIRECTORY LOGGED----------------------------')
-	    log.error(current_dir_log)
-	    log.error('FILENAME LOGGED----------------------------')
-            log.error(file_name)	
-	    file = open(file_name,'w')
+           # file_name = 'exported/Config' + id_file + '.py'
+           # file_name = '/data/srv/HG1509j-comp4/apps/confdb/Application_py266/exported/Config'        + id_file + '.py'
+            folder = ''
+            if os.environ.get('STATEDIR') is None:
+                log.error('STATEDIR IS NULL')
+            else:
+                folder = os.environ.get('STATEDIR')
+            # folder = os.environ['STATEDIR']
+            file_name = folder + '/Config' + id_file + '.py'
+            #file_name = current_dir + '/exported/Config' + id_file + '.py'
+            log.error('STATE FOLDER DIRECTORY LOGGED----------------------------')
+            log.error(folder)
+            log.error('CURRENT DIRECTORY LOGGED----------------------------')
+            log.error(current_dir_log)
+            log.error('FILENAME LOGGED----------------------------')
+            log.error(file_name)
+            file = open(file_name,'w')
             file.write(data)
             file.close()
             fn_temp = 'Config' + id_file
@@ -130,8 +130,8 @@ class Converter(object):
     def writeHeader(self, version_name, release_tag, process_name):
         result = "# " + version_name + " (" + release_tag + ")" + "\n\n"
         result = result + 'import FWCore.ParameterSet.Config as cms\n\n'
-        result = result + 'process = cms.Process( "' + process_name + '" )\n\n' 
-        result = result + 'process.HLTConfigVersion = cms.PSet(\n' 
+        result = result + 'process = cms.Process( "' + process_name + '" )\n\n'
+        result = result + 'process.HLTConfigVersion = cms.PSet(\n'
         result = result + self.data_builder.getTab(2) + "tableName = cms.string('" + version_name + "')\n)\n\n"
 
         return result
@@ -146,15 +146,15 @@ class Converter(object):
 
         if online == 'True':
             engine = create_engine(connectionString.connectUrlonline)
-            
+
         else:
             engine = create_engine(connectionString.connectUrloffline)
 
         Base.prepare(engine, reflect=True)
         session = scoped_session(sessionmaker(engine))
-        
+
         data = self.data_builder.getModules(version_id, version_rel, session)
-        
+
         child_conn.send(data)
         child_conn.close()
 

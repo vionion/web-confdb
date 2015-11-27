@@ -12,7 +12,7 @@ class PathsSchema(Schema):
     class Meta:
         fields = ("id", "id_path", "name", "pit")
         ordered = True
-    
+
 class PathsTreeSchema(Schema):
 #    id = fields.Integer()
     gid = fields.Integer()
@@ -24,16 +24,16 @@ class PathsTreeSchema(Schema):
     pit = fields.String()
     order = fields.Integer()
     icon = fields.Method("get_icon")
-    
+
     def get_Name(self,obj):
         return obj.name
-    
+
     def get_icon(self,obj):
         if obj.isEndPath == 0:
             return 'resources/Path_3.ico'
         elif obj.isEndPath == 1:
-            return 'resources/EndPath.ico'   
-        
+            return 'resources/EndPath.ico'
+
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
         ordered = True
@@ -42,15 +42,15 @@ class PathDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
     labels = fields.List(fields.String())
-    values =  fields.List(fields.Integer())  
+    values =  fields.List(fields.Integer())
     author = fields.String()
     desc = fields.String()
- 
+
     class Meta:
         fields = ("gid", "name", "labels", "values", "author", "desc")
-        ordered = True        
-        
-        
+        ordered = True
+
+
 class PathItemSchema(Schema):
 #    id = fields.Integer()
     gid = fields.Integer()
@@ -66,22 +66,22 @@ class PathItemSchema(Schema):
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
-    
+
     def get_Name(self,obj):
         if obj.paetype == 1:
-            if obj.operator == 0: 
+            if obj.operator == 0:
                 return obj.name
             elif obj.operator == 2:
                 return "(Ignored) "+obj.name
             elif obj.operator == 1:
                 return "(Negate) "+obj.name
-        
+
         else:
             return obj.name
-    
+
     def get_order(self,obj):
         return obj.order
-    
+
     def get_icon(self,obj):
         if obj.paetype == 1:
             return 'resources/Module_3.ico'
@@ -91,7 +91,7 @@ class PathItemSchema(Schema):
             return 'resources/OutputModule2.ico'
         else:
             return 'resources/Module_3.ico'
-    
+
     def get_item_type(self, obj):
         if obj.paetype == 1:
             return 'mod'
@@ -101,23 +101,23 @@ class PathItemSchema(Schema):
             return 'oum'
         else:
             return 'und'
-        
+
     def get_leaf(self, obj):
         if obj.paetype == 1:
             return True
-        else: 
+        else:
             return False
-    
+
     def get_loaded(self, obj):
         if obj.count == 0:
             return True
         else:
             return False
-        
+
     class Meta:
         fields = ("gid", "Name", "id_pathid", "pit","order","id_parent","leaf", "icon","expanded","children", "operator")
-        ordered = True    
-        
+        ordered = True
+
 class PathsItemSchema(Schema):
     id = fields.Integer()
     name = fields.String()
@@ -125,7 +125,7 @@ class PathsItemSchema(Schema):
     id_parent = fields.Integer()
     pit = fields.Method("get_item_type")
     leaf = fields.Method("get_leaf")
-    
+
     def get_item_type(self, obj):
         if obj.paetype == 1:
             return 'mod'
@@ -135,31 +135,31 @@ class PathsItemSchema(Schema):
             return 'oum'
         else:
             return 'und'
-        
+
     def get_leaf(self, obj):
         if obj.paetype == 1:
             return True
-        else: 
+        else:
             return False
-    
+
     def get_loaded(self, obj):
         if obj.count == 0:
             return True
         else:
             return False
-        
+
     class Meta:
         fields = ("id", "name", "id_parent", "pit", "leaf")
         ordered = True
-    
+
 class ModuleDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
     mti = fields.Integer()
-    mt =  fields.Method("get_item_type")   
+    mt =  fields.Method("get_item_type")
     author = fields.String()
     mclass = fields.String()
-    
+
     def get_item_type(self, obj):
         if obj.mti == 1:
             return 'EDProducer'
@@ -175,34 +175,34 @@ class ModuleDetailsSchema(Schema):
             return 'OutputModule'
         else:
             return 'und'
- 
+
     class Meta:
         fields = ("gid", "name", "mt", "author", "mclass")
         ordered = True
-        
+
 class OutputModuleDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
     mti = fields.Integer()
-    mt =  fields.Method("get_item_type")   
+    mt =  fields.Method("get_item_type")
     author = fields.String()
     mclass = fields.String()
     stream = fields.String()
     streamid = fields.Integer()
-    
+
     def get_item_type(self, obj):
         return 'OutputModule'
- 
+
     class Meta:
         fields = ("gid", "name", "mt", "author", "mclass", "stream", "streamid")
         ordered = True
-                
+
 class ModuleSchema(Schema):
     id = fields.Integer()
     name = fields.String()
-    
-#-----------------------------------Parameters Schemas -------------------------  
-        
+
+#-----------------------------------Parameters Schemas -------------------------
+
 class ParametersSchema(Schema):
     id = fields.Integer()
     name = fields.String()
@@ -227,14 +227,14 @@ class ParameterSchema(Schema):
     isDefault = fields.Method("get_isDefault")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
-    
+
     def get_isDefault(self,obj):
         if obj.default == 1:
             return 'True'
         else:
             return 'False'
-    
-    def get_rendervalue(self,obj): 
+
+    def get_rendervalue(self,obj):
         if obj.paramtype == 'bool':
             if obj.value == '1':
                 return 'True'
@@ -244,7 +244,7 @@ class ParameterSchema(Schema):
                 return obj.value
         else:
             return obj.value
-    
+
     def get_icon(self,obj):
         if obj.moetype == 1:
             return 'resources/param_2.ico'
@@ -254,10 +254,10 @@ class ParameterSchema(Schema):
             return 'resources/Vpset_2.ico'
         else:
             return ''
-    
+
     def get_gid(self,obj):
         return obj.id
-    
+
     def get_item_type(self, obj):
         if obj.moetype == 1:
             return 'par'
@@ -267,18 +267,18 @@ class ParameterSchema(Schema):
             return 'vps'
         else:
             return 'und'
-        
+
     def get_leaf(self, obj):
         if obj.moetype == 1:
             return True
-        else: 
+        else:
             return False
-    
+
     class Meta:
         fields = ("gid", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
         ordered = True
 
-#-----------------------------------Folder and Version Schemas -------------------------    
+#-----------------------------------Folder and Version Schemas -------------------------
 class FolderitemSchema(Schema):
     id = fields.Integer()
     name = fields.String()
@@ -289,22 +289,22 @@ class FolderitemSchema(Schema):
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
-    expandable = fields.Boolean() 
-    loaded = fields.Boolean() 
+    expandable = fields.Boolean()
+    loaded = fields.Boolean()
 #    children = fields.Nested('self', many=True)
-    
+
     def get_icon(self,obj):
         if obj.fit == "cnf":
             return 'resources/Config.ico'
         else:
             return ''
-    
+
     def get_leaf(self, obj):
         if obj.fit == "cnf":
             return True
-        else: 
+        else:
             return False
-    
+
     class Meta:
         fields = ("gid", "name", "new_name", "created", "leaf", "fit", "icon", "expandable")
         ordered = True
@@ -322,18 +322,18 @@ class VersionSchema(Schema):
     processname = fields.String()
     description = fields.String()
     releasetag = fields.String()
-    
+
     def get_gid(self,obj):
         return obj.id
-    
+
     def get_ver(self,obj):
         return obj.version
-    
+
     class Meta:
         fields = ("gid", "name", "ver", "created", "creator", "id_release", "processname", "description", "releasetag")
-        ordered = True 
-    
-#-----------------------------------Services Schemas ------------------------- 
+        ordered = True
+
+#-----------------------------------Services Schemas -------------------------
 
 class ServiceSchema(Schema):
 
@@ -344,19 +344,19 @@ class ServiceSchema(Schema):
         s_type = fields.String()
         icon = fields.Method("get_icon")
         expandable = fields.Method("get_exp")
-        
+
         def get_icon(self,obj):
             return 'resources/Service.ico'
-        
+
         def get_exp(self,obj):
             return False
-        
+
         class Meta:
             fields = ("gid", "name", "template_id", "release_id", "s_type", "icon", "expandable")
-            ordered = True 
-            
-#-----------------------------------Stream Schema -------------------------             
-            
+            ordered = True
+
+#-----------------------------------Stream Schema -------------------------
+
 class StreamItemSchema(Schema):
 #    id = fields.Integer()
     gid = fields.Integer()
@@ -366,7 +366,7 @@ class StreamItemSchema(Schema):
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
     children = fields.Nested('self', many=True)
-    
+
     def get_icon(self,obj):
         if obj.s_type == 'str':
             return 'resources/Stream.ico'
@@ -376,19 +376,19 @@ class StreamItemSchema(Schema):
             return 'resources/EventContent.ico'
         else:
             return ''
-        
+
     def get_leaf(self, obj):
         if obj.s_type == 'str':
             return False
-        else: 
+        else:
             return True
-        
+
     class Meta:
         fields = ("gid", "name", "fractodisk", "s_type", "leaf", "icon","children")
         ordered = True
 
-#--------------------------Event content statements Schema --------------------             
-            
+#--------------------------Event content statements Schema --------------------
+
 class EvcStatementSchema(Schema):
     id = fields.Integer()
     gid = fields.Method("get_gid")
@@ -399,22 +399,22 @@ class EvcStatementSchema(Schema):
     statementtype = fields.String()
     stype = fields.Method("get_stype")
     statementrank = fields.Integer()
-    
+
     def get_gid(self,obj):
         return obj.id
-    
+
     def get_stype(self,obj):
         if obj.statementtype == 0:
             return "drop"
         else:
             return "keep"
-        
+
     class Meta:
         fields = ("gid", "classn", "modulel", "extran", "processn", "stype", "statementrank")
         ordered = True
-            
-#--------------------------ES Module Schema --------------------           
-    
+
+#--------------------------ES Module Schema --------------------
+
 class ESModuleDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
@@ -427,14 +427,14 @@ class ESModuleDetailsSchema(Schema):
 
     def get_exp(self,obj):
         return False
-    
+
     class Meta:
         fields = ("gid", "name", "mclass", "icon", "expandable")
         ordered = True
-        
-        
+
+
 class GlobalPsetSchema(Schema):
-    
+
     gid = fields.Integer()
     name = fields.String()
     tracked = fields.Integer()
@@ -446,11 +446,11 @@ class GlobalPsetSchema(Schema):
 
     def get_exp(self,obj):
         return False
-    
+
     class Meta:
         fields = ("gid", "name", "tracked", "icon", "expandable")
         ordered = True
-        
+
 class EDSourceSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
@@ -463,11 +463,11 @@ class EDSourceSchema(Schema):
 
     def get_exp(self,obj):
         return False
-    
+
     class Meta:
         fields = ("gid", "name", "tclass", "icon", "expandable")
         ordered = True
-              
+
 class ESSourceSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
@@ -480,12 +480,12 @@ class ESSourceSchema(Schema):
 
     def get_exp(self,obj):
         return False
-    
+
     class Meta:
         fields = ("gid", "name", "tclass", "icon", "expandable")
         ordered = True
 
-        
+
 class DstPathsTreeSchema(Schema):
 #    id = fields.Integer()
     gid = fields.Integer()
@@ -496,59 +496,59 @@ class DstPathsTreeSchema(Schema):
     pit = fields.String()
     icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
-    
+
     def get_exp(self,obj):
         return False
-    
+
     def get_icon(self,obj):
         if obj.isEndPath == 0:
             return 'resources/Path_3.ico'
         elif obj.isEndPath == 1:
-            return 'resources/EndPath.ico'   
-        
+            return 'resources/EndPath.ico'
+
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "name", "pit", "expandable")
-        ordered = True  
-        
-        
-#----------------------- Summary Schemas -------------------------        
+        ordered = True
+
+
+#----------------------- Summary Schemas -------------------------
 class SummaryColumnSchema(Schema):
     gid = fields.Integer()
-    name = fields.String()        
+    name = fields.String()
     order =  fields.Integer()
-    
+
     class Meta:
-        fields = ("gid", "name", "order") 
-        ordered = True 
+        fields = ("gid", "name", "order")
+        ordered = True
 
 class SummaryValueSchema(Schema):
-    label = fields.String()        
+    label = fields.String()
     value =  fields.String()
-    
+
     class Meta:
-        fields = ("label", "value") 
-        ordered = True         
-        
+        fields = ("label", "value")
+        ordered = True
+
 class SummaryItemSchema(Schema):
     gid = fields.Integer()
-    name = fields.String()        
+    name = fields.String()
     leaf = fields.Boolean() #fields.Method("get_leaf")
     icon = fields.String() #fields.Method("get_icon")
     values = fields.List(fields.String()) #Nested(SummaryValueSchema, many=True)
     children = fields.Nested('self', many=True)
-    
+
     class Meta:
-        fields = ("gid", "name", "leaf", "icon", "values", "children") #"order", "sit", 
+        fields = ("gid", "name", "leaf", "icon", "values", "children") #"order", "sit",
         ordered = True
 
 #------------ Url Schema -------------------------
 class UrlStringSchema(Schema):
     gid = fields.Integer()
     url = fields.String()
-    
+
     class Meta:
         fields = ("gid", "url")
-        ordered = True        
+        ordered = True
 
 #--------------- Added By Husam -------------------
 
@@ -561,13 +561,13 @@ class FileEndPathsTreeSchema(Schema):
     pit = fields.String()
     order = fields.Integer()
     icon = fields.Method("get_icon")
-    
+
     def get_Name(self,obj):
         return obj.name
-    
+
     def get_icon(self,obj):
-            return 'resources/EndPath.ico'   
-        
+            return 'resources/EndPath.ico'
+
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
         ordered = True
@@ -581,13 +581,13 @@ class FilePathsTreeSchema(Schema):
     pit = fields.String()
     order = fields.Integer()
     icon = fields.Method("get_icon")
-    
+
     def get_Name(self,obj):
         return obj.name
-    
+
     def get_icon(self,obj):
-            return 'resources/Path_3.ico'   
-        
+            return 'resources/Path_3.ico'
+
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
         ordered = True
@@ -601,16 +601,16 @@ class FileDstPathsTreeSchema(Schema):
     order = fields.Integer()
     icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
-    
+
     def get_exp(self,obj):
         return False
-    
+
     def get_Name(self,obj):
         return obj.name
-    
+
     def get_icon(self,obj):
-        return 'resources/Path_3.ico'   
-        
+        return 'resources/Path_3.ico'
+
     class Meta:
         fields = ("gid", "vid", "icon", "id_path", "name", "order", "pit", "expandable")
         ordered = True
@@ -620,7 +620,7 @@ class FileModulesSchema(Schema):
     name = fields.String()
     mt = fields.String()
     mclass = fields.String()
- 
+
     class Meta:
         fields = ("gid", "name", "mt", "mclass")
         ordered = True
@@ -638,22 +638,22 @@ class FilePathItemSchema(Schema):
     icon = fields.Method("get_icon")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
-    
+
     def get_Name(self,obj):
         if obj.paetype == 1:
-            if obj.operator == 0: 
+            if obj.operator == 0:
                 return obj.name
             elif obj.operator == 2:
                 return "(Ignored) "+obj.name
             elif obj.operator == 1:
                 return "(Negate) "+obj.name
-        
+
         else:
             return obj.name
-    
+
     def get_order(self,obj):
         return obj.order
-    
+
     def get_icon(self,obj):
         if obj.paetype == 1:
             return 'resources/Module_3.ico'
@@ -663,7 +663,7 @@ class FilePathItemSchema(Schema):
             return 'resources/OutputModule2.ico'
         else:
             return 'resources/Module_3.ico'
-    
+
     def get_item_type(self, obj):
         if obj.paetype == 1:
             return 'mod'
@@ -673,16 +673,16 @@ class FilePathItemSchema(Schema):
             return 'oum'
         else:
             return 'und'
-        
+
     def get_leaf(self, obj):
         if obj.paetype == 1:
             return True
-        else: 
+        else:
             return False
-        
+
     class Meta:
         fields = ("gid", "Name", "id_pathid", "pit","order","leaf", "icon","expanded","children", "operator")
-        ordered = True    
+        ordered = True
 
 class FileParameterSchema(Schema):
     id = fields.Integer()
@@ -701,16 +701,16 @@ class FileParameterSchema(Schema):
     isDefault = fields.Method("get_isDefault")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
-    
+
     def get_isDefault(self,obj):
         if obj.default == 1:
             return 'True'
         else:
             return 'False'
-    
-    def get_rendervalue(self,obj): 
+
+    def get_rendervalue(self,obj):
         return obj.value
-    
+
     def get_icon(self,obj):
         if obj.moetype == 1:
             return 'resources/param_2.ico'
@@ -720,10 +720,10 @@ class FileParameterSchema(Schema):
             return 'resources/Vpset_2.ico'
         else:
             return ''
-    
+
     def get_gid(self,obj):
         return obj.id
-    
+
     def get_item_type(self, obj):
         if obj.moetype == 1:
             return 'par'
@@ -733,13 +733,13 @@ class FileParameterSchema(Schema):
             return 'vps'
         else:
             return 'und'
-        
+
     def get_leaf(self, obj):
         if obj.moetype == 1:
             return True
-        else: 
+        else:
             return False
-    
+
     class Meta:
         fields = ("gid", "name", "rendervalue", "order", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
         ordered = True
@@ -754,10 +754,10 @@ class FileEvcStatementSchema(Schema):
     statementtype = fields.String()
     stype = fields.Method("get_stype")
     statementrank = fields.Integer()
-    
+
     def get_gid(self,obj):
         return obj.id
-    
+
     def get_stype(self,obj):
         return obj.statementtype
 
@@ -769,13 +769,13 @@ class FileModuleDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
     mti = fields.String()
-    mt =  fields.Method("get_item_type")   
+    mt =  fields.Method("get_item_type")
     author = fields.String()
     mclass = fields.String()
-    
+
     def get_item_type(self, obj):
         return obj.mti
- 
+
     class Meta:
         fields = ("gid", "name", "mt", "author", "mclass")
         ordered = True
@@ -787,7 +787,7 @@ class FileVersionSchema(Schema):
 
     def get_gid(self,obj):
         return obj.id
- 
+
     class Meta:
         fields = ("id", "name")
         ordered = True

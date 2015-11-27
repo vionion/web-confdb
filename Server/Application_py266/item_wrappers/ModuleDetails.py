@@ -1,5 +1,5 @@
 # File ModuleDetails.py Description:
-# This contains the wrapper class of the ModuleDetails entity. 
+# This contains the wrapper class of the ModuleDetails entity.
 # The ModuleDetails class represents the main details to desplay on each module
 #
 # Class: ModuleDetails
