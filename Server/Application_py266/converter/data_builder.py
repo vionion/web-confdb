@@ -2,6 +2,7 @@
 #
 # Class: DataBuilder
 
+import itertools
 from confdb_queries.confdb_queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
@@ -379,7 +380,8 @@ class DataBuilder(object):
         paths = None
 
         try:
-            paths = self.queries.getPaths(self.version.id, self.database, self.logger)
+            paths    = self.queries.getPaths(self.version.id, self.database, self.logger)
+            endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: Query getPaths Error: ' + e.args[0]
             self.logger.error(msg)
@@ -391,7 +393,7 @@ class DataBuilder(object):
         elements = None
         seq_items = None
 
-        for path in paths:
+        for path in itertools.chain(paths, endpaths):
             try:
                 elements  = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
                 seq_items = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
