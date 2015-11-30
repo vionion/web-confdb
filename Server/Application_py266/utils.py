@@ -1,3 +1,5 @@
+import external.bidict as bidict
+
 class Counter(object):
 
     def __init__(self):
@@ -98,24 +100,21 @@ class OutputModulesDict(object):
 class SequencesDict(object):
 
     def __init__(self):
-        self.seqDict = {}
+        self.seqDict = bidict.bidict()
 
     def put(self, counter, sequence, id_pathid, order,lvl):
-        sid = sequence.id
-        value = str(sid)+","+str(id_pathid)+","+str(order)+","+str(lvl)
-        if(value in self.seqDict.values()):
-            return [k for k, v in self.seqDict.iteritems() if v == value][0]
+        value = (sequence.id, id_pathid, order, lvl)
+        if value in self.seqDict.inv:
+            return self.seqDict.inv[value]
         else:
             gid = counter.getNext()
             self.seqDict[gid] = value
             return gid
 
-    def get(self,gid):
-        if self.self.seqDict.get(gid):
-            value = self.seqDict.get(gid)
-            vals_list = value.split(",")
-            id_seq = vals_list[0]
-            return int(id_seq)
+    def get(self, gid):
+        if gid in self.seqDict:
+            value = self.seqDict[gid]
+            return value[0]
         else:
             return -2
 
