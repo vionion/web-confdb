@@ -401,12 +401,18 @@ class ParamsBuilder():
         try:
             #Retreive the module template
             template = queries.getTemplateFromPae(id_p,db, log)
+            
+        except:
+            log.error('ERROR: Query getTemplateFromPae Error')
+            return None
+        
+        try:
 
             #Retreive template parameters
             tempelements = queries.getTemplateParams(template.id,db, log)
 
         except:
-            log.error('ERROR: Query getTemplateFromPae/getTemplateParams Error')
+            log.error('ERROR: Query getTemplateParams Error')
             return None
 
         tempelements.sort(key=lambda par: par.id)
