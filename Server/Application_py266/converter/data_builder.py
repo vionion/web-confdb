@@ -299,27 +299,21 @@ class DataBuilder(object):
         params = {}
 
         try:
-            self.logger.info('getModules: running getModules query')
             modules = self.queries.getModules(self.version.id, self.database, self.logger)
 
-            self.logger.info('getModules: running getTemplateParams queries')
             templates = dict((module.id_templ, None) for module in modules)
             for id in templates:
                 templates[id] = self.queries.getTemplateParams(id, self.database, self.logger)
 
-            self.logger.info('getModules: running getModuleParamItemsOne queries')
             params = dict((module.id, None) for module in modules)
             for id in params:
                 params[id] = self.queries.getModuleParamItemsOne(id, self.database, self.logger)
-
-            self.logger.info('getModules: all queries done')
 
         except Exception as e:
             msg = 'ERROR: getModules: ' + e.args[0]
             self.logger.error(msg)
             return ""
 
-        self.logger.info('getModules: building modules configuration')
         for module in modules:
             result = result + "process." + module.name + " = cms." + module.mtype + '( "' + module.temp_name + '",\n'
             template = templates.get(module.id_templ)
@@ -336,7 +330,6 @@ class DataBuilder(object):
             else:
                 result = result + new_result
 
-        self.logger.info('getModules: done')
         return result + "\n"
 
 
@@ -449,21 +442,21 @@ class DataBuilder(object):
                 self.logger.error(msg)
                 return result
 
-            elements_dict = dict((x.id, x) for x in elements)
+            elements_dict = dict((element.id, element) for element in elements)
 
             seq = {}
             lvlZeroSeq_Dict = {}
 
             for p in items:
                 elem = elements_dict[p.id_pae]
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
+                if elem.paetype != 2:
+                    continue
 
-                if (item.paetype == 2):
-                    item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
-                    seq[item.gid]=item
-                    if (item.lvl == 0):
-                        iid = item.id
-                        lvlZeroSeq_Dict[item.gid] = iid
+                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
+                item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
+                seq[item.gid] = item
+                if (item.lvl == 0):
+                    lvlZeroSeq_Dict[item.gid] = item.id
 
             try:
                 lista     = self.queries.getLevelZeroPathItems(path.id, self.version.id, self.database, self.logger)
@@ -531,21 +524,21 @@ class DataBuilder(object):
                 self.logger.error(msg)
                 return result
 
-            elements_dict = dict((x.id, x) for x in elements)
+            elements_dict = dict((element.id, element) for element in elements)
 
             seq = {}
             lvlZeroSeq_Dict = {}
 
             for p in items:
                 elem = elements_dict[p.id_pae]
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
+                if elem.paetype != 2:
+                    continue
 
-                if (item.paetype == 2):
-                    item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
-                    seq[item.gid]=item
-                    if (item.lvl == 0):
-                        iid = item.id
-                        lvlZeroSeq_Dict[item.gid] = iid
+                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
+                item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
+                seq[item.gid]=item
+                if (item.lvl == 0):
+                    lvlZeroSeq_Dict[item.gid] = item.id
 
             try:
                 lista     = self.queries.getLevelZeroPathItems(path.id, self.version.id, self.database, self.logger)
@@ -822,6 +815,7 @@ class DataBuilder(object):
         result = ""
         for template_param in template_params:
             tracked = '' if template_param.tracked else 'untracked.'
+
             if template_param.paramtype == "VPSet":
                 result = result + self.getTab(4) + template_param.name + " = cms." + tracked
                 new_result = self.buildVPSetChildren(template_param, 6, 8)
@@ -835,7 +829,6 @@ class DataBuilder(object):
                     result = result +"VPSet(  *(\n" + new_result + self.getTab(4) + ") ),\n"
 
             elif template_param.paramtype == "PSet":
-                new_result = ""
                 new_result = self.buildPsetChildren(template_param, 6, 8)
 
                 if len(template_param.children) < 255:
@@ -843,7 +836,7 @@ class DataBuilder(object):
                     if new_result == "\n":
                         result = result[:-1] + "  ),\n"
                     else:
-                        result = result = result + new_result + self.getTab(4) + "),\n"
+                        result = result + new_result + self.getTab(4) + "),\n"
                 else:
                     result = result + self.getTab(4) + template_param.name + " = cms." + tracked + "PSet(  *(\n"
                     result = result + new_result + self.getTab(4) + ") ),\n"
@@ -862,6 +855,7 @@ class DataBuilder(object):
         psets = template_param.children
 
         for pset in psets:
+            tracked = '' if pset.tracked else 'untracked.'
             if pset.paramtype == "VPSet":
                 result = result + self.getTab(pset_tab) + pset.name + " = cms." + tracked
                 new_result = self.buildVPSetChildren(template_param, pset_tab+2, param_tab+2)
@@ -876,14 +870,14 @@ class DataBuilder(object):
             else:
                 new_result = self.buildPsetChildren(pset, pset_tab+2, param_tab+2)
                 if len(pset.children) < 255:
-                    pset_name = "cms.PSet(\n" if (pset.name == None) else pset.name + " = cms.PSet(\n"
+                    pset_name = "cms." + tracked + "PSet(\n" if (pset.name == None) else pset.name + " = cms." + tracked + "PSet(\n"
                     result = result + self.getTab(pset_tab) + pset_name
                     if new_result == "\n":
                         result = result[:-1] + "  ),\n"
                     else:
                         result = result + new_result + self.getTab(pset_tab) + "),\n"
                 else:
-                    pset_name = "cms.PSet(  *(\n" if (pset.name == None) else pset.name + " = cms.PSet(  *(\n"
+                    pset_name = "cms." + tracked + "PSet( *(\n" if (pset.name == None) else pset.name + " = cms." + tracked + "PSet( *(\n"
                     result = result + self.getTab(pset_tab) + pset_name
                     result = result + new_result + self.getTab(pset_tab) + "),\n"
 
@@ -895,6 +889,7 @@ class DataBuilder(object):
         params = template_params.children
 
         for param in params:
+            tracked = '' if param.tracked else 'untracked.'
             if param.paramtype == "VPSet":
                 result = result + self.getTab(pset_tab) + param.name + " = cms." + tracked
                 new_result = self.buildVPSetChildren(template_param, pset_tab+2, param_tab+2)
@@ -909,14 +904,14 @@ class DataBuilder(object):
             elif param.paramtype == "PSet":
                 new_result = self.buildPsetChildren(param, pset_tab+2, param_tab+2)
                 if len(param.children) < 255:
-                    pset_name = "cms.PSet(\n" if (param.name == None) else param.name + " = cms.PSet(\n"
+                    pset_name = "cms." + tracked + "PSet(\n" if (param.name == None) else param.name + " = cms.PSet(\n"
                     result = result + self.getTab(pset_tab) + pset_name
                     if new_result == "\n":
                         result = result[:-1] + "  ),\n"
                     else:
                         result = result + new_result + self.getTab(pset_tab) + "),\n"
                 else:
-                    pset_name = "cms.PSet(  *(\n" if (param.name == None) else param.name + " = cms.PSet(  *(\n"
+                    pset_name = "cms." + tracked + "PSet( *(\n" if (param.name == None) else param.name + " = cms.PSet( *(\n"
                     result = result + self.getTab(pset_tab) + pset_name
                     result = result + new_result + self.getTab(pset_tab) + "),\n"
             else:
