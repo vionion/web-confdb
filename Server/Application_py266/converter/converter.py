@@ -21,6 +21,9 @@ class Converter(object):
 
     queries = ConfDbQueries()
 
+    def __init__(self, threads = 4):
+        self. threads = threads
+
     def createConfig(self, ver=-2, cnf=-2, db = None, online = "False", filename = "", use_cherrypy = False):
 
         if use_cherrypy:
@@ -80,18 +83,19 @@ class Converter(object):
         parts = {}
         import task
 
-        # single threaded version
-        #import itertools
-        #task.initialize(online, version, use_cherrypy)
-        #for key, val in itertools.imap(task.worker, tasks):
-        #    parts[key] = val
-
-        # multiprocess version
-        pool = multiprocessing.Pool(processes = 8, initializer = task.initialize, initargs = (online, version, use_cherrypy))
-        for key, val in pool.imap_unordered(task.worker, tasks):
-            parts[key] = val
-        pool.close()
-        pool.join()
+        if self.threads == 1:
+            # single threaded version
+            import itertools
+            task.initialize(online, version, use_cherrypy)
+            for key, val in itertools.imap(task.worker, tasks):
+                parts[key] = val
+        else:
+            # multiprocess version
+            pool = multiprocessing.Pool(processes = self.threads, initializer = task.initialize, initargs = (online, version, use_cherrypy))
+            for key, val in pool.imap_unordered(task.worker, tasks):
+                parts[key] = val
+            pool.close()
+            pool.join()
 
         # combinine all parts
         data = \
