@@ -955,9 +955,9 @@ class DataBuilder(object):
         val = ""
 
         if (template_params.paramtype == "vstring"):
-            if template_params.value == None or template_params.value == "{}" or template_params.value == "{ }":
-                val = '( "" ),\n'
-            if template_params.value != None:
+            if template_params.value == None or template_params.value[1:-1].strip() == "":
+                val = '(  ),\n'
+            else:
                 elems = template_params.value[1:-1].split(",")
                 value = ""
                 for elem in elems:
