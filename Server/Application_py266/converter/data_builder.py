@@ -986,10 +986,12 @@ class DataBuilder(object):
                     val = '( *(' + template_params.value[1:-1] + ') ),\n'
 
         elif (template_params.paramtype == "vdouble"):
-            if len(template_params.value[1:-1].split(",")) < 255:
-                val = '( ' + template_params.value[1:-1] + ' ),\n'
+            values = [ v.strip() for v in template_params.value[1:-1].split(",") if len(v.strip()) ]
+            text = ', '.join(self.format_double(float(v)) for v in values)
+            if len(values) < 255:
+                val = '( ' +  text + ' ),\n'
             else:
-                val = '( *(' + template_params.value[1:-1] + ') ),\n'
+                val = '( *( ' + text + ' ) ),\n'
 
         elif (template_params.paramtype == "VInputTag"):
             val = '( ' + ','.join( "'%s'" % it.strip() for it in template_params.value[2:-2].split(',') if it) + ' ),\n'
@@ -1022,7 +1024,7 @@ class DataBuilder(object):
             if template_params.value == None:
                 val = '( ' + str(template_params.value) + ' ),\n'
             else:
-                val = '( ' + str(float(template_params.value)) + ' ),\n'
+                val = '( ' + self.format_double(float(template_params.value)) + ' ),\n'
 
         elif(template_params.paramtype == "InputTag"):
             if template_params.value == None:
@@ -1085,5 +1087,18 @@ class DataBuilder(object):
 
         return version
 
-    def getTab(self, n):
+    @staticmethod
+    def getTab(n):
         return "\t".expandtabs(n)
+
+    
+    @staticmethod
+    def format_double(value):
+        string = format(value)
+        if not '.' in string:
+            if 'e' in string:
+                string = string.replace('e', '.0e')
+            else:
+                string = string + '.0'
+        return string
+    
