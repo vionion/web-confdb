@@ -12,10 +12,8 @@ from schemas.responseSchemas import *
 from responses.responses import *
 from data_builder import DataBuilder
 import multiprocessing
+import logging
 
-import os
-import os.path
-current_dir_log = os.path.dirname(os.path.abspath(__file__))
 
 class Converter(object):
 
@@ -29,8 +27,37 @@ class Converter(object):
         if use_cherrypy:
             import cherrypy
             self.logger = cherrypy.log
+
+            # implement part of the logging interface in cherrypy logger
+            def log(self, lvl, msg, *args, **kwargs):
+                if args:
+                    msg = msg % args
+                if kwargs and 'exc_info' in kwargs and kwargs['exc_info']:
+                    traceback = True
+                else:
+                    traceback=False
+                self.error(msg, '', lvl, traceback)
+
+            def debug(self, msg, *args, **kwargs):
+                self.log(logging.DEBUG, msg, *args, **kwargs)
+
+            def info(self, msg, *args, **kwargs):
+                self.log(logging.INFO, msg, *args, **kwargs)
+
+            def warning(self, msg, *args, **kwargs):
+                self.log(logging.WARNING, msg, *args, **kwargs)
+
+            def critical(self, msg, *args, **kwargs):
+                self.log(logging.CRITICAL, msg, *args, **kwargs)
+
+            import types
+            self.logger.log      = types.MethodType(log,      self.logger)
+            self.logger.debug    = types.MethodType(debug,    self.logger)
+            self.logger.info     = types.MethodType(info,     self.logger)
+            self.logger.warning  = types.MethodType(warning,  self.logger)
+            self.logger.critical = types.MethodType(critical, self.logger)
+
         else:
-            import multiprocessing, logging
             formatter = logging.Formatter("[%(asctime)s - %(levelname)s/%(processName)s] %(name)s: %(message)s")
             handler   = logging.StreamHandler()
             handler.setFormatter(formatter)
