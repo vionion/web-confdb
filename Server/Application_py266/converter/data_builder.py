@@ -995,7 +995,7 @@ class DataBuilder(object):
             if template_params.value == None or template_params.value == "" or template_params.value == "none" or template_params.value == "None":
                 val = '( "" ),\n'
             else:
-                val = '( "' + template_params.value.replace("'","").replace('"',"") + '" ),\n'
+                val = '( "' + template_params.value.strip('"') + '" ),\n'
 
         elif (template_params.paramtype == "FileInPath"):
             if template_params.value == None or template_params.value == "" or template_params.value == "none" or template_params.value == "None":
