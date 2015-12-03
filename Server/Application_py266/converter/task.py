@@ -1,3 +1,5 @@
+import time
+
 from Config import Config
 from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 from sqlalchemy.ext.automap import automap_base
@@ -41,7 +43,8 @@ def worker(args):
 
     # call the requested method
     logger.info('%s: call to DataBuilder.%s' % (label, method))
+    t = time.time()
     data = getattr(databuilder, method)()
-    logger.info('%s: done' % label)
+    logger.info('%s: done [%.1fs]' % (label, time.time() - t))
     return label, data
 
