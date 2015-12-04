@@ -29,7 +29,7 @@ engine.start()
 session = None
 
 from utils import *
-cnfMap = ConfigsDict()
+#cnfMap = UniqueMapping()
 
 import logging
 # create console handler and set level to debug

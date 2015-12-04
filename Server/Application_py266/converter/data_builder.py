@@ -366,9 +366,11 @@ class DataBuilder(object):
 
         result = ""
 
-        seqsMap = SequencesDict()
+        """ unused
         idgen = Counter()
-        modsMap = ModulesDict()
+        seqsMap = SequencesMapping(idgen)
+        modsMap = ModulesMapping(idgen)
+        """
 
         paths = None
 
@@ -414,9 +416,9 @@ class DataBuilder(object):
         return result + "\n"
 
     def getPaths(self):
-        modsMap = ModulesDict()
-        seqsMap = SequencesDict()
         idgen = Counter()
+        seqsMap = SequencesMapping(idgen)
+        modsMap = ModulesMapping(idgen)
         result = ""
 
         elements = None
@@ -453,7 +455,7 @@ class DataBuilder(object):
                     continue
 
                 item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
-                item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
+                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
                 seq[item.gid] = item
                 if (item.lvl == 0):
                     lvlZeroSeq_Dict[item.gid] = item.id
@@ -473,7 +475,7 @@ class DataBuilder(object):
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
                 item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.putItem(idgen, elem, l.id_pathid, l.order, l.lvl)
+                item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
                 pats.insert(item.order, item)
 
             lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
@@ -495,10 +497,10 @@ class DataBuilder(object):
 
 
     def getEndPaths(self):
-        modsMap = ModulesDict()
-        seqsMap = SequencesDict()
-        oumodsMap = OutputModulesDict()
         idgen = Counter()
+        seqsMap = SequencesMapping(idgen)
+        modsMap = ModulesMapping(idgen)
+        oumodsMap = UniqueMapping(idgen)
         result = ""
 
         elements = None
@@ -535,7 +537,7 @@ class DataBuilder(object):
                     continue
 
                 item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
-                item.gid = seqsMap.put(idgen, elem, p.id_pathid, p.order, p.lvl)
+                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
                 seq[item.gid]=item
                 if (item.lvl == 0):
                     lvlZeroSeq_Dict[item.gid] = item.id
@@ -555,7 +557,7 @@ class DataBuilder(object):
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
                 item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.putItem(idgen, elem, l.id_pathid, l.order, l.lvl)
+                item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
                 pats.insert(item.order, item)
 
             lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
@@ -570,7 +572,7 @@ class DataBuilder(object):
                 oumName = "hltOutput"+stream.name
                 oum = Pathitem(outmodule.id_streamid, oumName, outmodule.id_pathid, 3, -1, 0, outmodule.order)
 
-                oum.gid = oumodsMap.put(idgen, oum)
+                oum.gid = oumodsMap.put(oum)
 
                 pats.insert(oum.order, oum)
 

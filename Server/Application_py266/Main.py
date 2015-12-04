@@ -44,58 +44,55 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 class Root(object):
 
+    # shared across databases
+    idfolgen = Counter()
+
     #----------- OFFLINE DB ---------
     idgen = Counter()
-    idstrgen = StreamItemCounter()
-    idsumgen = SummaryItemCounter()
+    patsMap = UniqueMapping(idgen)
+    seqsMap = SequencesMapping(idgen)
+    modsMap = ModulesMapping(idgen)
+    oumodsMap = UniqueMapping(idgen)
+    allmodsMap = UniqueMapping(idgen)
+    srvsMap = UniqueMapping(idgen)
+    gpsMap = UniqueMapping(idgen)
 
-    cnfMap = ConfigsDict()
-    folMap = FoldersDict()
+    idsumgen = Counter()
+    sumMap = UniqueMapping(idsumgen)
 
-    patsMap = PathsDict()
-    seqsMap = SequencesDict()
-    modsMap = ModulesDict()
-    oumodsMap = OutputModulesDict()
-    allmodsMap = AllModulesDict()
+    cnfMap = UniqueMapping(idfolgen)
+    folMap = UniqueMapping(idfolgen)
 
-    srvsMap = ServicesDict()
+    idstrgen = Counter()
+    strMap = UniqueMapping(idstrgen)
+    datMap = UniqueMapping(idstrgen)
+    evcMap = UniqueMapping(idstrgen)
 
-    strMap = StreamsDict()
-    datMap = DatasetsDict()
-    evcMap = EvcoDict()
-
-    gpsMap = GpsetsDict()
-
-    sumMap = SummaryitemsDict()
 
     #----------- ONLINE DB ---------
     idgen_online = Counter()
-    idstrgen_online = StreamItemCounter()
-    idsumgen_online = SummaryItemCounter()
+    patsMap_online = UniqueMapping(idgen_online)
+    seqsMap_online = SequencesMapping(idgen_online)
+    modsMap_online = ModulesMapping(idgen_online)
+    oumodsMap_online = UniqueMapping(idgen_online)
+    allmodsMap_online = UniqueMapping(idgen_online)
+    srvsMap_online = UniqueMapping(idgen_online)
+    gpsMap_online = UniqueMapping(idgen_online)
 
-    cnfMap_online = ConfigsDict()
-    folMap_online = FoldersDict()
+    idsumgen_online = Counter()
+    sumMap_online = UniqueMapping(idsumgen_online)
 
-    patsMap_online = PathsDict()
-    seqsMap_online = SequencesDict()
-    modsMap_online = ModulesDict()
-    oumodsMap_online = OutputModulesDict()
-    allmodsMap_online = AllModulesDict()
+    cnfMap_online = UniqueMapping(idfolgen)
+    folMap_online = UniqueMapping(idfolgen)
 
-    srvsMap_online = ServicesDict()
-
-    strMap_online = StreamsDict()
-    datMap_online = DatasetsDict()
-    evcMap_online = EvcoDict()
-
-    gpsMap_online = GpsetsDict()
-
-    sumMap_online = SummaryitemsDict()
+    idstrgen_online = Counter()
+    strMap_online = UniqueMapping(idstrgen_online)
+    datMap_online = UniqueMapping(idstrgen_online)
+    evcMap_online = UniqueMapping(idstrgen_online)
 
     config_dict = OrderedDict()
 
     #---- General purpose ---------
-    idfolgen = FolderItemCounter()
     funcs = Exposed()
     conv = Converter()
     inv = Inverter()
@@ -141,7 +138,6 @@ class Root(object):
         patsMap = None
         seqsMap = None
         modsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'file':
@@ -160,7 +156,6 @@ class Root(object):
                 patsMap = self.patsMap_online
                 seqsMap = self.seqsMap_online
                 modsMap = self.modsMap_online
-                idgen = self.idgen_online
                 cnfMap = self.cnfMap_online
 
             else:
@@ -168,7 +163,6 @@ class Root(object):
                 patsMap = self.patsMap
                 seqsMap = self.seqsMap
                 modsMap = self.modsMap
-                idgen = self.idgen
                 cnfMap = self.cnfMap
 
             data = None
@@ -178,10 +172,10 @@ class Root(object):
 
             #Pathitems request
             if(itype == 'pat'):
-                data = self.funcs.getPathItems(patsMap, seqsMap, modsMap, idgen, node, ver, db, self.log)
+                data = self.funcs.getPathItems(patsMap, seqsMap, modsMap, node, ver, db, self.log)
 
             else:
-                data = self.funcs.getPaths(patsMap, cnfMap, idgen, cnf, ver, db, self.log)
+                data = self.funcs.getPaths(patsMap, cnfMap, cnf, ver, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
@@ -314,7 +308,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         folMap = None
-        idfolgen = self.idfolgen
         cnfMap = None
 
         if online == 'True' or online == 'true':
@@ -334,10 +327,10 @@ class Root(object):
 
         if gid == -1:
 #            print "IN -1: "
-            data = self.funcs.getRootDirectory(folMap, idfolgen, cnfMap, self.folMap_online, db, self.log)
+            data = self.funcs.getRootDirectory(folMap, cnfMap, self.folMap_online, db, self.log)
 
         else:
-            data = self.funcs.getChildrenDirectories(gid,folMap, idfolgen, cnfMap, db, self.log)
+            data = self.funcs.getChildrenDirectories(gid,folMap, cnfMap, db, self.log)
 
         if (data is None):
 #            print ("Exception - Error")
@@ -436,7 +429,6 @@ class Root(object):
 
         cnfMap = None
         allmodsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getModulesFromFile(ver, self.config_dict)
@@ -452,18 +444,16 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 allmodsMap = self.allmodsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 allmodsMap = self.allmodsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllModules(cnf,ver,allmodsMap,idgen,db, self.log)
+            data = self.funcs.getAllModules(cnf,ver,allmodsMap,db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allmodules - data returned null object')
@@ -484,7 +474,6 @@ class Root(object):
 
         cnfMap = None
         srvsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getServiceFromFile(ver, self.config_dict)
@@ -499,18 +488,16 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 srvsMap = self.srvsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 srvsMap = self.srvsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllServices(cnf,ver,srvsMap,idgen,db, self.log)
+            data = self.funcs.getAllServices(cnf,ver,srvsMap,db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allservices - data returned null object')
@@ -570,7 +557,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         evcMap = None
-        idstrgen = None
         strMap = None
         datMap = None
         cnfMap = None
@@ -587,7 +573,6 @@ class Root(object):
             if online == 'True' or online == 'true':
                 db = db_online
                 evcMap = self.evcMap_online
-                idstrgen = self.idstrgen_online
                 strMap = self.strMap_online
                 datMap = self.datMap_online
                 cnfMap = self.cnfMap_online
@@ -595,7 +580,6 @@ class Root(object):
             else:
                 db = db_offline
                 evcMap = self.evcMap
-                idstrgen = self.idstrgen
                 strMap = self.strMap
                 datMap = self.datMap
                 cnfMap = self.cnfMap
@@ -604,7 +588,7 @@ class Root(object):
             ver = int(ver)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getStreamsItems(evcMap, idstrgen, strMap, datMap, ver, cnf, db, self.log)
+            data = self.funcs.getStreamsItems(evcMap, strMap, datMap, ver, cnf, db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allstreamitems - data returned null object')
@@ -787,7 +771,6 @@ class Root(object):
 
         seqsMap = None
         modsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'True' or online == 'true':
@@ -795,20 +778,18 @@ class Root(object):
 
             seqsMap = self.seqsMap_online
             modsMap = self.modsMap_online
-            idgen = self.idgen_online
             cnfMap = self.cnfMap_online
 
         else:
             db = db_offline
             seqsMap = self.seqsMap
             modsMap = self.modsMap
-            idgen = self.idgen
             cnfMap = self.cnfMap
 
         cnf = int(cnf)
         ver = int(ver)
         cnf = cnfMap.get(cnf)
-        data = self.funcs.getAllSequences(seqsMap, modsMap, idgen, cnf,ver,db, self.log)
+        data = self.funcs.getAllSequences(seqsMap, modsMap, cnf,ver,db, self.log)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allseqitems - data returned null object')
@@ -833,7 +814,6 @@ class Root(object):
         seqsMap = None
         modsMap = None
         oumodsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'file':
@@ -855,7 +835,6 @@ class Root(object):
                 seqsMap = self.seqsMap_online
                 modsMap = self.modsMap_online
                 oumodsMap = self.oumodsMap_online
-                idgen = self.idgen_online
                 cnfMap = self.cnfMap_online
 
             else:
@@ -865,7 +844,6 @@ class Root(object):
                 seqsMap = self.seqsMap
                 modsMap = self.modsMap
                 oumodsMap = self.oumodsMap
-                idgen = self.idgen
                 cnfMap = self.cnfMap
 
             data = None
@@ -875,10 +853,10 @@ class Root(object):
 
             #Pathitems request
             if(itype == 'pat'):
-                data = self.funcs.getEndPathItems(patsMap, seqsMap, modsMap, oumodsMap, idgen, node, ver, db, self.log)
+                data = self.funcs.getEndPathItems(patsMap, seqsMap, modsMap, oumodsMap, node, ver, db, self.log)
 
             else:
-                data = self.funcs.getEndPaths(patsMap, cnfMap, idgen, cnf, ver, db, self.log)
+                data = self.funcs.getEndPaths(patsMap, cnfMap, cnf, ver, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
@@ -942,7 +920,6 @@ class Root(object):
 
         cnfMap = None
         gpsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getGPsetsFromFile(ver, self.config_dict)
@@ -956,19 +933,17 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 gpsMap = self.gpsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 gpsMap = self.gpsMap
-                idgen = self.idgen
 
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllGlobalPsets(cnf,ver,gpsMap,idgen,db)
+            data = self.funcs.getAllGlobalPsets(cnf,ver,gpsMap,db)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allgpsets - data returned null object')
@@ -1179,7 +1154,6 @@ class Root(object):
         datMap = None
         cnfMap = None
         patsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getDataSetItemsFromFile(ver, int(dstid), self.config_dict)
@@ -1195,7 +1169,6 @@ class Root(object):
                 datMap = self.datMap_online
                 cnfMap = self.cnfMap_online
                 patsMap = self.patsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
@@ -1203,7 +1176,6 @@ class Root(object):
                 datMap = self.datMap
                 cnfMap = self.cnfMap
                 patsMap = self.patsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
@@ -1211,7 +1183,7 @@ class Root(object):
             dstid = datMap.get(dstid)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getDatasetItems(patsMap, idgen, ver, cnf, dstid, db, self.log)
+            data = self.funcs.getDatasetItems(patsMap, ver, cnf, dstid, db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: alldatasetitems - data returned null object')
@@ -1269,7 +1241,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         cnfMap = None
-        idsumgen = None
         sumMap = None
 
         if online == 'file':
@@ -1284,21 +1255,19 @@ class Root(object):
                 db = db_online
 
                 cnfMap = self.cnfMap_online
-                idsumgen = self.idsumgen_online
                 sumMap = self.sumMap_online
 
             else:
                 db = db_offline
 
                 cnfMap = self.cnfMap
-                idsumgen = self.idsumgen
                 sumMap = self.sumMap
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getSummaryItems(idsumgen, sumMap, ver, cnf, db, self.log)
+            data = self.funcs.getSummaryItems(sumMap, ver, cnf, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
