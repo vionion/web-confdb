@@ -373,7 +373,7 @@ class DataBuilder(object):
         result = ""
         while(counter < len(items) and items[counter].lvl == level):
             elem = elements_dict[items[counter].id_pae]
-            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order)
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
             children.append(item)
             counter = counter + 1
             if item.paetype == 2:
@@ -435,7 +435,7 @@ class DataBuilder(object):
 
             while counter < len(items):
                 elem = elements_dict[items[counter].id_pae]
-                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order)
+                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
                 counter = counter + 1
                 if item.paetype == 2:
                     if item.name in written_sequences:
