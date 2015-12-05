@@ -362,6 +362,39 @@ class DataBuilder(object):
         return result + "\n"
 
 
+    def skipSequence(self, counter, items, level):
+        while(counter < len(items) and items[counter].lvl >= level):
+            counter = counter + 1
+        return counter
+
+
+    def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level):
+        children = []
+        result = ""
+        while(counter < len(items) and items[counter].lvl == level):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order)
+            children.append(item)
+            counter = counter + 1
+            if item.paetype == 2:
+                if item.name in written_sequences:
+                    counter = self.skipSequence(counter, items, item.lvl+1)
+                else:
+                    new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
+                    result = result + new_result + "process." + item.name + " = cms.Sequence( "
+                    for child in new_children:
+                        if child.operator == 0:
+                            result = result + "process." + child.name + " + "
+                        elif child.operator == 2:
+                            result = result + "cms.ignore(process." + child.name + ")" + " + "
+                        elif child.operator == 1:
+                            result = result + "~process." + child.name + " + "
+                    result = result[:-2] + ")\n"
+                    written_sequences.add(item.name)
+
+        return result, counter, children, written_sequences
+
+
     def getSequences(self):
 
         result = ""
@@ -382,36 +415,43 @@ class DataBuilder(object):
             self.logger.error(msg)
             return result
 
-        children = []
-        written_sequences = []
+        written_sequences = set()
 
         elements = None
-        seq_items = None
+        items = None
 
         for path in itertools.chain(paths, endpaths):
             try:
-                elements  = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
-                seq_items = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
+                elements = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
                 msg = 'ERROR: Sequences Query Error: ' + e.args[0]
                 self.logger.error(msg)
                 return result
 
-            seq_elems_dict = dict((x.id, x) for x in elements)
+            elements_dict = dict((element.id, element) for element in elements)
 
             counter = 0
 
-            while counter < len(seq_items):
-                elem = seq_elems_dict[seq_items[counter].id_pae]
-                item = Pathitem(seq_items[counter].id_pae, elem.name, seq_items[counter].id_pathid, elem.paetype, seq_items[counter].id_parent, seq_items[counter].lvl, seq_items[counter].order)
+            while counter < len(items):
+                elem = elements_dict[items[counter].id_pae]
+                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order)
                 counter = counter + 1
-                if(item.paetype == 2 and item.name not in written_sequences):
-                    new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, seq_items, seq_elems_dict, item.lvl+1)
-                    result = result + new_result + "process." + item.name + " = cms.Sequence( "
-                    for child in new_children:
-                        result = result + "process." + child + " + "
-                    result = result[:-2] + ")\n"
-                    written_sequences.append(item.name)
+                if item.paetype == 2:
+                    if item.name in written_sequences:
+                        counter = self.skipSequence(counter, items, item.lvl+1)
+                    else:
+                        new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
+                        result = result + new_result + "process." + item.name + " = cms.Sequence( "
+                        for child in new_children:
+                            if child.operator == 0:
+                                result = result + "process." + child.name + " + "
+                            elif child.operator == 2:
+                                result = result + "cms.ignore(process." + child.name + ")" + " + "
+                            elif child.operator == 1:
+                                result = result + "~ process." + child.name + " + "
+                        result = result[:-2] + ")\n"
+                        written_sequences.add(item.name)
 
         return result + "\n"
 
@@ -1042,24 +1082,6 @@ class DataBuilder(object):
                 val = '( ' + str(template_params.value) + ' ),\n'
 
         return tracked, val
-
-    def getSequenceChildren(self, counter, written_sequences, seq_items, seq_elems_dict, level):
-        children = []
-        result = ""
-        while(counter < len(seq_items) and seq_items[counter].lvl == level):
-            elem = seq_elems_dict[seq_items[counter].id_pae]
-            item = Pathitem(seq_items[counter].id_pae, elem.name, seq_items[counter].id_pathid, elem.paetype, seq_items[counter].id_parent, seq_items[counter].lvl, seq_items[counter].order)
-            children.append(item.name)
-            counter = counter + 1
-            if (item.paetype == 2 and item.name not in written_sequences):
-                new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, seq_items, seq_elems_dict, item.lvl+1)
-                result = result + new_result + "process." + item.name + " = cms.Sequence( "
-                for child in new_children:
-                    result = result + "process." + child + " + "
-                result = result[:-2] + ")\n"
-                written_sequences.append(item.name)
-
-        return result, counter, children, written_sequences
 
 
     @staticmethod
