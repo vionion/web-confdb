@@ -347,7 +347,7 @@ class ConfDbQueries(object):
         if (id_templ == -2 or db == None):
             log.error('ERROR: getTemplateParams - input parameters error')
 
-        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).all()
+        tempelements = db.query(ModTelement).filter(ModTelement.id_modtemp==id_templ).order_by(ModTelement.id).all()
 
         return tempelements
 
