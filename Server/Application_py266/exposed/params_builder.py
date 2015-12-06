@@ -18,6 +18,11 @@ class ParamsBuilder():
             logger.error('ERROR: query %s(%s, ...): %s' % (query.__name__, module_id, e))
             return None
 
+        return ParamsBuilder.buildParameterStructure(logger, elements, set_default)
+
+
+    @staticmethod
+    def buildParameterStructure(logger, elements, set_default = False):
         # build all the parameters, PSets and VPSets
         params      = []
         pset        = {}
@@ -56,10 +61,12 @@ class ParamsBuilder():
                 if (item.lvl == 0):
                     params.insert(item.order,item)
                     params.sort(key=lambda par: par.order)
-                else:
+                elif item.id_parent:
                     tps = pset[item.id_parent].children
                     tps.insert(item.order, item)
                     tps.sort(key=lambda par: par.order)
+                else:
+                    logger.error('parameter %s has level %d but not parent' % (item.name, item.lvl))
 
         # complete the construction of the PSet
         psets = pset.values()

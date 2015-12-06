@@ -62,6 +62,7 @@ class DataBuilder(object):
         else:
             return result + "\n"
 
+
     def getStreams(self):
 
         result = "process.streams = cms.PSet(\n"
@@ -99,6 +100,7 @@ class DataBuilder(object):
         result = result[:-2] + "\n)\n"
 
         return result + "\n"
+
 
     def getDatasetsPaths(self):
 
@@ -138,6 +140,7 @@ class DataBuilder(object):
         result = result[:-2] + "\n)\n"
 
         return result + "\n"
+
 
     def getEDSources(self):
 
@@ -192,6 +195,7 @@ class DataBuilder(object):
 
         return result
 
+
     def getESSource(self):
 
         result = ""
@@ -226,6 +230,7 @@ class DataBuilder(object):
 
         return result + "\n"
 
+
     def getESModules(self):
 
         result = ""
@@ -259,6 +264,7 @@ class DataBuilder(object):
                     result = result + new_result
 
         return result + "\n"
+
 
     def getServices(self):
 
@@ -296,7 +302,7 @@ class DataBuilder(object):
 
         modules = []
         templates = {}
-        params = {}
+        parameters = {}
 
         try:
             modules = self.queries.getModules(self.version.id, self.database, self.logger)
@@ -305,25 +311,32 @@ class DataBuilder(object):
             for id in templates:
                 templates[id] = self.queries.getTemplateParams(id, self.database, self.logger)
 
-            params = dict((module.id, None) for module in modules)
-            for id in params:
-                params[id] = self.queries.getModuleParamItemsOne(id, self.database, self.logger)
+            parameters = dict((module.id, None) for module in modules)
+            for id in parameters:
+                parameters[id] = self.queries.getModuleParamItemsOne(id, self.database, self.logger)
 
         except Exception as e:
             msg = 'ERROR: getModules: ' + e.args[0]
             self.logger.error(msg)
-            return ""
+            return None
 
         for module in modules:
-            result = result + "process." + module.name + " = cms." + module.mtype + '( "' + module.temp_name + '",\n'
-            template = templates.get(module.id_templ)
-            if template is not None:
-                template.sort(key=lambda par: par.id)
-            parameters = params.get(module.id)
-            if parameters is not None:
-                parameters.sort(key=lambda par: par.id_moe)
-            template_params = self.moduleParamsBuilder(template, parameters)
+            # retrieve the template (default) parameters
+            t_params = self.params_builder.buildParameterStructure(self.logger, templates[module.id_templ], set_default = True)
 
+            # retreive the module parameters
+            m_params = self.params_builder.buildParameterStructure(self.logger, parameters[module.id], set_default = False)
+
+            # merge the template (default) and module parameters
+            params = {}
+            for p in t_params:
+                params[p.name] = p
+            for p in m_params:
+                params[p.name] = p
+            template_params = sorted(params.values(), key = lambda p: p.order)
+
+            # build the text representation
+            result = result + "process." + module.name + " = cms." + module.mtype + '( "' + module.temp_name + '",\n'
             new_result = self.createParameterString(template_params)
             if new_result == "":
                 result = result[:-2] + " )\n"
@@ -383,12 +396,7 @@ class DataBuilder(object):
                     new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
                     result = result + new_result + "process." + item.name + " = cms.Sequence( "
                     for child in new_children:
-                        if child.operator == 0:
-                            result = result + "process." + child.name + " + "
-                        elif child.operator == 2:
-                            result = result + "cms.ignore(process." + child.name + ")" + " + "
-                        elif child.operator == 1:
-                            result = result + "~process." + child.name + " + "
+                        result += self.emitPathItem(child)
                     result = result[:-2] + ")\n"
                     written_sequences.add(item.name)
 
@@ -444,12 +452,7 @@ class DataBuilder(object):
                         new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
                         result = result + new_result + "process." + item.name + " = cms.Sequence( "
                         for child in new_children:
-                            if child.operator == 0:
-                                result = result + "process." + child.name + " + "
-                            elif child.operator == 2:
-                                result = result + "cms.ignore(process." + child.name + ")" + " + "
-                            elif child.operator == 1:
-                                result = result + "~ process." + child.name + " + "
+                            result += self.emitPathItem(child)
                         result = result[:-2] + ")\n"
                         written_sequences.add(item.name)
 
@@ -489,15 +492,8 @@ class DataBuilder(object):
                 pathitems.append(pathitem)
 
             pathitems.sort(key = lambda pathitem: pathitem.order)
-
             for pathitem in pathitems:
-                if pathitem.operator == 0:
-                    result = result + "process." + pathitem.name + " + "
-                elif pathitem.operator == 2:
-                    result = result + "cms.ignore(process." + pathitem.name + ")" + " + "
-                elif pathitem.operator == 1:
-                    result = result + "~process." + pathitem.name + " + "
-
+                result += self.emitPathItem(pathitem)
             result = result[:-2] + ")\n"
 
         return result + "\n"
@@ -543,15 +539,8 @@ class DataBuilder(object):
                 pathitems.append(pathitem)
 
             pathitems.sort(key = lambda item: item.order)
-
             for pathitem in pathitems:
-                if pathitem.operator == 0:
-                    result = result + "process." + pathitem.name + " + "
-                elif pathitem.operator == 2:
-                    result = result + "cms.ignore(process." + pathitem.name + ")" + " + "
-                elif pathitem.operator == 1:
-                    result = result + "~process." + pathitem.name + " + "
-
+                result += self.emitPathItem(pathitem)
             result = result[:-2] + ")\n"
 
         return result + "\n"
@@ -580,207 +569,8 @@ class DataBuilder(object):
             result = "process.HLTSchedule = cms.Schedule( *(" + text
             return result[:-2] + " ))"
 
+
     ## -- Helper Functions -- ##
-
-    def moduleParamsBuilder(self, template, parameters):
-        params = []
-
-        if template == None:
-            template = {}
-
-        #Build template parameters
-        temp_pset = {}
-        temp_vpset = {}
-        temp_parents = {}
-        temp_parents[0]=-1
-
-        #Build all the vpsets/psets
-
-        temp_params = []
-        temp_params_dict = {}
-        temp_params_name_dict = {}
-
-        for p in template:
-            parent = temp_parents.get(p.lvl)
-            clvl = p.lvl+1
-            parValue = None
-            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
-                parValue = p.value
-            else:
-                parValue = p.valuelob
-
-            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
-            item.default = True
-
-            temp_params_name_dict[item.name] = item
-
-            # It is a vpset
-            if (item.moetype == 3):
-                temp_parents[clvl] = p.id
-                item.expanded = False
-                temp_vpset[item.id] = item
-
-            # It is a pset
-            elif (item.moetype == 2):
-                temp_parents[clvl] = p.id
-                item.expanded = False
-                temp_pset[item.id]=item
-                if (temp_vpset.has_key(item.id_parent)):
-                    temp_vpset[item.id_parent].children.insert(item.order, item)
-
-            # It is a param
-            else:
-                if(item.lvl == 0):
-                    temp_params.insert(item.order, item)
-                    temp_params.sort(key=lambda par: par.order)
-                else:
-                    tps = temp_pset[item.id_parent].children
-                    tps.insert(item.order, item)
-                    tps.sort(key=lambda par: par.order)
-
-        #complete Pset construction
-        temp_psets = temp_pset.values()
-        for s in temp_psets:
-            if (s.lvl != 0):
-                if (temp_pset.has_key(s.id_parent)):
-                    tps = temp_pset[s.id_parent].children
-                    tps.insert(s.order, s)
-                    tps.sort(key=lambda par: par.order)
-
-        #merge the psets created
-        temp_psKeys = temp_pset.keys()
-
-        for ss in temp_psKeys:
-            s = temp_pset.get(ss)
-            if(s.lvl==0):
-                temp_params.insert(s.order, s)
-
-        #merge the vpsets created
-        temp_vpsKeys = temp_vpset.keys()
-
-        for ss in temp_vpsKeys:
-            s = temp_vpset.get(ss)
-            if(s.lvl==0):
-                temp_params.insert(s.order, s)
-
-        temp_params_dict = dict((x.id, x) for x in temp_params)
-
-        #------------------------------------------------------------------------------------------------------------
-        #Retreive all the parameters of the module
-
-        pset = {}
-        vpset = {}
-        parents = {}
-
-        parents[0]=-1
-
-        not_in = []
-        params = []
-        pset_name_dict = {}
-        vpset_name_dict = {}
-        params_mod_name_dict = {}
-
-        if parameters != None:
-
-            for param in parameters:
-                parent = parents.get(param.lvl)
-                clvl = param.lvl+1
-                parValue = None
-                if (param.valuelob == None or param.valuelob == "") and (param.moetype == 1):
-                    parValue = param.value
-                else:
-                    parValue = param.valuelob
-
-                item = Parameter(param.id_moe, param.name, parValue, param.moetype, param.paramtype, parent, param.lvl, param.order, param.tracked)
-
-                params_mod_name_dict[item.name]=item
-                #Set default
-                if (temp_params_name_dict.has_key(item.name)):
-                    if temp_params_name_dict.get(item.name).value == item.value:
-                        item.default = True
-
-                # It is a vpset
-                if (item.moetype == 3):
-                    parents[clvl] = param.id_moe
-                    item.expanded = False
-                    vpset[item.id] = item
-                    vpset_name_dict[item.name]=item
-
-                # It is a pset
-                elif (item.moetype == 2):
-                    parents[clvl] = param.id_moe
-                    item.expanded = False
-                    pset[item.id]=item
-                    pset_name_dict[item.name]=item
-                    if (vpset.has_key(item.id_parent)):
-                        vpset[item.id_parent].children.insert(item.order, item)
-
-                # It is a param
-                else:
-                    if(item.lvl == 0):
-                        params.insert(item.order, item)
-                        params.sort(key=lambda par: par.order)
-                    else:
-                        tps = pset[item.id_parent].children
-                        tps.insert(item.order, item)
-                        tps.sort(key=lambda par: par.order)
-
-        #Check ok temp params
-        names = temp_params_name_dict.keys()
-        for pn in names:
-            if (not(params_mod_name_dict.has_key(pn))):
-                not_in.append(temp_params_name_dict.get(pn))
-
-
-        #Fill the remaining params from Template
-        if (len(not_in) > 0):
-            for n in not_in:
-                if (n.lvl != 0):
-                    if (n.id_parent in temp_vpset.keys()):
-                        if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
-                            vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order, n)
-
-                    elif (n.id_parent in temp_pset.keys()):
-                        if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
-                            pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order, n)
-
-                    else:
-                        self.logger.error('ERROR: Module Parameter Error Key')
-
-        #complete Pset construction
-        psets = pset.values()
-        for s in psets:
-            if (s.lvl != 0):
-                if (pset.has_key(s.id_parent)):
-                    tps = pset[s.id_parent].children
-                    tps.insert(s.order, s)
-                    tps.sort(key=lambda par: par.order)
-
-        #merge the psets created
-        psKeys = pset.keys() #pset.viewkeys()
-
-        for ss in psKeys:
-            s = pset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        #merge the vpsets created
-        vpsKeys = vpset.keys()
-
-        for ss in vpsKeys:
-            s = vpset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        #Merge the remaining template params
-        for p in not_in:
-            if(p.lvl==0):
-                tp = temp_params_dict.get(p.id)
-                params.insert(tp.order, p)
-
-        params.sort(key=lambda par: par.order)
-
-        return params
 
     def createParameterString(self, template_params):
         result = ""
@@ -1048,5 +838,15 @@ class DataBuilder(object):
                 string = string.replace('e', '.0e')
             else:
                 string = string + '.0'
+        return string
+
+    @staticmethod
+    def emitPathItem(item):
+        if item.operator == 0:
+            string = "process." + item.name + " + "
+        elif item.operator == 2:
+            string = "cms.ignore(process." + item.name + ")" + " + "
+        elif item.operator == 1:
+            string = "~process." + item.name + " + "
         return string
 
