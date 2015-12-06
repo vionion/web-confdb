@@ -455,16 +455,9 @@ class DataBuilder(object):
 
         return result + "\n"
 
-    def getPaths(self):
-        idgen = Counter()
-        seqsMap = SequencesMapping(idgen)
-        modsMap = ModulesMapping(idgen)
-        result = ""
 
-        elements = None
-        items = None
-        lista = None
-        lvlzelems = None
+    def getPaths(self):
+        result = ""
 
         try:
             paths = self.queries.getPaths(self.version.id, self.database, self.logger)
@@ -477,59 +470,33 @@ class DataBuilder(object):
             result = result + "process." + path.name + " = " + "cms.Path( "
 
             try:
-                elements = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
-                items    = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
+                elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
                 msg = 'ERROR: Paths Query Error: ' + e.args[0]
                 self.logger.error(msg)
-                return result
+                return None
 
             elements_dict = dict((element.id, element) for element in elements)
+            pathitems = []
 
-            seq = {}
-            lvlZeroSeq_Dict = {}
-
-            for p in items:
-                elem = elements_dict[p.id_pae]
-                if elem.paetype != 2:
+            # emit only the top-level items
+            for item in items:
+                elem = elements_dict[item.id_pae]
+                if item.lvl > 0:
                     continue
+                pathitem = Pathitem(item.id_pae, elem.name, item.id_pathid, elem.paetype, item.id_parent, item.lvl, item.order, item.operator)
+                pathitems.append(pathitem)
 
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
-                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                seq[item.gid] = item
-                if (item.lvl == 0):
-                    lvlZeroSeq_Dict[item.gid] = item.id
+            pathitems.sort(key = lambda pathitem: pathitem.order)
 
-            try:
-                lista     = self.queries.getLevelZeroPathItems(path.id, self.version.id, self.database, self.logger)
-                lvlzelems = self.queries.getLevelZeroPaelements(path.id, self.version.id, self.database, self.logger)
-
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                self.logger.error(msg)
-                return result
-
-            lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
-            pats = []
-
-            for l in lista:
-                elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
-                pats.insert(item.order, item)
-
-            lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-            for lzseq in lvlZeroSeq_Dict_keys:
-                lzsequence = seq[lzseq]
-                pats.insert(lzsequence.order, lzsequence)
-
-            for pat in pats:
-                if pat.operator == 0:
-                    result = result + "process." + pat.name + " + "
-                elif pat.operator == 2:
-                    result = result + "cms.ignore(process." + pat.name + ")" + " + "
-                elif pat.operator == 1:
-                    result = result + "~process." + pat.name + " + "
+            for pathitem in pathitems:
+                if pathitem.operator == 0:
+                    result = result + "process." + pathitem.name + " + "
+                elif pathitem.operator == 2:
+                    result = result + "cms.ignore(process." + pathitem.name + ")" + " + "
+                elif pathitem.operator == 1:
+                    result = result + "~process." + pathitem.name + " + "
 
             result = result[:-2] + ")\n"
 
@@ -537,96 +504,58 @@ class DataBuilder(object):
 
 
     def getEndPaths(self):
-        idgen = Counter()
-        seqsMap = SequencesMapping(idgen)
-        modsMap = ModulesMapping(idgen)
-        oumodsMap = UniqueMapping(idgen)
         result = ""
 
-        elements = None
-        items = None
-        lista = None
-        lvlzelems = None
-
         try:
-            endPaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
+            paths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getEndPaths Error: ' + e.args[0]
+            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
             self.logger.error(msg)
             return result
 
-        for path in endPaths:
+        for path in paths:
             result = result + "process." + path.name + " = " + "cms.EndPath( "
 
             try:
-                elements = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
-                items    = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
+                elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
                 msg = 'ERROR: Paths Query Error: ' + e.args[0]
                 self.logger.error(msg)
-                return result
+                return None
 
             elements_dict = dict((element.id, element) for element in elements)
+            pathitems = []
 
-            seq = {}
-            lvlZeroSeq_Dict = {}
-
-            for p in items:
-                elem = elements_dict[p.id_pae]
-                if elem.paetype != 2:
+            # emit only the top-level items...
+            for item in items:
+                element = elements_dict[item.id_pae]
+                if item.lvl > 0:
                     continue
+                pathitem = Pathitem(item.id_pae, element.name, item.id_pathid, element.paetype, item.id_parent, item.lvl, item.order, item.operator)
+                pathitems.append(pathitem)
 
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
-                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                seq[item.gid]=item
-                if (item.lvl == 0):
-                    lvlZeroSeq_Dict[item.gid] = item.id
+            # ...and the OutputMoules
+            outputmodule = self.queries.getOumStreamid(path.id, self.database, self.logger)
+            if (outputmodule != None):
+                stream = self.queries.getStreamid(outputmodule.id_streamid, self.database, self.logger)
+                pathitem = Pathitem(outputmodule.id_streamid, "hltOutput"+stream.name, outputmodule.id_pathid, 3, -1, 0, outputmodule.order)
+                pathitems.append(pathitem)
 
-            try:
-                lista     = self.queries.getLevelZeroPathItems(path.id, self.version.id, self.database, self.logger)
-                lvlzelems = self.queries.getLevelZeroPaelements(path.id, self.version.id, self.database, self.logger)
+            pathitems.sort(key = lambda item: item.order)
 
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                self.logger.error(msg)
-                return result
-
-            lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
-            pats = []
-
-            for l in lista:
-                elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
-                pats.insert(item.order, item)
-
-            lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-            for lzseq in lvlZeroSeq_Dict_keys:
-                lzsequence = seq[lzseq]
-                pats.insert(lzsequence.order, lzsequence)
-
-            outmodule = self.queries.getOumStreamid(path.id, self.database, self.logger)
-            if (outmodule != None):
-                stream = self.queries.getStreamid(outmodule.id_streamid, self.database, self.logger)
-
-                oumName = "hltOutput"+stream.name
-                oum = Pathitem(outmodule.id_streamid, oumName, outmodule.id_pathid, 3, -1, 0, outmodule.order)
-
-                oum.gid = oumodsMap.put(oum)
-
-                pats.insert(oum.order, oum)
-
-            for pat in pats:
-                if pat.operator == 0:
-                    result = result + "process." + pat.name + " + "
-                elif pat.operator == 2:
-                    result = result + "cms.ignore(process." + pat.name + ")" + " + "
-                elif pat.operator == 1:
-                    result = result + "~process." + pat.name + " + "
+            for pathitem in pathitems:
+                if pathitem.operator == 0:
+                    result = result + "process." + pathitem.name + " + "
+                elif pathitem.operator == 2:
+                    result = result + "cms.ignore(process." + pathitem.name + ")" + " + "
+                elif pathitem.operator == 1:
+                    result = result + "~process." + pathitem.name + " + "
 
             result = result[:-2] + ")\n"
 
         return result + "\n"
+
 
     def getSchedule(self):
 
@@ -1110,7 +1039,7 @@ class DataBuilder(object):
     def getTab(n):
         return "\t".expandtabs(n)
 
-    
+
     @staticmethod
     def format_double(value):
         string = format(value)
@@ -1120,4 +1049,4 @@ class DataBuilder(object):
             else:
                 string = string + '.0'
         return string
-    
+

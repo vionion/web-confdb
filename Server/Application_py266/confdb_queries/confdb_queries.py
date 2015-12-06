@@ -17,6 +17,46 @@ from confdb_tables.confdb_tables import *
 
 class ConfDbQueries(object):
 
+    def getPathElements(self, id_pathid, id_version, db, log):
+        if (id_pathid == -2 or id_version == -2 or db == None):
+            log.error('ERROR: getPathElements - input parameters error')
+
+        query = db.query(Pathelement).from_statement(text("SELECT "
+                        + "u_paelements.id, "
+                        + "u_paelements.name, "
+                        + "u_paelements.paetype "
+                        + "FROM u_pathid2pae, u_paelements, u_pathid2conf "
+                        + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
+                        + "and u_pathid2pae.id_pathid=:node "
+                        + "and u_pathid2pae.id_pae=u_paelements.id "
+                        + "and u_pathid2conf.id_confver=:leng "
+                        + "order by u_pathid2pae.id ")).params(node = id_pathid, leng = id_version)
+        results = query.all()
+        return results
+
+
+    def getPathItems(self, id_pathid, id_version, db, log):
+        if (id_pathid == -2 or id_version == -2 or db == None):
+            log.error('ERROR: getPathItems - input parameters error')
+
+        query = db.query(Pathitems).from_statement(text("SELECT "
+                        + "u_pathid2pae.id, "
+                        + "u_pathid2pae.id_pathid, "
+                        + "u_pathid2pae.id_pae, "
+                        + "u_pathid2pae.id_parent,"
+                        + "u_pathid2pae.lvl, "
+                        + "u_pathid2pae.ord, "
+                        + "u_pathid2pae.operator "
+                        + "FROM u_pathid2pae,u_paelements, u_pathid2conf  "
+                        + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
+                        + "and u_pathid2pae.id_pathid=:node "
+                        + "and u_pathid2pae.id_pae=u_paelements.id "
+                        + "and u_pathid2conf.id_confver=:leng "
+                        + "order by u_pathid2pae.id ")).params(node=id_pathid, leng=id_version)
+        results = query.all()
+        return results
+
+
     #Returns the Sequences Paelements records (Sequences and their Modules) in a given path
     #@params:
     #         id_version: id of Confversion table in the confDB
