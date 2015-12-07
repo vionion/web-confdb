@@ -9,8 +9,6 @@ class ParamsBuilder():
         if (module_id == -2 or session == None or query == None):
             logger.error('ERROR: buildParameters - input parameters error\n' + ''.join(traceback.format_stack()))
 
-        elements = None
-
         try:
             # retreive all the parameters of the module
             elements = query(module_id, session, logger)
@@ -24,74 +22,44 @@ class ParamsBuilder():
     @staticmethod
     def buildParameterStructure(logger, elements, set_default = False):
         # build all the parameters, PSets and VPSets
-        params      = []
-        pset        = {}
-        vpset       = {}
-        parents     = {}
-        parents[0]  = -1
+        params  = []
+        level   = 0
+        stack   = [ params ]
+        parents = [ None ]
+        prev    = None
 
         for p in elements:
-            parent = parents.get(p.lvl)
-            clvl = p.lvl+1
-            parValue = None
-            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
-                parValue = p.value
+            # build the next element
+            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):   # XXX why valuelob == "" ?  why moetype == 1 ?
+                value = p.value
             else:
-                parValue = p.valuelob
+                value = p.valuelob
 
-            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
+            if p.lvl > (len(stack)-1):
+                assert p.lvl == len(stack)
+                assert stack[-1]
+                stack.append(stack[-1][-1].children)
+                parents.append(prev)
+
+            while p.lvl < (len(stack)-1):
+                # stack[-1].sort(key = lambda p: p.order)
+                stack.pop()
+                prev = parents.pop()
+
+            item = Parameter(p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked)
             item.default = set_default
-
-            # the parameter is a VPSet
-            if (item.moetype == 3):
-                parents[clvl] = p.id
+            # the parameter is a PSet or VPSet
+            if item.moetype == 3 or item.moetype == 2:
                 item.expanded = False
-                vpset[item.id] = item
 
-            # the parameter is a PSet
-            elif (item.moetype == 2):
-                parents[clvl] = p.id
-                item.expanded = False
-                pset[item.id]=item
-                if (vpset.has_key(item.id_parent)):
-                    vpset[item.id_parent].children.insert(item.order, item)
+            stack[-1].append(item)
 
-            # the parameter is a simple value
-            else:
-                if (item.lvl == 0):
-                    params.insert(item.order,item)
-                    params.sort(key=lambda par: par.order)
-                elif item.id_parent:
-                    tps = pset[item.id_parent].children
-                    tps.insert(item.order, item)
-                    tps.sort(key=lambda par: par.order)
-                else:
-                    logger.error('parameter %s has level %d but not parent' % (item.name, item.lvl))
+            # remember the last elements as the possible next parent
+            prev = p.id
 
-        # complete the construction of the PSet
-        psets = pset.values()
-        for s in psets:
-            if (s.lvl != 0):
-                if (pset.has_key(s.id_parent)):
-                    tps = pset[s.id_parent].children
-                    tps.insert(s.order, s)
-                    tps.sort(key=lambda par: par.order)
-
-        # merge the PSets
-        psKeys = pset.keys()
-        for ss in psKeys:
-            s = pset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        # merge the VPSets
-        vpsKeys = vpset.keys()
-        for ss in vpsKeys:
-            s = vpset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        params.sort(key=lambda par: par.order)
+        while stack:
+            # stack[-1].sort(key = lambda p: p.order)
+            stack.pop()
 
         return params
 
