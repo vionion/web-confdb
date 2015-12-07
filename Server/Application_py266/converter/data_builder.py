@@ -653,7 +653,7 @@ class DataBuilder(object):
             tracked = '' if param.tracked else 'untracked.'
             if param.paramtype == "VPSet":
                 result = result + self.getTab(pset_tab) + param.name + " = cms." + tracked
-                new_result = self.buildVPSetChildren(template_param, pset_tab+2, param_tab+2)
+                new_result = self.buildVPSetChildren(param, pset_tab+2, param_tab+2)
                 if len(param.children) < 255:
                     result = result + "VPSet(\n"
                     if new_result == "\n":
