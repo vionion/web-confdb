@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # File Main.py Description:
 # This file is the entry point of the Server side application.
@@ -6,39 +7,23 @@
 # as well the Database session
 # Class: Root
 
-
-# -*- coding: utf-8 -*-
+import sys
+import logging
+import logging.handlers
 import cherrypy
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+from cherrypy.lib.static import serve_file
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from cherrypy import _cplogging, _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
-from cherrypy.lib.static import serve_file
-from operator import attrgetter
-import json
-#from collections import OrderedDict
-#from ordereddict import OrderedDict
 from marshmallow.ordereddict import OrderedDict
 from utils import *
-
-#NEW IMPORT
 from exposed.exposed import *
 from converter.converter import *
 from inverter.inverter import *
 from exposed.parser_functions import *
 from sqlalchemy_plugin.saplugin import *
-
-import glob
-
-import sys
-import logging
-import logging.handlers
-
-#Set logging handlers for the first time
-#from conflogger import logconfig
-
-import os
-import os.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
 #metadata = MetaData()
 
@@ -123,13 +108,10 @@ class Root(object):
 
         return "Hello World"
 
-    #Get a the list of items in a path
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def allpathitems(self, _dc=101, ver=-2, cnf=-2,node=1, itype="",online="False", filter=""):
-
-#        db = cherrypy.request.db
 
         db = None
         db_online = cherrypy.request.db_online
@@ -323,17 +305,13 @@ class Root(object):
         data = None
         gid = int(gid)
 
-#        print "GID: ",gid
-
         if gid == -1:
-#            print "IN -1: "
             data = self.funcs.getRootDirectory(folMap, cnfMap, self.folMap_online, db, self.log)
 
         else:
             data = self.funcs.getChildrenDirectories(gid,folMap, cnfMap, db, self.log)
 
         if (data is None):
-#            print ("Exception - Error")
             self.log.error('ERROR: directories - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the directories")
 
@@ -343,7 +321,6 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def versions(self, _dc=101, cid = 1, online="False"):
-#        db = cherrypy.request.db
 
         db = None
         db_online = cherrypy.request.db_online
@@ -363,7 +340,6 @@ class Root(object):
         id_c = cnfMap.get(cid)
         data = self.funcs.getVersionsByConfig(id_c,db, self.log)
         if (data == None):
-#            print ("Exception - Error")
             self.log.error('ERROR: versions - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the Versions")
 
@@ -374,8 +350,6 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def moddetails(self, _dc=101, mid=0, pid=0,online="False", verid=-1):
-#        db = cherrypy.request.db
-
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
@@ -1341,7 +1315,7 @@ class Root(object):
         print "CONFIG ID & NAME: ", config_id, config_obj.config_name
 
 
-        os.unlinke('temp.py') #CHANGED
+        os.unlink('temp.py')
 
         url = UrlString(config_id,"fake")
 
@@ -1403,23 +1377,24 @@ class Root(object):
         #assert isinstance(output.data, OrderedDict)
 
         return output.data
+
+
 class Download:
 
     def index(self, filepath):
-        # folder = os.environ['STATEDIR']
-        folder = os.environ.get('STATEDIR')
-        x = folder + "/" + filepath + '.py'
-        # x = current_dir + "/exported/" + filepath + '.py' #CHANGED
-        return serve_file(x, "application/x-download", "attachment")
+        from Config import state_folder
+        abspath = state_folder + "/" + filepath + '.py'
+        return serve_file(abspath, "application/x-download", "attachment")
+
     index.exposed = True
 
+
 if __name__ == '__main__':
-    # Register the SQLAlchemy plugin
 
     # Load configuration
-#    from Config.Config import connectUrl, cpconfig, base_url
     from Config import *
 
+    # Register the SQLAlchemy plugin
     from sqlalchemy_plugin.saplugin import SAEnginePlugin
     from cherrypy.process.plugins import DropPrivileges
 

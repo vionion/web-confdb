@@ -18,7 +18,6 @@ else:
 
 # Load configuration
 from Config import *
-from Config.Config import cpconfig, base_url
 from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 connectionString = ConnectionString()
 
