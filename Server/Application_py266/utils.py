@@ -1,4 +1,5 @@
 import external.bidict as bidict
+import time
 
 class Counter(object):
 
@@ -93,3 +94,23 @@ class SequencesMapping(object):
             return self.__dict[key][0]
         else:
             return -2
+
+
+
+class Timer(object):
+    "A simple Timer class built on top of time.time()"
+
+    def __init__(self):
+        self.reset()
+        self.start()
+
+    def reset(self):
+        self.elapsed = 0.
+
+    def start(self):
+        self.__start = time.time() - self.elapsed
+
+    def stop(self):
+        self.elapsed = time.time() - self.__start
+        return self.elapsed
+

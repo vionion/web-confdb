@@ -1,5 +1,3 @@
-import time
-
 from Config import Config
 from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 from sqlalchemy.ext.automap import automap_base
@@ -7,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from confdb_tables.confdb_tables import Base
 from data_builder import DataBuilder
+from utils import Timer
 
 logger      = None
 databuilder = None
@@ -43,8 +42,9 @@ def worker(args):
 
     # call the requested method
     logger.info('%s: call to DataBuilder.%s' % (label, method))
-    t = time.time()
+    t = Timer()
     data = getattr(databuilder, method)()
-    logger.info('%s: done [%.1fs]' % (label, time.time() - t))
+    t.stop()
+    logger.info('%s: done [%.1fs]' % (label, t.elapsed))
     return label, data
 

@@ -17,6 +17,7 @@ from marshmallow.ordereddict import OrderedDict
 from exposed.exposed import *
 from utils import *
 
+
 class DataBuilder(object):
 
     queries = ConfDbQueries()
@@ -305,43 +306,70 @@ class DataBuilder(object):
         parameters = {}
 
         try:
+            t1 = Timer()
             modules = self.queries.getModules(self.version.id, self.database, self.logger)
+            t1.stop()
+            print 'getModules: query getModules(...) took               %6.2fs' % t1.elapsed
 
+            t1 = Timer()
             templates = dict((module.id_templ, None) for module in modules)
             for id in templates:
                 templates[id] = self.queries.getTemplateParams(id, self.database, self.logger)
+            t1.stop()
+            print 'getModules: query getTemplateParams(...) took        %6.2fs' % t1.elapsed
 
+            t1 = Timer()
             parameters = dict((module.id, None) for module in modules)
             for id in parameters:
                 parameters[id] = self.queries.getModuleParamItemsOne(id, self.database, self.logger)
+            t1.stop()
+            print 'getModules: query getModuleParamItemsOne(...) took   %6.2fs' % t1.elapsed
 
         except Exception as e:
             msg = 'ERROR: getModules: ' + e.args[0]
             self.logger.error(msg)
             return None
 
+        t2 = Timer()
+        t3 = Timer()
+        t4 = Timer()
+        t5 = Timer()
+
         for module in modules:
+            t2.start()
             # retrieve the template (default) parameters
             t_params = self.params_builder.buildParameterStructure(self.logger, templates[module.id_templ], set_default = True)
+            t2.stop()
 
+            t3.start()
             # retreive the module parameters
             m_params = self.params_builder.buildParameterStructure(self.logger, parameters[module.id], set_default = False)
+            t3.stop()
 
             # merge the template (default) and module parameters
+            t4.start()
             params = {}
             for p in t_params:
                 params[p.name] = p
             for p in m_params:
                 params[p.name] = p
             template_params = sorted(params.values(), key = lambda p: p.order)
+            t4.stop()
 
             # build the text representation
+            t5.start()
             result = result + "process." + module.name + " = cms." + module.mtype + '( "' + module.temp_name + '",\n'
             new_result = self.createParameterString(template_params)
             if new_result == "":
                 result = result[:-2] + " )\n"
             else:
                 result = result + new_result
+            t5.stop()
+
+        print 'getModules: buildParameterStructure (template) took  %6.2fs' % t2.elapsed
+        print 'getModules: buildParameterStructure (module) took    %6.2fs' % t3.elapsed
+        print 'getModules: merging the parameters took              %6.2fs' % t4.elapsed
+        print 'getModules: emitting the python representation took  %6.2fs' % t5.elapsed
 
         return result + "\n"
 
