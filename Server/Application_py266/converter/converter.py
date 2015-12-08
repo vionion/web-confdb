@@ -87,12 +87,12 @@ class Converter(object):
 
         # Adding File's Headers
         self.logger.info('retrieving header...')
-        header = self.writeHeader(version.name, release.releasetag, version.processname)#version.config)
+        header = self.writeHeader(version.name, release.releasetag, version.processname)
         self.logger.info('done')
 
         tasks = [
-            ('paths',          'getPaths'),
             ('modules',        'getModules'),
+            ('paths',          'getPaths'),
             ('sequences',      'getSequences'),
             ('datasets',       'getDatasetsPaths'),
             ('psets',          'getGlobalPsets'),
@@ -157,7 +157,7 @@ class Converter(object):
         result = result + 'import FWCore.ParameterSet.Config as cms\n\n'
         result = result + 'process = cms.Process( "' + process_name + '" )\n\n'
         result = result + 'process.HLTConfigVersion = cms.PSet(\n'
-        result = result + self.data_builder.getTab(2) + "tableName = cms.string('" + version_name + "')\n)\n\n"
+        result = result + DataBuilder.indent_module + "tableName = cms.string( '" + version_name + "' )\n)\n\n"
 
         return result
 
