@@ -59,5 +59,5 @@ cnf = -1
 
 import os
 workdir = os.getcwd()
-config_file_name = converter.createConfig(ver, cnf, session, online, workdir + '/HLT.py', use_cherrypy = False)
+config_file_name = converter.createConfig(ver, cnf, session, online, workdir, use_cherrypy = False)
 

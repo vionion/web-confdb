@@ -68,15 +68,24 @@ class SATool(cherrypy.Tool):
 
 
     def cleanup_files(self):
-        "Remove the generated file after the download"
+        "Remove the generated file and folder after the download"
 
         path_info = cherrypy.request.path_info
 
         if "download" in path_info:
-            from Config import state_dir
-            path = state_dir + "/" + cherrypy.request.params['filepath'] + '.py'
+            from LocalConfig import state_dir
+            path = state_dir + "/" + cherrypy.request.params['filepath']
 
-            if os.path.exists(path):
-                log_msg = "DELETING FILE: " + path
-                self.log.error(log_msg)
-                os.unlink(path)
+            self.log.info('cleanup: %s' % path)
+            try:
+                os.remove(path)
+                self.log.info('cleanup: removed file %s' % path)
+            except:
+                  pass
+            path = os.path.dirname(path)
+            try:
+                os.rmdir(path)
+                self.log.info('cleanup: removed empty directory %s' % path)
+            except:
+                pass
+

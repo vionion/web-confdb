@@ -22,7 +22,7 @@ class Converter(object):
     def __init__(self, threads = 4):
         self. threads = threads
 
-    def createConfig(self, ver=-2, cnf=-2, db = None, online = "False", filename = "", use_cherrypy = False):
+    def createConfig(self, ver=-2, cnf=-2, db = None, online = "False", folder = "", use_cherrypy = False):
 
         if use_cherrypy:
             import cherrypy
@@ -141,15 +141,16 @@ class Converter(object):
             parts['endpaths'] + \
             parts['schedule']
 
+        filename = folder + '/HLT.py'
         try:
-            file = open(filename,'w')
+            file = open(filename, 'w')
             file.write(data)
             file.close()
-            return True
+            return filename
         except Exception as e:
             msg = 'ERROR: Writting to file %s: %s' % (filename, e.args[0])
             self.logger.error(msg)
-            return False
+            return None
 
 
     def writeHeader(self, version_name, release_tag, process_name):

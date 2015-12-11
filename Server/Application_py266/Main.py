@@ -82,7 +82,6 @@ class Root(object):
     conv = Converter()
     inv = Inverter()
     par_funcs = Parser_Functions()
-    configDumpCounter = Counter()
     config_idgen = Counter()
 
     log = cherrypy.log
@@ -1253,20 +1252,16 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def export(self, _dc=101,  ver=-2, cnf=-2,online="False"):
-        import time
-        now = time.time()
+        from LocalConfig import state_dir
+        timer = Timer()
+
         db = None
-        db_online = cherrypy.request.db_online
-        db_offline = cherrypy.request.db_offline
-
         cnfMap = None
-
         if online == 'True' or online == 'true':
-            db = db_online
+            db = cherrypy.request.db_online
             cnfMap = self.cnfMap_online
-
         else:
-            db = db_offline
+            db = cherrypy.request.db_offline
             cnfMap = self.cnfMap
 
         cnf = int(cnf)
@@ -1278,17 +1273,19 @@ class Root(object):
         resp.success = True
         resp.children = []
 
-        config_filename = current_dir + '/dump%08d.py' % self.configDumpCounter.getNext()
-        self.conv.createConfig(ver, cnf, db, online, config_filename, use_cherrypy = True)
-        # FIXME need to handle the case where the dump failed
-        config_path = '/confdb/download/?filepath=' + config_filename
+        folder = tempfile.mkdtemp(dir = state_dir)
+        absolute_filename = self.conv.createConfig(ver, cnf, db, online, folder, use_cherrypy = True)
+        relative_filename = absolute_filename[len(state_dir):].lstrip('/')
+        if not relative_filename:
+            # FIXME need to handle the case where the dump failed
+            pass
+        config_path = base_url + '/download/?filepath=' + relative_filename
         url = UrlString(1, config_path)
         resp.children.append(url)
-        print "Time: ", int(time.time() - now)
+        timer.stop()
+        self.log.info('export done to file %s in %0.1fs' % (absolute_filename, timer.elapsed))
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
     @cherrypy.tools.json_out()
@@ -1382,9 +1379,9 @@ class Root(object):
 class Download:
 
     def index(self, filepath):
-        from Config import state_folder
-        abspath = state_folder + "/" + filepath + '.py'
-        return serve_file(abspath, "application/x-download", "attachment")
+        from LocalConfig import state_dir
+        absolute_filename = state_dir + "/" + filepath
+        return serve_file(absolute_filename, "application/x-download", "attachment")
 
     index.exposed = True
 

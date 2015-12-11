@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from ConfDBAuth.ConfDBAuth import * #connectUrl
 import os
 import tempfile
+
+from ConfDBAuth.ConfDBAuth import *
 
 # local confguration for CherryPy
 cpconfig = {
@@ -20,4 +21,3 @@ base_url = ""
 state_dir = tempfile.gettempdir()
 if 'STATEDIR' in os.environ:
     state_dir = os.environ.get('STATEDIR')
-
