@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import cherrypy
 import os
-from os import unlink
 
-__all__ = ['SATool']
+__all__ = [ 'SATool' ]
 
 class SATool(cherrypy.Tool):
     def __init__(self,current_dir="",log=None):
@@ -60,30 +59,33 @@ class SATool(cherrypy.Tool):
 
         if ((not hasattr(cherrypy.request, 'db_offline')) and (not hasattr(cherrypy.request, 'db_online'))):
             return
+
         cherrypy.request.db_online = None
         cherrypy.request.db_offline = None
 
         cherrypy.engine.publish('commit-online-session')
         cherrypy.engine.publish('commit-offline-session')
 
-    def cleanup_files(self):
 
-        "Remove the generated file after the download"
-#        print "path_info: ", cherrypy.request.path_info
-#        print "params: ", cherrypy.request.params
+    def cleanup_files(self):
+        "Remove the generated file and folder after the download"
+
         path_info = cherrypy.request.path_info
 
-        path = ""
-
         if "download" in path_info:
-#            print "FILEPATH: ", cherrypy.request.params['filepath']
-            # path = self.current_dir + "/exported/" + cherrypy.request.params['filepath'] + '.py'
-            # folder = os.environ['STATEDIR']
-            folder = os.environ.get('STATEDIR')
-            path = folder + "/" + cherrypy.request.params['filepath'] + '.py'
-        if os.path.exists(path):
-            #print "nothing"
-            log_msg = "DELETING FILE: "+path
-            self.log.error(log_msg)
-            unlink(path)
+            from LocalConfig import state_dir
+            path = state_dir + "/" + cherrypy.request.params['filepath']
+
+            self.log.info('cleanup: %s' % path)
+            try:
+                os.remove(path)
+                self.log.info('cleanup: removed file %s' % path)
+            except:
+                  pass
+            path = os.path.dirname(path)
+            try:
+                os.rmdir(path)
+                self.log.info('cleanup: removed empty directory %s' % path)
+            except:
+                pass
 

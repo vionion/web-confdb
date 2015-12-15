@@ -2,6 +2,8 @@
 #
 # Class: DataBuilder
 
+import itertools
+import re
 from confdb_queries.confdb_queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
@@ -15,88 +17,83 @@ from marshmallow import Schema, fields, pprint
 from marshmallow.ordereddict import OrderedDict
 from exposed.exposed import *
 from utils import *
-import string
-import re
-from multiprocessing import Process, Pipe
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+
 
 class DataBuilder(object):
 
     queries = ConfDbQueries()
     params_builder = ParamsBuilder()
 
-    global_datasets = None
-    global_paths = None
-    global_endPaths = None
-    global_paths_str = None
-    global_endpaths_str = None
+    indent_module = '  '
+    indent_parameter = '  '
 
-    def getGlobalPsets(self, ver_id, db, log):
-        queries = self.queries
+    def __init__(self, database, version, logger):
+        self.database = database
+        self.version  = version
+        self.logger   = logger
+
+    def getGlobalPsets(self):
         result = ""
 
-        global_psets = None
+        psets = None
 
         try:
-            global_psets = queries.getConfGPsets(ver_id, db, log)
+            psets = self.queries.getConfGPsets(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: Query getConfGPsets Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         template_params = None
 
-        for gpset in global_psets:
-            result = result + "process." + gpset.name + ' = cms.PSet(\n'
-
+        for gpset in psets:
             try:
-                template_params = self.params_builder.gpsetParamsBuilder(gpset.id, queries, db,log)
+                template_params = self.params_builder.gpsetParamsBuilder(gpset.id, self.queries, self.database, self.logger)
             except Exception as e:
                 msg = 'ERROR: Query gpsetParamsBuilder Error: ' + e.args[0]
-                log.error(msg)
+                self.logger.error(msg)
                 return result
 
-            new_result = self.createParameterString(template_params)
-            if new_result == "":
-                result = result[:-2] + " )\n"
+            result = result + "process." + gpset.name + ' = cms.PSet('
+            if template_params:
+                result += '\n' + ',\n'.join(self.emitParameter(p) for p in template_params) + '\n)\n'
             else:
-                result = result + new_result
+                result += ' )\n'
 
         if result == "":
             return result
         else:
             return result + "\n"
 
-    def getStreams(self, ver_id, db):
 
-        result = ""
-        global global_datasets
+    def getStreams(self):
+        result = "process.streams = cms.PSet(\n"
 
         streams = None
-        global_datasets = None
+        datasets = None
         relations = None
 
         try:
-            streams = self.queries.getConfStreams(ver_id,db)
-            global_datasets = self.queries.getConfDatasets(ver_id,db)
-            relations = self.queries.getConfStrDatRels(ver_id,db)
+            streams   = self.queries.getConfStreams(self.version.id, self.database)
+            datasets  = self.queries.getConfDatasets(self.version.id, self.database)
+            relations = self.queries.getConfStrDatRels(self.version.id, self.database)
         except Exception as e:
             msg = 'ERROR: Steams Query Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
 
         streams.sort(key=lambda par: par.name)
-        global_datasets.sort(key=lambda par: par.name)
+        datasets.sort(key=lambda par: par.name)
 
         for stream in streams:
-            result = result + self.getTab(2) + stream.name + " = cms.vstring( "
+            result = result + self.indent_module + stream.name + " = cms.vstring( "
+
             new_result = ""
-            for dataset in global_datasets:
+            for dataset in datasets:
                 if(stream.id == relations_dict.get(dataset.id)):
-                    new_result = new_result + "'" + dataset.name + "'" + ",\n" + self.getTab(4)
+                    new_result = new_result + "'" + dataset.name + "'" + ",\n" + self.indent_module + self.indent_parameter
 
             if new_result != "":
                 result = result + new_result[:-6] + " ),\n"
@@ -107,54 +104,62 @@ class DataBuilder(object):
 
         return result + "\n"
 
-    def getDatasetsPaths(self, ver_id, db):
 
-        result = ""
+    def getDatasetsPaths(self):
 
-        paths = None
+        result = "process.datasets = cms.PSet(\n"
 
-        for dataset in global_datasets:
-            result = result + self.getTab(2) + dataset.name + " = cms.vstring( "
+        try:
+            datasets = self.queries.getConfDatasets(self.version.id, self.database)
+            datasets.sort(key=lambda par: par.name)
+        except Exception as e:
+            msg = 'ERROR: Steams Query Error: ' + e.args[0]
+            self.logger.error(msg)
+            return result
 
+        for dataset in datasets:
+            result = result + self.indent_module + dataset.name + " = cms.vstring( "
+
+            paths = None
             try:
-                paths = self.queries.getDatasetPathids(ver_id, dataset.id, db)
+                paths = self.queries.getDatasetPathids(self.version.id, dataset.id, self.database)
             except Exception as e:
                 msg = 'ERROR: Query getDatasetPathids Error: ' + e.args[0]
-                log.error(msg)
+                self.logger.error(msg)
                 return result
 
             paths.sort(key=lambda par: par.name)
             if len(paths) == 0:
-                result = result + "\n" + self.getTab(4)
+                result = result + "\n" + self.indent_module + self.indent_parameter
             elif len(paths) < 255:
                 for path in paths:
-                    result = result + "'" + path.name + "'" + ",\n" + self.getTab(4)
+                    result = result + "'" + path.name + "'" + ",\n" + self.indent_module + self.indent_parameter
             else:
                 result = result + "*( "
                 for path in paths:
-                    result = result + "'" + path.name + "'" + ",\n" + self.getTab(4)
-                result = result[:-6] + "),\n" + self.getTab(4)
+                    result = result + "'" + path.name + "'" + ",\n" + self.indent_module + self.indent_parameter
+                result = result[:-6] + "),\n" + self.indent_module + self.indent_parameter
             result = result[:-6] + " ),\n"
         result = result[:-2] + "\n)\n"
 
         return result + "\n"
 
-    def getEDSources(self, ver_id, id_rel, db = None):
+
+    def getEDSources(self):
 
         result = ""
-        queries = self.queries
 
         modules = None
         templates = None
         conf2eds = None
 
         try:
-            modules = queries.getConfEDSource(ver_id,db)
-            templates = queries.getEDSTemplates(id_rel,db)
-            conf2eds = queries.getConfToEDSRel(ver_id,db)
+            modules   = self.queries.getConfEDSource(self.version.id, self.database)
+            templates = self.queries.getEDSTemplates(self.version.id_release, self.database)
+            conf2eds  = self.queries.getConfToEDSRel(self.version.id, self.database)
         except Exception as e:
             msg = 'ERROR: EDSources Query Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         templates_dict = dict((x.id, x) for x in templates)
@@ -177,25 +182,21 @@ class DataBuilder(object):
         tempelements = None
 
         for edsource in edsources:
-            result = result + 'process.source = cms.Source( "'  + edsource.name + '",\n'
-
             try:
-                template = queries.getEDSTemplateByEds(edsource.id,db)
-                tempelements = queries.getEDSTemplateParams(template.id,db)
+                template     = self.queries.getEDSTemplateByEds(edsource.id, self.database)
+                tempelements = self.queries.getEDSTemplateParams(template.id, self.database)
             except Exception as e:
                 msg = 'ERROR: EDSources Query Error: ' + e.args[0]
-                log.error(msg)
+                self.logger.error(msg)
                 return ""
-            for tempel in tempelements:
-                tracked, val = self.buildParamValue(tempel, 4, 6)
-                result = result + self.getTab(4) + tempel.name + " = cms." + tracked + tempel.paramtype + val
-            result = result[:-2] + "\n)\n\n"
+
+            params = self.params_builder.buildParameterStructure(self.logger, tempelements, set_default = True)
+            result = result + self.emitModule('source', 'Source', edsource.name, params)
 
         return result
 
-    def getESSource(self, ver_id, id_rel, db = None, log=None):
 
-        queries = self.queries
+    def getESSource(self):
         result = ""
 
         modules = None
@@ -203,12 +204,12 @@ class DataBuilder(object):
         conf2ess = None
 
         try:
-            modules = queries.getConfESSource(ver_id,db)
-            templates = queries.getESSTemplates(id_rel,db)
-            conf2ess = queries.getConfToESSRel(ver_id,db)
+            modules =   self.queries.getConfESSource(self.version.id, self.database)
+            templates = self.queries.getESSTemplates(self.version.id_release, self.database)
+            conf2ess =  self.queries.getConfToESSRel(self.version.id, self.database)
         except Exception as e:
             msg = 'ERROR: ESSource Query Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         templates_dict = dict((x.id, x) for x in templates)
@@ -218,19 +219,14 @@ class DataBuilder(object):
         for module in modules:
             if (templates_dict.has_key(module.id_template) and conf2ess_dict.has_key(module.id)):
                 template = templates_dict.get(module.id_template)
-                result = result + "process." + module.name + ' = cms.ESSource( "' + template.name + '",\n'
-                template_params = self.params_builder.esSourceParamsBuilder(module.id, self.queries, db, log)
-                new_result = self.createParameterString(template_params)
-                if new_result == "":
-                    result = result[:-2] + " )\n"
-                else:
-                    result = result + new_result
+                template_params = self.params_builder.esSourceParamsBuilder(module.id, self.queries, self.database, self.logger)
+                result = result + self.emitModule(module.name, 'ESSource', template.name, template_params)
 
         return result + "\n"
 
-    def getESModules(self, ver_id, id_rel, db = None, log=None):
 
-        queries = self.queries
+    def getESModules(self):
+
         result = ""
 
         modules = None
@@ -238,12 +234,12 @@ class DataBuilder(object):
         conf2esm = None
 
         try:
-            modules = queries.getConfESModules(ver_id,db)
-            templates = queries.getESMTemplates(id_rel,db)
-            conf2esm = queries.getConfToESMRel(ver_id,db)
+            modules   = self.queries.getConfESModules(self.version.id, self.database)
+            templates = self.queries.getESMTemplates(self.version.id_release, self.database)
+            conf2esm  = self.queries.getConfToESMRel(self.version.id, self.database)
         except Exception as e:
             msg = 'ERROR: ESModules Query Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         templates_dict = dict((x.id, x) for x in templates)
@@ -253,30 +249,25 @@ class DataBuilder(object):
         for module in modules:
             if (templates_dict.has_key(module.id_template) and conf2esm_dict.has_key(module.id)):
                 template = templates_dict.get(module.id_template)
-                result = result + "process." + module.name + ' = cms.ESProducer( "' + template.name + '",\n'
-                template_params = self.params_builder.esModuleParamsBuilder(module.id, self.queries, db, log)
-                new_result = self.createParameterString(template_params)
-                if new_result == "":
-                    result = result[:-2] + " )\n"
-                else:
-                    result = result + new_result
+                template_params = self.params_builder.esModuleParamsBuilder(module.id, self.queries, self.database, self.logger)
+                result = result + self.emitModule(module.name, 'ESProducer', template.name, template_params)
 
         return result + "\n"
 
-    def getServices(self, ver_id, id_rel, db = None, log=None):
 
-        queries = self.queries
+    def getServices(self):
+
         result = ""
 
         services = None
         templates = None
 
         try:
-            services = queries.getConfServices(ver_id,db)
-            templates = queries.getRelSrvTemplates(id_rel,db)
+            services  = self.queries.getConfServices(self.version.id, self.database)
+            templates = self.queries.getRelSrvTemplates(self.version.id_release, self.database)
         except Exception as e:
             msg = 'ERROR: Services Query Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
         templates_dict = dict((x.id, x) for x in templates)
@@ -284,788 +275,442 @@ class DataBuilder(object):
         for service in services:
             if (templates_dict.has_key(service.id_template)):
                 template = templates_dict.get(service.id_template)
-                result = result + "process." + template.name + ' = cms.Service( "' + template.name + '",\n'
-                template_params = self.params_builder.serviceParamsBuilder(service.id, self.queries, db, log)
-                new_result = self.createParameterString(template_params)
-                if new_result == "":
-                    result = result[:-2] + " )\n"
-                else:
-                    result = result + new_result
+                template_params = self.params_builder.serviceParamsBuilder(service.id, self.queries, self.database, self.logger)
+                result = result + self.emitModule(template.name, 'Service', template.name, template_params)
 
         return result + "\n"
 
-    def getModules(self, ver_id = -2, id_rel = -2, db = None):
 
-        import cherrypy
-        log = cherrypy.log
-
-        queries = self.queries
+    def getModules(self):
         result = ""
 
-        modules = None
-        module_parameters = None
-        module_template = None
+        modules = []
+        templates = {}
+        parameters = {}
 
         try:
-            modules = self.queries.getModules(ver_id, db, log)
-            module_parameters = self.queries.getModuleElements(ver_id, db, log)
-            module_template = self.queries.getModuleTemplateParameters(id_rel, db, log)
+            t1 = Timer()
+            modules = self.queries.getModules(self.version.id, self.database, self.logger)
+            t1.stop()
+            self.logger.info('getModules: getModules(...) [%.1fs]' % t1.elapsed)
+
+            t1 = Timer()
+            templates = dict((module.id_templ, None) for module in modules)
+            for id in templates:
+                templates[id] = self.queries.getTemplateParams(id, self.database, self.logger)
+            t1.stop()
+            self.logger.info('getModules: getTemplateParams(...) [%.1fs]' % t1.elapsed)
+
+            t1 = Timer()
+            parameters = dict((module.id, None) for module in modules)
+            for id in parameters:
+                parameters[id] = self.queries.getModuleParamItemsOne(id, self.database, self.logger)
+            t1.stop()
+            self.logger.info('getModules: getModuleParamItemsOne(...) [%.1fs]' % t1.elapsed)
+
         except Exception as e:
-            msg = 'ERROR: Modules Query Error: ' + e.args[0]
-            log.error(msg)
-            return result
+            msg = 'ERROR: getModules: ' + e.args[0]
+            self.logger.error(msg)
+            return None
 
-        module_para_dict = dict()
-        module_temp_dict = dict()
-
-        for param in module_parameters:
-            if param.id_pae not in module_para_dict:
-                module_para_dict[param.id_pae] = []
-                module_para_dict[param.id_pae].append(param)
-            else:
-                module_para_dict[param.id_pae].append(param)
-
-        for template in module_template:
-            if template.id_modtemp not in module_temp_dict:
-                module_temp_dict[template.id_modtemp] = []
-                module_temp_dict[template.id_modtemp].append(template)
-            else:
-                module_temp_dict[template.id_modtemp].append(template)
-
-        modules.sort(key=lambda par: par.name)
+        t2 = Timer()
+        t3 = Timer()
 
         for module in modules:
-            result = result + "process." + module.name + " = cms." + module.mtype + '( "' + module.temp_name + '",\n'
-            template = module_temp_dict.get(module.id_templ)
-            parameters = module_para_dict.get(module.id)
-            if parameters is not None:
-                parameters.sort(key=lambda par: par.id_moe)
-            if template is not None:
-                template.sort(key=lambda par: par.id)
-            template_params = self.moduleParamsBuilder(template, parameters, log)
+            t2.start()
+            # retrieve the template (default) parameters
+            t_params = self.params_builder.buildParameterStructure(self.logger, templates[module.id_templ], set_default = True)
 
-            new_result = self.createParameterString(template_params)
+            # retreive the module parameters
+            m_params = self.params_builder.buildParameterStructure(self.logger, parameters[module.id], set_default = False)
 
-            if new_result == "":
-                result = result[:-2] + " )\n"
-            else:
-                result = result + new_result
+            # merge the template (default) and module parameters
+            params = {}
+            for p in t_params:
+                params[p.name] = p
+            for p in m_params:
+                params[p.name] = p
+            template_params = sorted(params.values(), key = lambda p: p.order)
+            t2.stop()
 
-        return result + "\n"
+            # build the text representation
+            t3.start()
+            result = result + self.emitModule(module.name, module.mtype, module.temp_name, template_params)
+            t3.stop()
 
-    def getOutputModules(self, ver_id, id_rel, db = None, log=None):
+        self.logger.info('getModules: building the parameter structure [%.1fs]' % t2.elapsed)
+        self.logger.info('getModules: emitting the python representation [%.1fs]' % t3.elapsed)
 
-        queries = self.queries
-        global global_endPaths, global_endpaths_str
+        return result + '\n'
+
+
+    def getOutputModules(self):
 
         result = ""
-        global_endpaths_str = ""
 
-        global_endPaths = None
+        endpaths = None
 
         try:
-            global_endPaths = queries.getEndPaths(ver_id,db, log)
+            endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: Query getEndPaths Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
             return result
 
-        for path in global_endPaths:
-            global_endpaths_str = global_endpaths_str + "process." + path.name + ", "
-            outmodule = queries.getOumStreamid(path.id, db, log)
+        for path in endpaths:
+            outmodule = self.queries.getOumStreamid(path.id, self.database, self.logger)
             if outmodule == None:
                 continue
-            stream = queries.getStreamid(outmodule.id_streamid, db, log)
-            result = result + "process.hltOutput"+ stream.name + ' = cms.OutputModule( "ShmStreamConsumer",\n'
-            template_params = self.params_builder.outputModuleParamsBuilder(stream.id,queries,db,log)
-            new_result = self.createParameterString(template_params)
-            if new_result == "":
-                result = result[:-2] + " )\n"
-            else:
-                result = result + new_result
+            stream = self.queries.getStreamid(outmodule.id_streamid, self.database, self.logger)
+            template_params = self.params_builder.outputModuleParamsBuilder(stream.id, self.queries, self.database, self.logger)
+            result = result + self.emitModule('hltOutput'+ stream.name, 'OutputModule', 'ShmStreamConsumer', template_params)
 
         return result + "\n"
 
-    def getSequences(self, ver_id, id_rel, db = None, log=None):
 
-        queries = self.queries
-        result = ""
+    def skipSequence(self, counter, items, level):
+        while(counter < len(items) and items[counter].lvl >= level):
+            counter = counter + 1
+        return counter
 
-        seqsMap = SequencesDict()
-        idgen = Counter()
-        modsMap = ModulesDict()
 
-        global global_paths, global_paths_str
-
-        global_paths = None
-
-        try:
-            global_paths = queries.getPaths(ver_id, db, log)
-        except Exception as e:
-            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
-            log.error(msg)
-            return result
-
-        global_paths_str = ""
-
+    def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level):
         children = []
-        written_sequences = []
-
-        elements = None
-        seq_items = None
-
-        for path in global_paths:
-            global_paths_str = global_paths_str + "process." + path.name + ", "
-
-            try:
-                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
-                seq_items = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
-            except Exception as e:
-                msg = 'ERROR: Sequences Query Error: ' + e.args[0]
-                log.error(msg)
-                return result
-
-            seq_elems_dict = dict((x.id, x) for x in elements)
-
-            counter = 0
-
-            while counter < len(seq_items):
-                elem = seq_elems_dict[seq_items[counter].id_pae]
-                item = Pathitem(seq_items[counter].id_pae, elem.name, seq_items[counter].id_pathid, elem.paetype, seq_items[counter].id_parent, seq_items[counter].lvl, seq_items[counter].order)
-                counter = counter + 1
-                if(item.paetype == 2 and item.name not in written_sequences):
-                    new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, seq_items, seq_elems_dict, item.lvl+1)
+        result = ""
+        while(counter < len(items) and items[counter].lvl == level):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+            children.append(item)
+            counter = counter + 1
+            if item.paetype == 2:
+                if item.name in written_sequences:
+                    counter = self.skipSequence(counter, items, item.lvl+1)
+                else:
+                    new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
                     result = result + new_result + "process." + item.name + " = cms.Sequence( "
                     for child in new_children:
-                        result = result + "process." + child + " + "
+                        result += self.emitPathItem(child)
                     result = result[:-2] + ")\n"
-                    written_sequences.append(item.name)
-
-        return result + "\n"
-
-    def getPaths(self, ver_id, id_rel, db = None, log=None):
-        queries = self.queries
-        modsMap = ModulesDict()
-        seqsMap = SequencesDict()
-        idgen = Counter()
-        result = ""
-
-        elements = None
-        items = None
-        lista = None
-        lvlzelems = None
-
-        for path in global_paths:
-            result = result + "process." + path.name + " = " + "cms.Path( "
-
-            try:
-                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
-                items = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                log.error(msg)
-                return result
-
-            elements_dict = dict((x.id, x) for x in elements)
-
-            seq = {}
-            lvlZeroSeq_Dict = {}
-
-            for p in items:
-                elem = elements_dict[p.id_pae]
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
-
-                if (item.paetype == 2):
-                    item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                    seq[item.gid]=item
-                    if (item.lvl == 0):
-                        iid = item.id
-                        lvlZeroSeq_Dict[item.gid] = iid
-
-            try:
-                lista = queries.getLevelZeroPathItems(path.id, ver_id, db, log)
-                lvlzelems = queries.getLevelZeroPaelements(path.id, ver_id, db, log)
-
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                log.error(msg)
-                return result
-
-            lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
-            pats = []
-
-            for l in lista:
-                elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
-                pats.insert(item.order,item)
-
-            lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-            for lzseq in lvlZeroSeq_Dict_keys:
-                lzsequence = seq[lzseq]
-                pats.insert(lzsequence.order, lzsequence)
-
-            for pat in pats:
-                if pat.operator == 0:
-                    result = result + "process." + pat.name + " + "
-                elif pat.operator == 2:
-                    result = result + "cms.ignore(process." + pat.name + ")" + " + "
-                elif pat.operator == 1:
-                    result = result + "~process." + pat.name + " + "
-
-            result = result[:-2] + ")\n"
-
-        return result + "\n"
-
-    def getEndPaths(self, ver_id, id_rel, db = None, log=None):
-
-        queries = self.queries
-        modsMap = ModulesDict()
-        seqsMap = SequencesDict()
-        oumodsMap = OutputModulesDict()
-        idgen = Counter()
-        result = ""
-
-        elements = None
-        items = None
-        lista = None
-        lvlzelems = None
-
-        for path in global_endPaths:
-            result = result + "process." + path.name + " = " + "cms.EndPath( "
-
-            try:
-                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
-                items = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                log.error(msg)
-                return result
-
-            elements_dict = dict((x.id, x) for x in elements)
-
-            seq = {}
-            lvlZeroSeq_Dict = {}
-
-            for p in items:
-                elem = elements_dict[p.id_pae]
-                item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
-
-                if (item.paetype == 2):
-                    item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
-                    seq[item.gid]=item
-                    if (item.lvl == 0):
-                        iid = item.id
-                        lvlZeroSeq_Dict[item.gid] = iid
-
-            try:
-                lista = queries.getLevelZeroPathItems(path.id, ver_id, db, log)
-                lvlzelems = queries.getLevelZeroPaelements(path.id, ver_id, db, log)
-
-            except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
-                log.error(msg)
-                return result
-
-            lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
-            pats = []
-
-            for l in lista:
-                elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
-                pats.insert(item.order,item)
-
-            lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-            for lzseq in lvlZeroSeq_Dict_keys:
-                lzsequence = seq[lzseq]
-                pats.insert(lzsequence.order, lzsequence)
-
-            outmodule = queries.getOumStreamid(path.id, db, log)
-            if (outmodule != None):
-                stream = queries.getStreamid(outmodule.id_streamid, db, log)
-
-                oumName = "hltOutput"+stream.name
-                oum = Pathitem(outmodule.id_streamid, oumName, outmodule.id_pathid, 3, -1, 0, outmodule.order)
-
-                oum.gid = oumodsMap.put(idgen,oum)
-
-                pats.insert(oum.order, oum)
-
-            for pat in pats:
-                if pat.operator == 0:
-                    result = result + "process." + pat.name + " + "
-                elif pat.operator == 2:
-                    result = result + "cms.ignore(process." + pat.name + ")" + " + "
-                elif pat.operator == 1:
-                    result = result + "~process." + pat.name + " + "
-
-            result = result[:-2] + ")\n"
-
-        return result + "\n"
-
-    def getSchedule(self):
-
-        if global_paths_str + global_endpaths_str == "":
-            return "process.HLTSchedule = cms.Schedule( )"
-
-        else:
-            result = "process.HLTSchedule = cms.Schedule( *(" + global_paths_str + global_endpaths_str
-            return result[:-2] + " ))"
-
-    ## -- Helper Functions -- ##
-
-    def moduleParamsBuilder(self, template, parameters, log):
-        params = []
-
-        if template == None:
-            template = {}
-
-        #Build template parameters
-        temp_pset = {}
-        temp_vpset = {}
-        temp_parents = {}
-        temp_parents[0]=-1
-
-        #Build all the vpsets/psets
-
-        temp_params = []
-        temp_params_dict = {}
-        temp_params_name_dict = {}
-
-        for p in template:
-            parent = temp_parents.get(p.lvl)
-            clvl = p.lvl+1
-            parValue = None
-            if (p.valuelob == None or p.valuelob == "") and (p.moetype == 1):
-                parValue = p.value
-
-            else:
-                parValue = p.valuelob
-
-            item = Parameter(p.id, p.name, parValue, p.moetype, p.paramtype, parent, p.lvl, p.order, p.tracked)
-            item.default = True
-
-            temp_params_name_dict[item.name] = item
-
-            # It is a vpset
-            if (item.moetype == 3):
-                temp_parents[clvl] = p.id
-                item.expanded = False
-                temp_vpset[item.id] = item
-
-            # It is a pset
-            elif (item.moetype == 2):
-                temp_parents[clvl] = p.id
-                item.expanded = False
-                temp_pset[item.id]=item
-                if (temp_vpset.has_key(item.id_parent)):
-                    temp_vpset[item.id_parent].children.insert(item.order, item)
-
-            # It is a param
-            else:
-                if(item.lvl == 0):
-                    temp_params.insert(item.order,item)
-                    temp_params.sort(key=lambda par: par.order)
-                else:
-                    tps = temp_pset[item.id_parent].children
-                    tps.insert(item.order, item)
-                    tps.sort(key=lambda par: par.order)
-
-        #complete Pset construction
-        temp_psets = temp_pset.values()
-        for s in temp_psets:
-            if (s.lvl != 0):
-                if (temp_pset.has_key(s.id_parent)):
-                    tps = temp_pset[s.id_parent].children
-                    tps.insert(s.order, s)
-                    tps.sort(key=lambda par: par.order)
-
-        #merge the psets created
-        temp_psKeys = temp_pset.keys()
-
-        for ss in temp_psKeys:
-            s = temp_pset.get(ss)
-            if(s.lvl==0):
-                temp_params.insert(s.order, s)
-
-        #merge the vpsets created
-        temp_vpsKeys = temp_vpset.keys()
-
-        for ss in temp_vpsKeys:
-            s = temp_vpset.get(ss)
-            if(s.lvl==0):
-                temp_params.insert(s.order, s)
-
-        temp_params_dict = dict((x.id, x) for x in temp_params)
-
-        #------------------------------------------------------------------------------------------------------------
-        #Retreive all the parameters of the module
-
-        pset = {}
-        vpset = {}
-        parents = {}
-
-        parents[0]=-1
-
-        not_in = []
-        params = []
-        pset_name_dict = {}
-        vpset_name_dict = {}
-        params_mod_name_dict = {}
-
-        if parameters != None:
-
-            for param in parameters:
-                parent = parents.get(param.lvl)
-                clvl = param.lvl+1
-                parValue = None
-                if (param.valuelob == None or param.valuelob == "") and (param.moetype == 1):
-                    parValue = param.value
-
-                else:
-                    parValue = param.valuelob
-
-                item = Parameter(param.id_moe, param.name, parValue, param.moetype, param.paramtype, parent, param.lvl, param.ord, param.tracked)
-
-                params_mod_name_dict[item.name]=item
-                #Set default
-                if (temp_params_name_dict.has_key(item.name)):
-                    if temp_params_name_dict.get(item.name).value == item.value:
-                        item.default = True
-
-                # It is a vpset
-                if (item.moetype == 3):
-                    parents[clvl] = param.id_moe
-                    item.expanded = False
-                    vpset[item.id] = item
-                    vpset_name_dict[item.name]=item
-
-                # It is a pset
-                elif (item.moetype == 2):
-                    parents[clvl] = param.id_moe
-                    item.expanded = False
-                    pset[item.id]=item
-                    pset_name_dict[item.name]=item
-                    if (vpset.has_key(item.id_parent)):
-                        vpset[item.id_parent].children.insert(item.order, item)
-
-                # It is a param
-                else:
-                    if(item.lvl == 0):
-                        params.insert(item.order,item)
-                        params.sort(key=lambda par: par.order)
-                    else:
-                        tps = pset[item.id_parent].children
-                        tps.insert(item.order, item)
-                        tps.sort(key=lambda par: par.order)
-
-        #Check ok temp params
-        names = temp_params_name_dict.keys()
-        for pn in names:
-            if (not(params_mod_name_dict.has_key(pn))):
-                not_in.append(temp_params_name_dict.get(pn))
-
-
-        #Fill the remaining params from Template
-        if (len(not_in) > 0):
-            for n in not_in:
-                if (n.lvl != 0):
-                    if (n.id_parent in temp_vpset.keys()):
-                        if(vpset_name_dict.has_key(temp_vpset.get(n.id_parent).name)):
-                            vpset_name_dict.get(temp_vpset.get(n.id_parent).name).children.insert(n.order,n)
-
-                    elif (n.id_parent in temp_pset.keys()):
-                        if(pset_name_dict.has_key(temp_pset.get(n.id_parent).name)):
-                            pset_name_dict.get(temp_pset.get(n.id_parent).name).children.insert(n.order,n)
-
-                    else:
-                        log.error('ERROR: Module Param Error Key')
-
-        #complete Pset construction
-        psets = pset.values()
-        for s in psets:
-            if (s.lvl != 0):
-                if (pset.has_key(s.id_parent)):
-                    tps = pset[s.id_parent].children
-                    tps.insert(s.order, s)
-                    tps.sort(key=lambda par: par.order)
-
-        #merge the psets created
-        psKeys = pset.keys() #pset.viewkeys()
-
-        for ss in psKeys:
-            s = pset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        #merge the vpsets created
-        vpsKeys = vpset.keys()
-
-        for ss in vpsKeys:
-            s = vpset.get(ss)
-            if(s.lvl==0):
-                params.insert(s.order, s)
-
-        #Merge the remaining template params
-        for p in not_in:
-            if(p.lvl==0):
-                tp = temp_params_dict.get(p.id)
-                params.insert(tp.order, p)
-
-        params.sort(key=lambda par: par.order)
-
-        return params
-
-    def createParameterString(self, template_params):
-        result = ""
-        for template_param in template_params:
-            tracked = '' if template_param.tracked else 'untracked.'
-            if template_param.paramtype == "VPSet":
-                result = result + self.getTab(4) + template_param.name + " = cms." + tracked
-                new_result = self.buildVPSetChildren(template_param, 6, 8)
-                if len(template_param.children) < 255:
-                    result = result + "VPSet(\n"
-                    if new_result == "\n":
-                        result =  result + self.getTab(4) + "),\n"
-                    else:
-                        result = result + new_result + self.getTab(4) + "),\n"
-                else:
-                    result = result +"VPSet(  *(\n" + new_result + self.getTab(4) + ") ),\n"
-
-            elif template_param.paramtype == "PSet":
-                new_result = ""
-                new_result = self.buildPsetChildren(template_param, 6, 8)
-
-                if len(template_param.children) < 255:
-                    result = result + self.getTab(4) + template_param.name + " = cms." + tracked + "PSet(\n"
-                    if new_result == "\n":
-                        result = result[:-1] + "  ),\n"
-                    else:
-                        result = result = result + new_result + self.getTab(4) + "),\n"
-                else:
-                    result = result + self.getTab(4) + template_param.name + " = cms." + tracked + "PSet(  *(\n"
-                    result = result + new_result + self.getTab(4) + ") ),\n"
-
-            else:
-                tracked, val = self.buildParamValue(template_param, 4, 6)
-                result = result + self.getTab(4) + template_param.name + " = cms." + tracked + template_param.paramtype + val
-
-        if result == "":
-            return result
-        else:
-            return result[:-2] + "\n)\n"
-
-    def buildVPSetChildren(self, template_param, pset_tab, param_tab):
-        result = ""
-        psets = template_param.children
-
-        for pset in psets:
-            if pset.paramtype == "VPSet":
-                result = result + self.getTab(pset_tab) + pset.name + " = cms." + tracked
-                new_result = self.buildVPSetChildren(template_param, pset_tab+2, param_tab+2)
-                if len(pset.children) < 255:
-                    result = result + "VPSet(\n"
-                    if new_result == "\n":
-                        result =  result + self.getTab(pset_tab) + "),\n"
-                    else:
-                        result = result + new_result + self.getTab(pset_tab) + "),\n"
-                else:
-                    result = result +"VPSet(  *(\n" + new_result + self.getTab(pset_tab) + ") ),\n"
-            else:
-                new_result = self.buildPsetChildren(pset,pset_tab+2,param_tab+2)
-                if len(pset.children) < 255:
-                    pset_name = "cms.PSet(\n" if (pset.name == None) else pset.name + " = cms.PSet(\n"
-                    result = result + self.getTab(pset_tab) + pset_name
-                    if new_result == "\n":
-                        result = result[:-1] + "  ),\n"
-                    else:
-                        result = result + new_result + self.getTab(pset_tab) + "),\n"
-                else:
-                    pset_name = "cms.PSet(  *(\n" if (pset.name == None) else pset.name + " = cms.PSet(  *(\n"
-                    result = result + self.getTab(pset_tab) + pset_name
-                    result = result + new_result + self.getTab(pset_tab) + "),\n"
-
-        result = result[:-2] + "\n"
-        return result
-
-    def buildPsetChildren(self, template_params, pset_tab, param_tab):
-        result = ""
-        params = template_params.children
-
-        for param in params:
-            if param.paramtype == "VPSet":
-                result = result + self.getTab(pset_tab) + param.name + " = cms." + tracked
-                new_result = self.buildVPSetChildren(template_param, pset_tab+2, param_tab+2)
-                if len(param.children) < 255:
-                    result = result + "VPSet(\n"
-                    if new_result == "\n":
-                        result =  result + self.getTab(pset_tab) + "),\n"
-                    else:
-                        result = result + new_result + self.getTab(pset_tab) + "),\n"
-                else:
-                    result = result +"VPSet(  *(\n" + new_result + self.getTab(pset_tab) + ") ),\n"
-            elif param.paramtype == "PSet":
-                new_result = self.buildPsetChildren(param, pset_tab+2, param_tab+2)
-                if len(param.children) < 255:
-                    pset_name = "cms.PSet(\n" if (param.name == None) else param.name + " = cms.PSet(\n"
-                    result = result + self.getTab(pset_tab) + pset_name
-                    if new_result == "\n":
-                        result = result[:-1] + "  ),\n"
-                    else:
-                        result = result + new_result + self.getTab(pset_tab) + "),\n"
-                else:
-                    pset_name = "cms.PSet(  *(\n" if (param.name == None) else param.name + " = cms.PSet(  *(\n"
-                    result = result + self.getTab(pset_tab) + pset_name
-                    result = result + new_result + self.getTab(pset_tab) + "),\n"
-            else:
-                tracked, val = self.buildParamValue(param, pset_tab, param_tab)
-                result = result + self.getTab(pset_tab) + param.name + " = cms." + tracked + param.paramtype + val
-        result = result[:-2] + "\n"
-        return result
-
-    def modifyTemplateParameters(self, templateparams, params):
-        data = []
-        counter = 0
-        for templateparam in templateparams:
-            data.append(templateparam)
-            for param in params:
-                if templateparam.name == param.name:
-                    data[counter] = param
-            counter = counter + 1
-        return data
-
-    def checkIfInTemplate(self, templateparams, params):
-        flag = False
-        for param in params:
-            for templateparam in templateparams:
-                if param.name == templateparam.name:
-                    flag = True
-                    break
-                else:
-                    flag = False
-            if flag == False:
-                return False
-        return True
-
-    def buildParamValue(self, template_params, pset_tab, param_tab):
-
-        tracked = '' if template_params.tracked else 'untracked.'
-        val = ""
-
-        if (template_params.paramtype == "vstring"):
-            if template_params.value == None or template_params.value == "{}" or template_params.value == "{ }":
-                val = '( "" ),\n'
-            if template_params.value != None:
-                elems = template_params.value[1:-1].split(",")
-                value = ""
-                for elem in elems:
-                    value = value + elem + ",\n" + self.getTab(param_tab) if '"' in elem else value + '"' + elem + '"' + ",\n" + self.getTab(param_tab)
-                if len(elems) < 255:
-                    val = val + '(' + value[:- (len(self.getTab(param_tab)) + 2)] + '),\n'
-                else:
-                    val = val + '( *(' + value[:- (len(self.getTab(param_tab)) + 2)] + ') ),\n'
-
-        elif (template_params.paramtype == "vint32"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                if len(template_params.value[1:-1].split(",")) < 255:
-                    val = '(' + template_params.value[1:-1] + '),\n'
-                else:
-                    val = '( *(' + template_params.value[1:-1] + ') ),\n'
-
-        elif (template_params.paramtype == "vuint32"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                if len(template_params.value[1:-1].split(",")) < 255:
-                    val = '(' + template_params.value[1:-1] + '),\n'
-                else:
-                    val = '( *(' + template_params.value[1:-1] + ') ),\n'
-
-        elif (template_params.paramtype == "vdouble"):
-            if len(template_params.value[1:-1].split(",")) < 255:
-                val = '( ' + template_params.value[1:-1] + ' ),\n'
-            else:
-                val = '( *(' + template_params.value[1:-1] + ') ),\n'
-
-        elif(template_params.paramtype == "VInputTag"):
-            val = "( '" + template_params.value[2:-2] + "' ),\n" if template_params.value[2:-2] != '' else "(  ),\n"
-
-        elif (template_params.paramtype == "string"):
-            if template_params.value == None or template_params.value == "" or template_params.value == "none" or template_params.value == "None":
-                val = '( "" ),\n'
-            else:
-                val = '( "' + template_params.value.replace("'","").replace('"',"") + '" ),\n'
-
-        elif (template_params.paramtype == "FileInPath"):
-            if template_params.value == None or template_params.value == "" or template_params.value == "none" or template_params.value == "None":
-                val = '( "" ),\n'
-            else:
-                val = '( "' + template_params.value.replace("'","").replace('"',"") + '" ),\n'
-
-        elif (template_params.paramtype == "bool"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                val = '( True ),\n' if (int(template_params.value)) else '( False ),\n'
-
-        elif (template_params.paramtype == "uint64"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                val = '( ' + hex(int(template_params.value)).replace("-","") + ' ),\n'
-
-        elif (template_params.paramtype == "double"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                val = '( ' + str(float(template_params.value)) + ' ),\n'
-
-        elif(template_params.paramtype == "InputTag"):
-            if template_params.value == None:
-                val = '( ' + str(template_params.value) + ' ),\n'
-            else:
-                if template_params.value == '""':
-                    val = '( ' + template_params.value + ' ),\n'
-                else:
-                    val = '( '
-                    for elem in template_params.value.split(":"):
-                        val = val + "'" + elem + "', "
-                    val = val[:-2] + ' ),\n'
-
-        else:
-            if (template_params.value != None):
-                val = '( ' + template_params.value + ' ),\n'
-            else:
-                val = '( ' + str(template_params.value) + ' ),\n'
-
-        return tracked, val
-
-    def getSequenceChildren(self, counter, written_sequences, seq_items, seq_elems_dict, level):
-        children = []
-        result = ""
-        while(counter < len(seq_items) and seq_items[counter].lvl == level):
-            elem = seq_elems_dict[seq_items[counter].id_pae]
-            item = Pathitem(seq_items[counter].id_pae, elem.name, seq_items[counter].id_pathid, elem.paetype, seq_items[counter].id_parent, seq_items[counter].lvl, seq_items[counter].order)
-            children.append(item.name)
-            counter = counter + 1
-            if (item.paetype == 2 and item.name not in written_sequences):
-                new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, seq_items, seq_elems_dict, item.lvl+1)
-                result = result + new_result + "process." + item.name + " = cms.Sequence( "
-                for child in new_children:
-                    result = result + "process." + child + " + "
-                result = result[:-2] + ")\n"
-                written_sequences.append(item.name)
+                    written_sequences.add(item.name)
 
         return result, counter, children, written_sequences
 
-    def getRequestedVersion(self, ver=-2, cnf=-2, db = None):
+
+    def getSequences(self):
+
+        result = ""
+
+        try:
+            paths    = self.queries.getPaths(self.version.id, self.database, self.logger)
+            endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
+        except Exception as e:
+            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            self.logger.error(msg)
+            return result
+
+        written_sequences = set()
+        elements = None
+        items = None
+
+        for path in itertools.chain(paths, endpaths):
+            try:
+                elements = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
+            except Exception as e:
+                msg = 'ERROR: Sequences Query Error: ' + e.args[0]
+                self.logger.error(msg)
+                return result
+
+            elements_dict = dict((element.id, element) for element in elements)
+
+            counter = 0
+
+            while counter < len(items):
+                elem = elements_dict[items[counter].id_pae]
+                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                counter = counter + 1
+                if item.paetype == 2:
+                    if item.name in written_sequences:
+                        counter = self.skipSequence(counter, items, item.lvl+1)
+                    else:
+                        new_result, counter, new_children, written_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1)
+                        result = result + new_result + "process." + item.name + " = cms.Sequence( "
+                        for child in new_children:
+                            result += self.emitPathItem(child)
+                        result = result[:-2] + ")\n"
+                        written_sequences.add(item.name)
+
+        return result + "\n"
+
+
+    def getPaths(self):
+        result = ""
+
+        try:
+            paths = self.queries.getPaths(self.version.id, self.database, self.logger)
+        except Exception as e:
+            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            self.logger.error(msg)
+            return result
+
+        for path in paths:
+            result = result + "process." + path.name + " = " + "cms.Path( "
+
+            try:
+                elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
+            except Exception as e:
+                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                self.logger.error(msg)
+                return None
+
+            elements_dict = dict((element.id, element) for element in elements)
+            pathitems = []
+
+            # emit only the top-level items
+            for item in items:
+                elem = elements_dict[item.id_pae]
+                if item.lvl > 0:
+                    continue
+                pathitem = Pathitem(item.id_pae, elem.name, item.id_pathid, elem.paetype, item.id_parent, item.lvl, item.order, item.operator)
+                pathitems.append(pathitem)
+
+            pathitems.sort(key = lambda pathitem: pathitem.order)
+            for pathitem in pathitems:
+                result += self.emitPathItem(pathitem)
+            result = result[:-2] + ")\n"
+
+        return result + "\n"
+
+
+    def getEndPaths(self):
+        result = ""
+
+        try:
+            paths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
+        except Exception as e:
+            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            self.logger.error(msg)
+            return result
+
+        for path in paths:
+            result = result + "process." + path.name + " = " + "cms.EndPath( "
+
+            try:
+                elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
+                items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
+            except Exception as e:
+                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                self.logger.error(msg)
+                return None
+
+            elements_dict = dict((element.id, element) for element in elements)
+            pathitems = []
+
+            # emit only the top-level items...
+            for item in items:
+                element = elements_dict[item.id_pae]
+                if item.lvl > 0:
+                    continue
+                pathitem = Pathitem(item.id_pae, element.name, item.id_pathid, element.paetype, item.id_parent, item.lvl, item.order, item.operator)
+                pathitems.append(pathitem)
+
+            # ...and the OutputMoules
+            outputmodule = self.queries.getOumStreamid(path.id, self.database, self.logger)
+            if (outputmodule != None):
+                stream = self.queries.getStreamid(outputmodule.id_streamid, self.database, self.logger)
+                pathitem = Pathitem(outputmodule.id_streamid, "hltOutput"+stream.name, outputmodule.id_pathid, 3, -1, 0, outputmodule.order)
+                pathitems.append(pathitem)
+
+            pathitems.sort(key = lambda item: item.order)
+            for pathitem in pathitems:
+                result += self.emitPathItem(pathitem)
+            result = result[:-2] + ")\n"
+
+        return result + "\n"
+
+
+    def getSchedule(self):
+        try:
+            paths    = self.queries.getPaths(self.version.id, self.database, self.logger)
+            endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
+        except Exception as e:
+            msg = 'ERROR: getSchedule: error querying database: ' + e.args[0]
+            self.logger.error(msg)
+            return 'process.HLTSchedule = cms.Schedule( )'
+
+        if not paths and not endpaths:
+            return 'process.HLTSchedule = cms.Schedule( )'
+
+        string = ', '.join('process.' + path.name for path in itertools.chain(paths, endpaths))
+        if len(paths) + len(endpaths) > 255:
+            string = '*( ' + string + ' )'
+
+        return 'process.HLTSchedule = cms.Schedule( ' + string + ' )'
+
+
+    ## -- Helper Functions -- ##
+    delimiter = [ re.compile(', *'), re.compile('", *"'), re.compile("', *'") ]
+
+    def decode_string(self, value):
+        if value is None or value == '':
+            return ''
+        elif len(value) > 1 and ((value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == '"')):
+            return value[1:-1]
+        else:
+            return value
+
+    def decode_bool(self, value):
+        if value == '0':
+            return False
+        elif value == '1':
+            return True
+        else:
+            # FIXME raise an exception ?
+            return False
+
+    def decode_uint32(self, value):
+        return int(value) % 2**32
+
+    def decode_uint64(self, value):
+        return int(value) % 2**64
+
+    def decode_vstring(self, value):
+        if value[0] == '{' and value[-1] == '}':
+            value = value[1:-1].strip()
+            if len(value) == 0:
+                return []
+            if len(value) == 1:
+                return [ value ]
+            if value[0] == '"' and value[-1] == '"':
+                value = value[1:-1]
+                d = self.delimiter[1]
+            elif value[0] == "'" and value[-1] == '"':
+                value = value[1:-1]
+                d = self.delimiter[2]
+            else:
+                d = self.delimiter[0]
+            return d.split(value)
+        else:
+            self.logger.warning('found scalar value "%s" in place of a vector' % value)
+            return [ value ]
+
+    def format_string(self, value):
+        return '"' + value + '"'
+
+    def decode_vector(self, scalar, value):
+        if value[0] == '{' and value[-1] == '}':
+            value = value[1:-1].strip()
+            if len(value) == 0:
+                return []
+            return [ scalar(v) for v in self.delimiter[0].split(value) ]
+        else:
+            self.logger.warning('found scalar value "%s" in place of a vector' % value)
+            return [ scalar(value) ]
+
+    def format_vector(self, scalar, value):
+        string = ' ' + ', '.join(scalar(v) for v in value) + ' '
+        if len(value) > 255:
+            string = ' *(' + string + ') '
+        return string
+
+    def format_double(self, value):
+        string = format(value)
+        if not '.' in string:
+            if 'e' in string:
+                string = string.replace('e', '.0e')
+            else:
+                string = string + '.0'
+        return string
+
+
+    def emitParameter(self, parameter):
+        level   = parameter.lvl
+        indent  = self.indent_module + self.indent_parameter * level
+        name    = parameter.name
+        tracked = '' if parameter.tracked else 'untracked.'
+        type    = parameter.paramtype
+
+        if type in ( 'vstring', 'VInputTag' ):
+            # FIXME - a VInputTag should e amitted as a tuple of InputTags, not as a tuple of strings 
+            value  = self.decode_vstring(parameter.value)
+            string = self.format_vector(self.format_string, value)
+        elif type in ( 'vint32', 'vint64' ):
+            value  = self.decode_vector(int, parameter.value)
+            string = self.format_vector(format, value)
+        elif type in ( 'vuint32', ):
+            value  = self.decode_vector(self.decode_uint32, parameter.value)
+            string = self.format_vector(format, value)
+        elif type in ( 'vuint64', ):
+            value  = self.decode_vector(self.decode_uint64, parameter.value)
+            string = self.format_vector(format, value)
+        elif type in ( 'vdouble', ):
+            value  = self.decode_vector(float, parameter.value)
+            string = self.format_vector(self.format_double, value)
+        elif type in ( 'VPSet', ):
+            string = '\n' + ',\n'.join(self.emitParameter(v) for v in parameter.children) + '\n' + indent
+            if len(parameter.children) > 255:
+                string = ' *(' + string + ') '
+        elif type in ( 'string', 'InputTag', 'FileInPath' ):
+            value = self.decode_string(parameter.value)
+            string = ' ' + self.format_string(value) + ' '
+        elif type in ( 'bool', ):
+            value = self.decode_bool(parameter.value)
+            string = ' ' + format(value) + ' '
+        elif type in ( 'int32', 'int64' ):
+            value = int(parameter.value)
+            string = ' ' + format(value) + ' '
+        elif type in ( 'uint32', ):
+            value = self.decode_uint32(parameter.value)
+            if parameter.value[0:2] == '0x':
+                string = ' 0x' + format(value, '08x') + ' '
+            else:
+                string = ' ' + format(value) + ' '
+        elif type in ( 'uint64', ):
+            value = self.decode_uint64(parameter.value)
+            if parameter.value[0:2] == '0x':
+                string = ' 0x' + format(value, '016x') + ' '
+            else:
+                string = ' ' + format(value) + ' '
+        elif type in ( 'double', ) :
+            value = float(parameter.value)
+            string = ' ' + self.format_double(value) + ' '
+        elif type in ( 'PSet', ) :
+            string = '\n' + ',\n'.join(self.emitParameter(v) for v in parameter.children) + '\n' + indent
+        else:
+            string = parameter.value
+
+        if name is not None:
+            return indent + name + ' = cms.' + tracked + type + '(' + string + ')'
+        else:
+            return indent + 'cms.' + tracked + type + '(' + string + ')'
+
+
+    def emitModule(self, module_name, module_type, module_class, parameters):
+        string = 'process.' + module_name + ' = cms.' + module_type + '( "' + module_class + '"'
+        if parameters:
+            string += ',\n' + ',\n'.join(self.emitParameter(p) for p in parameters) + '\n)\n'
+        else:
+            string += ' )\n'
+        return string
+
+
+    def emitPathItem(self, item):
+        if item.operator == 0:
+            string = "process." + item.name + " + "
+        elif item.operator == 2:
+            string = "cms.ignore(process." + item.name + ")" + " + "
+        elif item.operator == 1:
+            string = "~process." + item.name + " + "
+        return string
+
+
+    @staticmethod
+    def getRequestedVersion(ver, cnf, db):
 
         ver_id = -1
         version = None
-        queries = self.queries
+        queries = DataBuilder.queries
 
         if((ver == -2) and (cnf == -2)):
             print "VER CNF ERROR"
@@ -1074,13 +719,12 @@ class DataBuilder(object):
             configs = queries.getConfVersions(cnf, db)
             configs.sort(key=lambda par: par.version, reverse=True)
             ver_id = configs[0].id
-            version = queries.getVersion(ver_id,db)
+            version = queries.getVersion(ver_id, db)
 
         elif(ver != -2):
             ver_id = ver
-            version = queries.getVersion(ver,db)
+            version = queries.getVersion(ver, db)
 
         return version
 
-    def getTab(self, n):
-        return "\t".expandtabs(n)
+

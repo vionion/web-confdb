@@ -10,153 +10,155 @@ from item_wrappers.Parameter import *
 from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
-from marshmallow import Schema, fields, pprint
-#from ordereddict import OrderedDict
-from marshmallow.ordereddict import OrderedDict
 from data_builder import DataBuilder
-import string
-import re
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from multiprocessing import Process, Pipe
+import multiprocessing
+import logging
 
-import os
-import os.path
-current_dir_log = os.path.dirname(os.path.abspath(__file__))
 
 class Converter(object):
 
-    data_builder = DataBuilder()
     queries = ConfDbQueries()
 
-    def createConfig(self, ver=-2, cnf=-2, db = None, online="False", log=None, counter=None, current_dir=""):
+    def __init__(self, threads = 4):
+        self. threads = threads
+
+    def createConfig(self, ver=-2, cnf=-2, db = None, online = "False", folder = "", use_cherrypy = False):
+
+        if use_cherrypy:
+            import cherrypy
+            self.logger = cherrypy.log
+
+            # implement part of the logging interface in cherrypy logger
+            def log(self, lvl, msg, *args, **kwargs):
+                if args:
+                    msg = msg % args
+                if kwargs and 'exc_info' in kwargs and kwargs['exc_info']:
+                    traceback = True
+                else:
+                    traceback=False
+                self.error(msg, '', lvl, traceback)
+
+            def debug(self, msg, *args, **kwargs):
+                self.log(logging.DEBUG, msg, *args, **kwargs)
+
+            def info(self, msg, *args, **kwargs):
+                self.log(logging.INFO, msg, *args, **kwargs)
+
+            def warning(self, msg, *args, **kwargs):
+                self.log(logging.WARNING, msg, *args, **kwargs)
+
+            def critical(self, msg, *args, **kwargs):
+                self.log(logging.CRITICAL, msg, *args, **kwargs)
+
+            import types
+            self.logger.log      = types.MethodType(log,      self.logger)
+            self.logger.debug    = types.MethodType(debug,    self.logger)
+            self.logger.info     = types.MethodType(info,     self.logger)
+            self.logger.warning  = types.MethodType(warning,  self.logger)
+            self.logger.critical = types.MethodType(critical, self.logger)
+
+        else:
+            formatter = logging.Formatter("[%(asctime)s - %(levelname)s/%(processName)s] %(name)s: %(message)s")
+            handler   = logging.StreamHandler()
+            handler.setFormatter(formatter)
+            self.logger = multiprocessing.get_logger()
+            self.logger.setLevel(logging.INFO)
+            self.logger.addHandler(handler)
 
         version = None
         release = None
         try:
-            version = self.data_builder.getRequestedVersion(ver, cnf, db)
+            version = DataBuilder.getRequestedVersion(ver, cnf, db)
         except Exception as e:
             msg = 'ERROR: Query getRequestedVersion Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
 
         if version == None:
             print "\nCould Not Find The Requested Version.\n"
             return
 
+        self.data_builder = DataBuilder(db, version, self.logger)
+
         try:
-            release = self.queries.getRelease(version.id_release, db, log)
+            release = self.queries.getRelease(version.id_release, db, self.logger)
         except Exception as e:
             msg = 'ERROR: Query getRelease Error: ' + e.args[0]
-            log.error(msg)
+            self.logger.error(msg)
 
-        # Adding Modules of All Paths - Second Process
-        parent_conn, child_conn = Pipe()
-        proc = Process(target =self.writePathsModules, args=(version.id , version.id_release, child_conn, online))
-        proc.start()
+        # Adding File's Headers
+        self.logger.info('retrieving header...')
+        header = self.writeHeader(version.name, release.releasetag, version.processname)
+        self.logger.info('done')
 
-        #Adding File's Headers
-        header = self.writeHeader(version.name, release.releasetag, version.processname)#version.config)
+        tasks = [
+            ('modules',        'getModules'),
+            ('paths',          'getPaths'),
+            ('sequences',      'getSequences'),
+            ('datasets',       'getDatasetsPaths'),
+            ('psets',          'getGlobalPsets'),
+            ('streams',        'getStreams'),
+            ('source',         'getEDSources'),
+            ('esproducers',    'getESModules'),
+            ('essources',      'getESSource'),
+            ('services',       'getServices'),
+            ('outputmodules',  'getOutputModules'),
+            ('endpaths',       'getEndPaths'),
+            ('schedule',       'getSchedule'),
+        ]
 
-        #Adding Global Psets
-        gpsets = self.data_builder.getGlobalPsets(version.id, db, log)
+        # build each part of the configuration
+        parts = {}
+        import task
 
-        # Adding Streams
-        streams = 'process.streams = cms.PSet(\n' + self.data_builder.getStreams(version.id, db)
+        if self.threads == 1:
+            # single threaded version
+            import itertools
+            task.initialize(online, version, use_cherrypy)
+            for key, val in itertools.imap(task.worker, tasks):
+                parts[key] = val
+        else:
+            # multiprocess version
+            pool = multiprocessing.Pool(processes = self.threads, initializer = task.initialize, initargs = (online, version, use_cherrypy))
+            for key, val in pool.imap_unordered(task.worker, tasks):
+                parts[key] = val
+            pool.close()
+            pool.join()
 
-        # Adding Datasets
-        datasets = 'process.datasets = cms.PSet(\n' + self.data_builder.getDatasetsPaths(version.id, db)
+        # combinine all parts
+        data = \
+            header + \
+            parts['psets'] + \
+            parts['streams'] + \
+            parts['datasets'] + \
+            parts['source'] + \
+            parts['essources'] + \
+            parts['esproducers'] + \
+            parts['services'] + \
+            parts['modules'] + \
+            parts['outputmodules'] + \
+            parts['sequences'] + \
+            parts['paths'] + \
+            parts['endpaths'] + \
+            parts['schedule']
 
-        # Adding ED-Sources
-        edSources = self.data_builder.getEDSources(version.id, version.id_release, db)
-
-        # Adding ES-Sources
-        esSources = self.data_builder.getESSource(version.id, version.id_release, db, log)
-
-        # Adding ES-Modules
-        esModules = self.data_builder.getESModules(version.id, version.id_release, db, log)
-
-        # Adding Services
-        services = self.data_builder.getServices(version.id, version.id_release, db, log)
-
-        # Adding Modules of All End Paths
-        endPathModules = self.data_builder.getOutputModules(version.id, version.id_release, db, log)
-
-        # Adding Sequences
-        sequences = self.data_builder.getSequences(version.id, version.id_release, db, log)
-
-        # Adding Paths
-        paths = self.data_builder.getPaths(version.id, version.id_release, db, log)
-
-        # Adding End Paths
-        endPaths = self.data_builder.getEndPaths(version.id, version.id_release, db, log)
-
-        # Adding Scheduler
-        schedule = self.data_builder.getSchedule()
-
-        modules = parent_conn.recv()
-        proc.join()
-
-        # Combining All Information
-        data = header + gpsets + streams + datasets + edSources + esSources + esModules + services + modules + endPathModules + sequences + paths + endPaths + schedule
-
+        filename = folder + '/HLT.py'
         try:
-            id_file = str(counter.getNext())
-           # file_name = 'exported/Config' + id_file + '.py'
-           # file_name = '/data/srv/HG1509j-comp4/apps/confdb/Application_py266/exported/Config'        + id_file + '.py'
-            folder = ''
-            if os.environ.get('STATEDIR') is None:
-                log.error('STATEDIR IS NULL')
-            else:
-                folder = os.environ.get('STATEDIR')
-            # folder = os.environ['STATEDIR']
-            file_name = folder + '/Config' + id_file + '.py'
-            #file_name = current_dir + '/exported/Config' + id_file + '.py'
-            log.error('STATE FOLDER DIRECTORY LOGGED----------------------------')
-            log.error(folder)
-            log.error('CURRENT DIRECTORY LOGGED----------------------------')
-            log.error(current_dir_log)
-            log.error('FILENAME LOGGED----------------------------')
-            log.error(file_name)
-            file = open(file_name,'w')
+            file = open(filename, 'w')
             file.write(data)
             file.close()
-            fn_temp = 'Config' + id_file
-            return fn_temp
+            return filename
         except Exception as e:
-            msg = 'ERROR: Writting to file Error: ' + str(e.args[0])
-            log.error(msg)
+            msg = 'ERROR: Writting to file %s: %s' % (filename, e.args[0])
+            self.logger.error(msg)
             return None
+
 
     def writeHeader(self, version_name, release_tag, process_name):
         result = "# " + version_name + " (" + release_tag + ")" + "\n\n"
         result = result + 'import FWCore.ParameterSet.Config as cms\n\n'
         result = result + 'process = cms.Process( "' + process_name + '" )\n\n'
         result = result + 'process.HLTConfigVersion = cms.PSet(\n'
-        result = result + self.data_builder.getTab(2) + "tableName = cms.string('" + version_name + "')\n)\n\n"
+        result = result + DataBuilder.indent_module + "tableName = cms.string( '" + version_name + "' )\n)\n\n"
 
         return result
 
-    def writePathsModules(self, version_id, version_rel, child_conn, online="False"):
-        from Config import *
-        from sqlalchemy.ext.automap import automap_base
-        from confdb_tables.confdb_tables import *
-
-        connectionString = ConnectionString()
-        engine = None
-
-        if online == 'True':
-            engine = create_engine(connectionString.connectUrlonline)
-
-        else:
-            engine = create_engine(connectionString.connectUrloffline)
-
-        Base.prepare(engine, reflect=True)
-        session = scoped_session(sessionmaker(engine))
-
-        data = self.data_builder.getModules(version_id, version_rel, session)
-
-        child_conn.send(data)
-        child_conn.close()
-
-        session.close()
-        engine.dispose()

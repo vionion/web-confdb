@@ -13,8 +13,6 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
-#from collections import OrderedDict
-#from ordereddict import OrderedDict
 from marshmallow.ordereddict import OrderedDict
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -27,21 +25,19 @@ class Exposed(object):
     params_builder = ParamsBuilder()
     summary_builder = SummaryBuilder()
 
+
     #Returns the path items (Sequences and Modules)
     #@params: patsMap: map of paths database ids
     #         seqsMap: map of sequences database ids
     #         modsMap: map of moduels database ids
-    #         idgen: pathites id (gid) generator
     #         gid: path node generated id
     #         ver: version id
     #         db: database session object
     #
-    def getPathItems(self, patsMap = None, seqsMap = None, modsMap = None, idgen = None, gid=-2, ver=-2, db = None, log = None):
+    def getPathItems(self, patsMap = None, seqsMap = None, modsMap = None, gid=-2, ver=-2, db = None, log = None):
 
-        #params check
-        if (patsMap == None or seqsMap == None or modsMap == None or idgen == None or gid == -1 or db == None or ver == -1):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getPathItems - input parameters error')
+        if (patsMap == None or seqsMap == None or modsMap == None or gid == -1 or db == None or ver == -1):
+            log.error('ERROR: getPathItems - input parameters error' + self.log_arguments(gid=gid, ver=ver))
 
         queries = self.queries
 
@@ -82,7 +78,7 @@ class Exposed(object):
             item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
 
             if (item.paetype == 2):
-                item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = seqsMap.put(elem,p.id_pathid,p.order,p.lvl)
                 item.expanded = False
                 seq[item.gid]=item
                 idpaes[item.gid]=p.id_pae
@@ -92,7 +88,7 @@ class Exposed(object):
 
             # It is a module
             else:
-                item.gid = modsMap.putItem(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = modsMap.put(elem,p.id_pathid,p.order,p.lvl)
                 id_par = item.id_parent
 #                idPae_values = idpaes.viewvalues()
                 idPae_values = idpaes.values()
@@ -135,7 +131,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-            item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
+            item.gid = modsMap.put(elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
 #        #merge the sequences created
@@ -160,18 +156,15 @@ class Exposed(object):
     #@params: patsMap: map of paths database ids
     #         seqsMap: map of sequences database ids
     #         modsMap: map of moduels database ids
-    #         idgen: pathites id (gid) generator
     #         gid: path node generated id
     #         ver: version id
     #         db: database session object
     #
 
-    def getEndPathItems(self, patsMap = None, seqsMap = None, modsMap = None, oumodsMap = None, idgen = None, gid=-2, ver=-2, db = None, log = None):
+    def getEndPathItems(self, patsMap = None, seqsMap = None, modsMap = None, oumodsMap = None, gid=-2, ver=-2, db = None, log = None):
 
-        #params check
-        if (patsMap == None or seqsMap == None or modsMap == None or oumodsMap == None or idgen == None or gid == -1 or db == None or ver == -1):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getEndPathItems - input parameters error')
+        if (patsMap == None or seqsMap == None or modsMap == None or oumodsMap == None or gid == -1 or db == None or ver == -1):
+            log.error('ERROR: getEndPathItems - input parameters error' + self.log_arguments(gid=gid, ver=ver))
 
         queries = self.queries
 
@@ -211,7 +204,7 @@ class Exposed(object):
             item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
 
             if (item.paetype == 2):
-                item.gid = seqsMap.put(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = seqsMap.put(elem,p.id_pathid,p.order,p.lvl)
                 item.expanded = False
                 seq[item.gid]=item
                 idpaes[item.gid]=p.id_pae
@@ -221,7 +214,7 @@ class Exposed(object):
 
             # It is a module
             else:
-                item.gid = modsMap.putItem(idgen,elem,p.id_pathid,p.order,p.lvl)
+                item.gid = modsMap.put(elem,p.id_pathid,p.order,p.lvl)
                 id_par = item.id_parent
 #                idPae_values = idpaes.viewvalues()
                 idPae_values = idpaes.values()
@@ -263,7 +256,7 @@ class Exposed(object):
         for l in lista:
             elem = lvlzelems_dict[l.id_pae]
             item = Pathitem(l.id_pae ,elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-            item.gid = modsMap.putItem(idgen,elem,l.id_pathid,l.order,l.lvl)
+            item.gid = modsMap.put(elem,l.id_pathid,l.order,l.lvl)
             pats.insert(item.order,item)
 
         #merge the sequences created
@@ -296,7 +289,7 @@ class Exposed(object):
             oumName = "hltOutput"+stream.name
             oum = Pathitem(outmodule.id_streamid, oumName, outmodule.id_pathid, 3, -1, 0, outmodule.order)
 
-            oum.gid = oumodsMap.put(idgen,oum)
+            oum.gid = oumodsMap.put(oum)
 
             pats.insert(oum.order, oum)
 
@@ -314,18 +307,15 @@ class Exposed(object):
     #@params: patsMap: map of paths database ids
     #         seqsMap: map of sequences database ids
     #         modsMap: map of moduels database ids
-    #         idgen: pathites id (gid) generator
     #         cnf: Configuration id (to get the last version)
     #         ver: version id
     #         db: database session object
     #
 
-    def getPaths(self, patsMap = None, cnfMap = None, idgen = None, cnf=-2, ver=-2, db = None, log = None):
+    def getPaths(self, patsMap = None, cnfMap = None, cnf=-2, ver=-2, db = None, log = None):
 
-        #params check
-        if (patsMap == None or cnfMap == None or idgen == None or (cnf == -2 and ver == -2) or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getPaths - input parameters error')
+        if (patsMap == None or cnfMap == None or (cnf == -2 and ver == -2) or db == None):
+            log.error('ERROR: getPaths - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         queries = self.queries
         resp = ResponseTree()
@@ -360,7 +350,7 @@ class Exposed(object):
         for p in pats:
             p.vid = ver_id
             p.order = i
-            p.gid = patsMap.put(idgen,p)
+            p.gid = patsMap.put(p)
             i = i+1
 
         resp.children = pats
@@ -376,18 +366,15 @@ class Exposed(object):
     #@params: patsMap: map of paths database ids
     #         seqsMap: map of sequences database ids
     #         modsMap: map of moduels database ids
-    #         idgen: paths id (gid) generator
     #         cnf: Configuration id (to get the last version)
     #         ver: version id
     #         db: database session object
     #
 
-    def getEndPaths(self, patsMap = None, cnfMap = None, idgen = None, cnf=-2, ver=-2, db = None, log = None):
+    def getEndPaths(self, patsMap = None, cnfMap = None, cnf=-2, ver=-2, db = None, log = None):
 
-        #params check
-        if (patsMap == None or cnfMap == None or idgen == None or (cnf == -2 and ver == -2) or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getEndPaths - input parameters error')
+        if (patsMap == None or cnfMap == None or (cnf == -2 and ver == -2) or db == None):
+            log.error('ERROR: getEndPaths - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         queries = self.queries
         resp = ResponseTree()
@@ -422,7 +409,7 @@ class Exposed(object):
         for p in pats:
             p.vid = ver_id
             p.order = i
-            p.gid = patsMap.put(idgen,p)
+            p.gid = patsMap.put(p)
             i = i+1
 
         resp.children = pats
@@ -443,10 +430,8 @@ class Exposed(object):
 
     def getOUModuleItems(self, oumid=-2, db = None, log = None):
 
-        #params check
         if (oumid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getOUModuleItems - input parameters error')
+            log.error('ERROR: getOUModuleItems - input parameters error' + self.log_arguments(oumid=oumid))
 
 #        print "OUMID: ", oumid
         id_p = oumid #srvsMap.get(sid)
@@ -472,10 +457,8 @@ class Exposed(object):
 
     def getModuleItems(self, mid=-2, db = None, log = None):
 
-        #params check
         if (mid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getModuleItems - input parameters error')
+            log.error('ERROR: getModuleItems - input parameters error' + self.log_arguments(mid=mid))
 
         queries = self.queries
         params = []
@@ -501,16 +484,13 @@ class Exposed(object):
 
     #Returns the directories tree
     #@params: folMap: map of directories database ids
-    #         idfolgen: folder id (gid) generator
     #         cnfMap: map of configurations database ids
     #         db: database session object
     #
 
-#    def getDirectories(self, folMap = None, idfolgen = None, cnfMap = None, db = None, log = None):
+#    def getDirectories(self, folMap = None, cnfMap = None, db = None, log = None):
 #
-#        #params check
-#        if (folMap == None or cnfMap == None or idfolgen == None or db == None):
-##            print ("PARAMETERS EXCEPTION HERE")
+#        if (folMap == None or cnfMap == None or db == None):
 #            log.error('ERROR: getDirectories - input parameters error')
 #
 #        queries = self.queries
@@ -541,14 +521,14 @@ class Exposed(object):
 #        for d in directories:
 #            f = FolderItem(d.id, d.name, "fol",d.id_parentdir, d.created)
 #            f.cmpv = 1
-#            f.gid = folMap.put(idfolgen,f)
+#            f.gid = folMap.put(f)
 #
 #            configs = queries.getConfigsInDir(d.id,db)
 #
 #            if (len(configs) > 0):
 #                for c in configs:
 #                    cnf = FolderItem(c.id, c.name, "cnf",d.id, None)
-#                    cnf.gid = cnfMap.put(idfolgen, cnf)
+#                    cnf.gid = cnfMap.put(cnf)
 #                    cnf.cmpv = 2
 #                    nam = f.name+"/"
 #                    cnf.new_name = cnf.name.replace(nam,"")
@@ -584,10 +564,9 @@ class Exposed(object):
 #
 #        return output.data
 
-    def getChildrenDirectories(self, id_parent=-2, folMap = None, idfolgen = None, cnfMap = None, db = None, log = None):
-        #params check
-        if (id_parent == -2 or folMap == None or cnfMap == None or idfolgen == None or db == None):
-            log.error('ERROR: getDirectories - input parameters error')
+    def getChildrenDirectories(self, id_parent=-2, folMap = None, cnfMap = None, db = None, log = None):
+        if (id_parent == -2 or folMap == None or cnfMap == None or db == None):
+            log.error('ERROR: getDirectories - input parameters error' + self.log_arguments(id_parent=id_parent))
 
         queries = self.queries
         resp = Response()
@@ -634,7 +613,6 @@ class Exposed(object):
             except Exception as e:
                 msg = 'ERROR: Query getChildDirectories/getConfigsInDir Error: ' + e.args[0]
                 log.error(msg)
-#                log.error('ERROR: Query getChildDirectories/getConfigsInDir Error')
                 return None
 
             if (len(dir_childs)==0 and len(cnf_childs)==0):
@@ -642,7 +620,7 @@ class Exposed(object):
             else:
                 f.expandable = True
 
-            f.gid = folMap.put(idfolgen,f)
+            f.gid = folMap.put(f)
 
             resp.children.append(f)
 
@@ -651,7 +629,7 @@ class Exposed(object):
         if (len(configs) > 0):
             for c in configs:
                 cnf = FolderItem(c.id, c.name, "cnf",dir_id, None)
-                cnf.gid = cnfMap.put(idfolgen, cnf)
+                cnf.gid = cnfMap.put(cnf)
                 cnf.cmpv = 2
                 c_names = cnf.name.split('/')
                 c_names_len = len(c_names)
@@ -669,10 +647,9 @@ class Exposed(object):
         return output.data
 
 
-    def getRootDirectory(self, folMap = None, idfolgen = None, cnfMap = None ,folMap_online = None, db = None, log = None):
+    def getRootDirectory(self, folMap = None, cnfMap = None ,folMap_online = None, db = None, log = None):
 
-        #params check
-        if (folMap == None or cnfMap == None or idfolgen == None or folMap_online == None or db == None):
+        if (folMap == None or cnfMap == None or folMap_online == None or db == None):
             log.error('ERROR: getDirectories - input parameters error')
 
         queries = self.queries
@@ -705,7 +682,7 @@ class Exposed(object):
         rootFol.new_name = 'Root'
         rootFol.expandable = True
 
-        rootFol.gid = folMap.put(idfolgen,rootFol)
+        rootFol.gid = folMap.put(rootFol)
 
         try:
             #get Child directories
@@ -748,10 +725,10 @@ class Exposed(object):
                 f.expandable = True
 
             if f.new_name == 'cdaq' or f.new_name == 'minidaq':
-                f.gid = folMap_online.put(idfolgen,f)
+                f.gid = folMap_online.put(f)
 
             else:
-                f.gid = folMap.put(idfolgen,f)
+                f.gid = folMap.put(f)
 
             resp.children.append(f)
 
@@ -760,7 +737,7 @@ class Exposed(object):
         if (len(configs) > 0):
             for c in configs:
                 cnf = FolderItem(c.id, c.name, "cnf",dir_id, None)
-                cnf.gid = cnfMap.put(idfolgen, cnf)
+                cnf.gid = cnfMap.put(cnf)
                 cnf.cmpv = 2
                 c_names = cnf.name.split('/')
                 c_names_len = len(c_names)
@@ -790,10 +767,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (conf_id == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getVersionsByConfig - input parameters error')
+            log.error('ERROR: getVersionsByConfig - input parameters error' + self.log_arguments(conf_id=conf_id))
 
         resp = Response()
         schema = ResponseVersionSchema()
@@ -831,10 +806,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (cnf == -2 or ver == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getVersionDetails - input parameters error')
+            log.error('ERROR: getVersionDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseVersionSchema()
@@ -867,10 +840,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (pat_id == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getPathDetails - input parameters error')
+            log.error('ERROR: getPathDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, pat_id=pat_id))
 
         resp = Response()
         schema = ResponsePathDetailsSchema()
@@ -897,14 +868,8 @@ class Exposed(object):
         description = None
         try:
             path = queries.getPathName(pat_id,ver_id,db, log)
-#            print "PATH: ",path
-
             prescaleTemplate = queries.getConfPrescaleTemplate(id_rel,db, log)
-#            print "PRESCALETEMPLATE: ",prescaleTemplate
-
             prescale = queries.getConfPrescale(ver_id,prescaleTemplate.id,db, log)
-#            print "PRESCALE: ",prescale
-
             description = queries.getPathDescription(pat_id,ver_id,db, log)
         except:
             log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale/getPathDescription Error')
@@ -914,8 +879,6 @@ class Exposed(object):
 #            return None
 
         pathName = path.name
-#        print "PATHNAME: ",pathName
-
         prescaleParams = []
         labels = None
         found = False
@@ -973,11 +936,8 @@ class Exposed(object):
             if(found):
                 values = map(int, re.findall('\d+', preRows[i].children[1].value))
 
-#                print "GOt values"
-
                 if(not(len(labels) == len(values))):
                     log.error('ERROR: Prescale rown NOT SAME CARDINALITY')
-#                    print "ERROR NOT SAME CARDINALITY"
 
 #                pd = PathDetails(path.id, path.name, labels, values, "", "")
                 pd = None
@@ -1012,14 +972,14 @@ class Exposed(object):
                     i+=1
 #                    print "i++"
             if not found:
-                log.error('ERROR: Prescale label not found') #print "labels not found"
+                log.error('ERROR: Prescale label not found')
 
 #            print "Building Labels"
 
             labels = re.findall(r'"([^"]*)"', prescaleParams[i].value)
 
             if len(labels) == 0:
-                log.error('WARNING: No Prescales label found') #print "labels empty"
+                log.error('WARNING: No Prescales label found')
 #            else:
 
 
@@ -1064,10 +1024,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (mod_id == -2 or pat_id == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getModuleDetails - input parameters error')
+            log.error('ERROR: getModuleDetails - input parameters error' + self.log_arguments(mod_id=mod_id, pat_id=pat_id))
 
         resp = Response()
         schema = ResponseModuleDetailsSchema()
@@ -1109,14 +1067,12 @@ class Exposed(object):
     #         db: database session object
     #
 
-    def getAllModules(self, cnf = -2, ver = -2, modsMap = None, idgen = None, db = None, log = None):
+    def getAllModules(self, cnf = -2, ver = -2, modsMap = None, db = None, log = None):
 
         queries = self.queries
 
-        #params check
-        if ((cnf == -2 and ver == -2) or modsMap == None or idgen == None or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getAllModules - input parameters error')
+        if ((cnf == -2 and ver == -2) or modsMap == None or db == None):
+            log.error('ERROR: getAllModules - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseModuleDetailsSchema()
@@ -1167,7 +1123,7 @@ class Exposed(object):
             if (templates_dict.has_key(m2t)):
                 temp = templates_dict.get(m2t)
                 md = ModuleDetails(m.id, m.name, temp.id_mtype, "", temp.name)
-                md.gid = modsMap.put(idgen,md)
+                md.gid = modsMap.put(md)
 
             else:
                 log.error('ERROR: Module key error') #print "ERROR KEY"
@@ -1189,14 +1145,12 @@ class Exposed(object):
     #@params: cnf: Configuration Table id
     #         db: database session object
     #
-    def getAllServices(self, cnf = -2, ver = -2, srvsMap = None, idgen = None, db = None, log = None):
+    def getAllServices(self, cnf = -2, ver = -2, srvsMap = None, db = None, log = None):
 
         queries = self.queries
 
-        #params check
-        if ((cnf == -2 and ver == -2) or srvsMap == None or idgen == None or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getAllServices - input parameters error')
+        if ((cnf == -2 and ver == -2) or srvsMap == None or db == None):
+            log.error('ERROR: getAllServices - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseServiceSchema()
@@ -1237,7 +1191,7 @@ class Exposed(object):
                 temp = templates_dict.get(m.id_template)
 #                print "SER: ", m.id, m.id_template, id_rel, temp.name
                 srv = Service(m.id, m.id_template, id_rel, temp.name, "")
-                srv.gid = srvsMap.put(idgen,srv)
+                srv.gid = srvsMap.put(srv)
 
             else:
                 log.error('ERROR: Service key error') #print "ERROR KEY"
@@ -1260,16 +1214,10 @@ class Exposed(object):
     #
     def getServiceItems(self, sid=-2, db = None, log = None):
 
-        #params check
         if (sid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getServiceItems - input parameters error')
+            log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid=sid))
 
-#        print "SID: ", sid
-
-        id_p = sid #srvsMap.get(sid)
-
-#        print "ID_P: ", id_p, sid
+        id_p = sid
 
         resp = Response()
         schema = ResponseParamSchema()
@@ -1279,7 +1227,6 @@ class Exposed(object):
             return None
 
         resp.success = True
-         #params
 
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
@@ -1294,12 +1241,10 @@ class Exposed(object):
     #         db: database session object
     #
 
-    def getStreamsItems(self, evcMap, idstrgen, strMap, datMap, ver=-2, cnf=-2, db = None, log = None):
+    def getStreamsItems(self, evcMap, strMap, datMap, ver=-2, cnf=-2, db = None, log = None):
 
-        #params check
         if (ver==-2 or cnf==-2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getStreamsItems - input parameters error')
+            log.error('ERROR: getStreamsItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db)
@@ -1340,7 +1285,7 @@ class Exposed(object):
         evco_dict = {}
         for e in evcontents:
             si = Streamitem(e.id,-1,e.name,"evc")
-            si.gid = evcMap.put(idstrgen,si)
+            si.gid = evcMap.put(si)
             si.id_stream = -2
             evco_dict[e.id] = si
 
@@ -1359,12 +1304,12 @@ class Exposed(object):
                     si.children.append(evco)
                 else:
                     new_evco = Streamitem(evco.id,-1,evco.name,"evc")
-                    new_evco.gid = evcMap.putDouble(idstrgen,new_evco)
+                    new_evco.gid = evcMap.put(new_evco, unique = False)
                     si.children.append(new_evco)
             else:
                 evcoOut.append(si)
 
-            si.gid = strMap.put(idstrgen,si)
+            si.gid = strMap.put(si)
 
         for d in datasets:
             if (d.id == -1):
@@ -1372,7 +1317,7 @@ class Exposed(object):
 #                print "Unassigned Paths"
             else:
                 si = Streamitem(d.id,-1,d.name,"dat")
-                si.gid = datMap.put(idstrgen,si)
+                si.gid = datMap.put(si)
                 streamid = relations_dict.get(d.id)
                 streams_dict.get(streamid).children.append(si)
 
@@ -1401,10 +1346,8 @@ class Exposed(object):
 
     def getEvcStatements(self, evc=-2, db = None, log = None):
 
-        #params check
         if (evc==-2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getEvcStatements - input parameters error')
+            log.error('ERROR: getEvcStatements - input parameters error' + self.log_arguments(evc=evc))
 
         #Retreive the module template
         evcostatements = None
@@ -1453,10 +1396,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if ((cnf == -2 and ver == -2) or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getAllESModules - input parameters error')
+            log.error('ERROR: getAllESModules - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseESModuleDetailsSchema()
@@ -1526,12 +1467,8 @@ class Exposed(object):
 
     def getESModItems(self, esmid=-2, db = None, log = None):
 
-        #params check
         if (esmid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getESModItems - input parameters error')
-
-#        print "SID: ", esmid
+            log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(esmid=esmid))
 
         resp = Response()
         schema = ResponseParamSchema()
@@ -1550,12 +1487,10 @@ class Exposed(object):
         return output.data
 
 
-    def getAllSequences(self, seqsMap = None, modsMap = None, idgen = None, cnf=-2, ver=-2, db = None, log = None):
+    def getAllSequences(self, seqsMap = None, modsMap = None, cnf=-2, ver=-2, db = None, log = None):
 
-        #params check
-        if (seqsMap == None or modsMap == None or idgen == None or cnf == -1 or db == None or ver == -1):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getAllSequences - input parameters error')
+        if (seqsMap == None or modsMap == None or cnf == -1 or db == None or ver == -1):
+            log.error('ERROR: getAllSequences - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         queries = self.queries
 
@@ -1599,13 +1534,13 @@ class Exposed(object):
             elem = elements_dict[p.id_pae]
             item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
             if (item.paetype == 2):
-                item.gid = seqsMap.put(idgen,elem)
+                item.gid = seqsMap.put(elem)
                 item.expanded = False
                 seq[item.id]=item
 
             # It is a module
             else:
-                item.gid = modsMap.put(idgen,elem)
+                item.gid = modsMap.put(elem)
                 seq[p.id_parent].children.insert(p.order, item)
 
 #        print "Sequences Built"
@@ -1625,10 +1560,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (mod_id == -2 or pat_id == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getOUTModuleDetails - input parameters error')
+            log.error('ERROR: getOUTModuleDetails - input parameters error' + self.log_arguments(mod_id=mod_id, pat_id=pat_id))
 
         resp = Response()
         schema = ResponseOutputModuleDetailsSchema()
@@ -1647,7 +1580,7 @@ class Exposed(object):
 
         oumName = "hltOutput"+stream.name
         oumd = OutputModuleDetails(mod_id, oumName, "", "", stream.name, mod_id)
-#        oumd.gid = oumodsMap.put(idgen,oum)
+#        oumd.gid = oumodsMap.put(oum)
 
         resp.success = True
         resp.children = []
@@ -1665,10 +1598,8 @@ class Exposed(object):
     #
     def getGpsetItems(self, sid=-2, db = None, log = None):
 
-        #params check
         if (sid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getGpsetItems - input parameters error')
+            log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(sid=sid))
 
 #        print "SID: ", sid
 
@@ -1697,14 +1628,12 @@ class Exposed(object):
     #@params: cnf: Configuration Table id
     #         db: database session object
     #
-    def getAllGlobalPsets(self, cnf = -2, ver = -2, gpsMap = None, idgen = None, db = None, log = None):
+    def getAllGlobalPsets(self, cnf = -2, ver = -2, gpsMap = None, db = None, log = None):
 
         queries = self.queries
 
-        #params check
-        if ((cnf == -2 and ver == -2) or gpsMap == None or idgen == None or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getAllGlobalPsets - input parameters error')
+        if ((cnf == -2 and ver == -2) or gpsMap == None or db == None):
+            log.error('ERROR: getAllGlobalPsets - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseGlobalPsetSchema()
@@ -1732,7 +1661,7 @@ class Exposed(object):
 
         for m in gpsets:
             gps = GlobalPset(m.id, m.name, m.tracked)
-            gps.gid = gpsMap.put(idgen,gps)
+            gps.gid = gpsMap.put(gps)
             if (gps != None):
                 resp.children.append(gps)
             else:
@@ -1754,10 +1683,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if ((cnf == -2 and ver == -2) or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getEDSource - input parameters error')
+            log.error('ERROR: getEDSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseEDSourceSchema()
@@ -1826,10 +1753,8 @@ class Exposed(object):
 
     def getEDSourceItems(self, edsid=-2, db = None, log = None):
 
-        #params check
         if (edsid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getEDSourceItems - input parameters error')
+            log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=edsid))
 
 #        print "SID: ", edsid
 
@@ -1850,10 +1775,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if ((cnf == -2 and ver == -2) or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getESSource - input parameters error')
+            log.error('ERROR: getESSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseESSourceSchema()
@@ -1923,10 +1846,8 @@ class Exposed(object):
 
     def getESSourceItems(self, essid=-2, db = None, log = None):
 
-        #params check
         if (essid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getESSourceItems - input parameters error')
+            log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(essid=essid))
 
 #        print "SID: ", essid
 
@@ -1945,11 +1866,9 @@ class Exposed(object):
 
         return output.data
 
-    def getDatasetItems(self, patsMap, idgen, ver=-2, cnf=-2, dstid=-2, db = None, log = None):
-    #params check
+    def getDatasetItems(self, patsMap, ver=-2, cnf=-2, dstid=-2, db = None, log = None):
         if (ver==-2 or cnf==-2 or dstid == -2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getDatasetItems - input parameters error')
+            log.error('ERROR: getDatasetItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, dstid=dstid))
 
         resp = ResponseTree()
         schema = ResponseDstPathsTreeSchema()
@@ -1972,7 +1891,7 @@ class Exposed(object):
 
         for p in paths:
             p.vid = ver_id
-            p.gid = patsMap.put(idgen,p)
+            p.gid = patsMap.put(p)
 
         resp.children = paths
 
@@ -1991,7 +1910,7 @@ class Exposed(object):
 
         if((ver == -2) and (cnf == -2)):
 #            print "VER CNF ERROR"
-            log.error('ERROR: getRequestedVersion - input parameters error')
+            log.error('ERROR: getRequestedVersion - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         elif(cnf != -2 and cnf != -1):
 #            print "CNF ", cnf
@@ -2010,9 +1929,8 @@ class Exposed(object):
 
     def getSummaryColumns(self, ver=-2, cnf=-2, db = None, log = None):
 
-        #params check
         if (ver==-2 or cnf==-2 or db == None):
-            log.error('ERROR: getSummaryColumns - input parameters error')
+            log.error('ERROR: getSummaryColumns - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = ResponseTree()
         schema = ResponseSummaryColumnSchema()
@@ -2027,12 +1945,10 @@ class Exposed(object):
 
         return output.data
 
-    def getSummaryItems(self, idsumgen, sumMap, ver=-2, cnf=-2, db = None, log = None):
+    def getSummaryItems(self, sumMap, ver=-2, cnf=-2, db = None, log = None):
 
-        #params check
         if (ver==-2 or cnf==-2 or db == None):
-#            print ("PARAMETERS EXCEPTION HERE")
-            log.error('ERROR: getStreamsItems - input parameters error')
+            log.error('ERROR: getStreamsItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         resp = Response()
         schema = ResponseSummaryItemSchema()
@@ -2204,7 +2120,7 @@ class Exposed(object):
             si = Summaryitem(s.id,s.name,"str",False,'resources/Stream.ico')
             streams_dict[s.id] = si
 
-            si.gid = sumMap.put(idsumgen,si,"str")
+            si.gid = sumMap.put(si,"str")
 
 #        print "Built stream"
 
@@ -2242,7 +2158,7 @@ class Exposed(object):
 
                                 pat_id = str(d.id) + "pat"
                                 pat = Summaryitem(p.id,(p.name),"pat",True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(idsumgen,pat,pat_id)
+                                pat.gid = sumMap.put(pat,pat_id)
 
                                 if not paths.has_key(pat.gid):
 
@@ -2289,7 +2205,7 @@ class Exposed(object):
                             else:
                                 pat_id = str(d.id) + "pat"
                                 pat = Summaryitem(p.id,(p.name),"pat",True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(idsumgen,pat,pat_id)
+                                pat.gid = sumMap.put(pat,pat_id)
 
                                 values = zero_values
 
@@ -2316,7 +2232,7 @@ class Exposed(object):
                         else:
                             pat_id = str(d.id) + "pat"
                             pat = Summaryitem(p.id,p.name,"pat",True,'resources/Path_3.ico')
-                            pat.gid = sumMap.put(idsumgen,pat,pat_id)
+                            pat.gid = sumMap.put(pat,pat_id)
 
                             if not paths.has_key(pat.gid):
 
@@ -2355,7 +2271,7 @@ class Exposed(object):
                         si.children.extend(paths.values())
 
 #                si.children.extend(paths)
-                si.gid = sumMap.put(idsumgen,si,"dat")
+                si.gid = sumMap.put(si,"dat")
 
                 streams_dict.get(streamid).children.append(si)
 
@@ -2381,9 +2297,8 @@ class Exposed(object):
 
         queries = self.queries
 
-        #params check
         if (cnfMap == None or name == "" or db == None):
-            log.error('ERROR: getRoutedConfig - input parameters error')
+            log.error('ERROR: getRoutedConfig - input parameters error' + self.log_arguments(name=name))
             return -1
 
         confVer_id = -1
@@ -2398,3 +2313,9 @@ class Exposed(object):
             return -1
 
         return confVer_id
+
+
+    def log_arguments(self, **kwargs):
+        width = max(len(arg) for (arg,val) in kwargs.iteritems())
+        return ''.join('\n    ' + arg + ':' + ' ' * (width - len(arg)) + ' ' + repr(val) for (arg,val) in kwargs.iteritems())
+

@@ -1,104 +1,88 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # File Main.py Description:
 # This file is the entry point of the Server side application.
 # It contains the method to instantiate the and starts the server
 # as well the Database session
 # Class: Root
 
-
-# -*- coding: utf-8 -*-
+import sys
+import logging
+import logging.handlers
 import cherrypy
+import os
+import tempfile
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+from cherrypy.lib.static import serve_file
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from cherrypy import _cplogging, _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
-from cherrypy.lib.static import serve_file
-from operator import attrgetter
-import json
-#from collections import OrderedDict
-#from ordereddict import OrderedDict
 from marshmallow.ordereddict import OrderedDict
 from utils import *
-
-#NEW IMPORT
 from exposed.exposed import *
 from converter.converter import *
 from inverter.inverter import *
 from exposed.parser_functions import *
 from sqlalchemy_plugin.saplugin import *
 
-import glob
-
-import sys
-import logging
-import logging.handlers
-
-#Set logging handlers for the first time
-#from conflogger import logconfig
-
-import os
-import os.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
 #metadata = MetaData()
 
 class Root(object):
 
+    # shared across databases
+    idfolgen = Counter()
+
     #----------- OFFLINE DB ---------
     idgen = Counter()
-    idstrgen = StreamItemCounter()
-    idsumgen = SummaryItemCounter()
+    patsMap = UniqueMapping(idgen)
+    seqsMap = SequencesMapping(idgen)
+    modsMap = ModulesMapping(idgen)
+    oumodsMap = UniqueMapping(idgen)
+    allmodsMap = UniqueMapping(idgen)
+    srvsMap = UniqueMapping(idgen)
+    gpsMap = UniqueMapping(idgen)
 
-    cnfMap = ConfigsDict()
-    folMap = FoldersDict()
+    idsumgen = Counter()
+    sumMap = UniqueMapping(idsumgen)
 
-    patsMap = PathsDict()
-    seqsMap = SequencesDict()
-    modsMap = ModulesDict()
-    oumodsMap = OutputModulesDict()
-    allmodsMap = AllModulesDict()
+    cnfMap = UniqueMapping(idfolgen)
+    folMap = UniqueMapping(idfolgen)
 
-    srvsMap = ServicesDict()
+    idstrgen = Counter()
+    strMap = UniqueMapping(idstrgen)
+    datMap = UniqueMapping(idstrgen)
+    evcMap = UniqueMapping(idstrgen)
 
-    strMap = StreamsDict()
-    datMap = DatasetsDict()
-    evcMap = EvcoDict()
-
-    gpsMap = GpsetsDict()
-
-    sumMap = SummaryitemsDict()
 
     #----------- ONLINE DB ---------
     idgen_online = Counter()
-    idstrgen_online = StreamItemCounter()
-    idsumgen_online = SummaryItemCounter()
+    patsMap_online = UniqueMapping(idgen_online)
+    seqsMap_online = SequencesMapping(idgen_online)
+    modsMap_online = ModulesMapping(idgen_online)
+    oumodsMap_online = UniqueMapping(idgen_online)
+    allmodsMap_online = UniqueMapping(idgen_online)
+    srvsMap_online = UniqueMapping(idgen_online)
+    gpsMap_online = UniqueMapping(idgen_online)
 
-    cnfMap_online = ConfigsDict()
-    folMap_online = FoldersDict()
+    idsumgen_online = Counter()
+    sumMap_online = UniqueMapping(idsumgen_online)
 
-    patsMap_online = PathsDict()
-    seqsMap_online = SequencesDict()
-    modsMap_online = ModulesDict()
-    oumodsMap_online = OutputModulesDict()
-    allmodsMap_online = AllModulesDict()
+    cnfMap_online = UniqueMapping(idfolgen)
+    folMap_online = UniqueMapping(idfolgen)
 
-    srvsMap_online = ServicesDict()
-
-    strMap_online = StreamsDict()
-    datMap_online = DatasetsDict()
-    evcMap_online = EvcoDict()
-
-    gpsMap_online = GpsetsDict()
-
-    sumMap_online = SummaryitemsDict()
+    idstrgen_online = Counter()
+    strMap_online = UniqueMapping(idstrgen_online)
+    datMap_online = UniqueMapping(idstrgen_online)
+    evcMap_online = UniqueMapping(idstrgen_online)
 
     config_dict = OrderedDict()
 
     #---- General purpose ---------
-    idfolgen = FolderItemCounter()
     funcs = Exposed()
     conv = Converter()
     inv = Inverter()
     par_funcs = Parser_Functions()
-    configDumpCounter = Counter()
     config_idgen = Counter()
 
     log = cherrypy.log
@@ -124,13 +108,10 @@ class Root(object):
 
         return "Hello World"
 
-    #Get a the list of items in a path
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def allpathitems(self, _dc=101, ver=-2, cnf=-2,node=1, itype="",online="False", filter=""):
-
-#        db = cherrypy.request.db
 
         db = None
         db_online = cherrypy.request.db_online
@@ -139,7 +120,6 @@ class Root(object):
         patsMap = None
         seqsMap = None
         modsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'file':
@@ -158,7 +138,6 @@ class Root(object):
                 patsMap = self.patsMap_online
                 seqsMap = self.seqsMap_online
                 modsMap = self.modsMap_online
-                idgen = self.idgen_online
                 cnfMap = self.cnfMap_online
 
             else:
@@ -166,7 +145,6 @@ class Root(object):
                 patsMap = self.patsMap
                 seqsMap = self.seqsMap
                 modsMap = self.modsMap
-                idgen = self.idgen
                 cnfMap = self.cnfMap
 
             data = None
@@ -176,10 +154,10 @@ class Root(object):
 
             #Pathitems request
             if(itype == 'pat'):
-                data = self.funcs.getPathItems(patsMap, seqsMap, modsMap, idgen, node, ver, db, self.log)
+                data = self.funcs.getPathItems(patsMap, seqsMap, modsMap, node, ver, db, self.log)
 
             else:
-                data = self.funcs.getPaths(patsMap, cnfMap, idgen, cnf, ver, db, self.log)
+                data = self.funcs.getPaths(patsMap, cnfMap, cnf, ver, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
@@ -312,7 +290,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         folMap = None
-        idfolgen = self.idfolgen
         cnfMap = None
 
         if online == 'True' or online == 'true':
@@ -328,17 +305,13 @@ class Root(object):
         data = None
         gid = int(gid)
 
-#        print "GID: ",gid
-
         if gid == -1:
-#            print "IN -1: "
-            data = self.funcs.getRootDirectory(folMap, idfolgen, cnfMap, self.folMap_online, db, self.log)
+            data = self.funcs.getRootDirectory(folMap, cnfMap, self.folMap_online, db, self.log)
 
         else:
-            data = self.funcs.getChildrenDirectories(gid,folMap, idfolgen, cnfMap, db, self.log)
+            data = self.funcs.getChildrenDirectories(gid,folMap, cnfMap, db, self.log)
 
         if (data is None):
-#            print ("Exception - Error")
             self.log.error('ERROR: directories - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the directories")
 
@@ -348,7 +321,6 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def versions(self, _dc=101, cid = 1, online="False"):
-#        db = cherrypy.request.db
 
         db = None
         db_online = cherrypy.request.db_online
@@ -368,7 +340,6 @@ class Root(object):
         id_c = cnfMap.get(cid)
         data = self.funcs.getVersionsByConfig(id_c,db, self.log)
         if (data == None):
-#            print ("Exception - Error")
             self.log.error('ERROR: versions - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the Versions")
 
@@ -379,8 +350,6 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def moddetails(self, _dc=101, mid=0, pid=0,online="False", verid=-1):
-#        db = cherrypy.request.db
-
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
@@ -434,7 +403,6 @@ class Root(object):
 
         cnfMap = None
         allmodsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getModulesFromFile(ver, self.config_dict)
@@ -450,18 +418,16 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 allmodsMap = self.allmodsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 allmodsMap = self.allmodsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllModules(cnf,ver,allmodsMap,idgen,db, self.log)
+            data = self.funcs.getAllModules(cnf,ver,allmodsMap,db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allmodules - data returned null object')
@@ -482,7 +448,6 @@ class Root(object):
 
         cnfMap = None
         srvsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getServiceFromFile(ver, self.config_dict)
@@ -497,18 +462,16 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 srvsMap = self.srvsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 srvsMap = self.srvsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllServices(cnf,ver,srvsMap,idgen,db, self.log)
+            data = self.funcs.getAllServices(cnf,ver,srvsMap,db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allservices - data returned null object')
@@ -568,7 +531,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         evcMap = None
-        idstrgen = None
         strMap = None
         datMap = None
         cnfMap = None
@@ -585,7 +547,6 @@ class Root(object):
             if online == 'True' or online == 'true':
                 db = db_online
                 evcMap = self.evcMap_online
-                idstrgen = self.idstrgen_online
                 strMap = self.strMap_online
                 datMap = self.datMap_online
                 cnfMap = self.cnfMap_online
@@ -593,7 +554,6 @@ class Root(object):
             else:
                 db = db_offline
                 evcMap = self.evcMap
-                idstrgen = self.idstrgen
                 strMap = self.strMap
                 datMap = self.datMap
                 cnfMap = self.cnfMap
@@ -602,7 +562,7 @@ class Root(object):
             ver = int(ver)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getStreamsItems(evcMap, idstrgen, strMap, datMap, ver, cnf, db, self.log)
+            data = self.funcs.getStreamsItems(evcMap, strMap, datMap, ver, cnf, db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allstreamitems - data returned null object')
@@ -785,7 +745,6 @@ class Root(object):
 
         seqsMap = None
         modsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'True' or online == 'true':
@@ -793,20 +752,18 @@ class Root(object):
 
             seqsMap = self.seqsMap_online
             modsMap = self.modsMap_online
-            idgen = self.idgen_online
             cnfMap = self.cnfMap_online
 
         else:
             db = db_offline
             seqsMap = self.seqsMap
             modsMap = self.modsMap
-            idgen = self.idgen
             cnfMap = self.cnfMap
 
         cnf = int(cnf)
         ver = int(ver)
         cnf = cnfMap.get(cnf)
-        data = self.funcs.getAllSequences(seqsMap, modsMap, idgen, cnf,ver,db, self.log)
+        data = self.funcs.getAllSequences(seqsMap, modsMap, cnf,ver,db, self.log)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allseqitems - data returned null object')
@@ -831,7 +788,6 @@ class Root(object):
         seqsMap = None
         modsMap = None
         oumodsMap = None
-        idgen = None
         cnfMap = None
 
         if online == 'file':
@@ -853,7 +809,6 @@ class Root(object):
                 seqsMap = self.seqsMap_online
                 modsMap = self.modsMap_online
                 oumodsMap = self.oumodsMap_online
-                idgen = self.idgen_online
                 cnfMap = self.cnfMap_online
 
             else:
@@ -863,7 +818,6 @@ class Root(object):
                 seqsMap = self.seqsMap
                 modsMap = self.modsMap
                 oumodsMap = self.oumodsMap
-                idgen = self.idgen
                 cnfMap = self.cnfMap
 
             data = None
@@ -873,10 +827,10 @@ class Root(object):
 
             #Pathitems request
             if(itype == 'pat'):
-                data = self.funcs.getEndPathItems(patsMap, seqsMap, modsMap, oumodsMap, idgen, node, ver, db, self.log)
+                data = self.funcs.getEndPathItems(patsMap, seqsMap, modsMap, oumodsMap, node, ver, db, self.log)
 
             else:
-                data = self.funcs.getEndPaths(patsMap, cnfMap, idgen, cnf, ver, db, self.log)
+                data = self.funcs.getEndPaths(patsMap, cnfMap, cnf, ver, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
@@ -940,7 +894,6 @@ class Root(object):
 
         cnfMap = None
         gpsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getGPsetsFromFile(ver, self.config_dict)
@@ -954,19 +907,17 @@ class Root(object):
                 db = db_online
                 cnfMap = self.cnfMap_online
                 gpsMap = self.gpsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
                 cnfMap = self.cnfMap
                 gpsMap = self.gpsMap
-                idgen = self.idgen
 
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllGlobalPsets(cnf,ver,gpsMap,idgen,db)
+            data = self.funcs.getAllGlobalPsets(cnf,ver,gpsMap,db)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allgpsets - data returned null object')
@@ -1177,7 +1128,6 @@ class Root(object):
         datMap = None
         cnfMap = None
         patsMap = None
-        idgen = None
 
         if online == 'file':
             data = self.par_funcs.getDataSetItemsFromFile(ver, int(dstid), self.config_dict)
@@ -1193,7 +1143,6 @@ class Root(object):
                 datMap = self.datMap_online
                 cnfMap = self.cnfMap_online
                 patsMap = self.patsMap_online
-                idgen = self.idgen_online
 
             else:
                 db = db_offline
@@ -1201,7 +1150,6 @@ class Root(object):
                 datMap = self.datMap
                 cnfMap = self.cnfMap
                 patsMap = self.patsMap
-                idgen = self.idgen
 
             cnf = int(cnf)
             ver = int(ver)
@@ -1209,7 +1157,7 @@ class Root(object):
             dstid = datMap.get(dstid)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getDatasetItems(patsMap, idgen, ver, cnf, dstid, db, self.log)
+            data = self.funcs.getDatasetItems(patsMap, ver, cnf, dstid, db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: alldatasetitems - data returned null object')
@@ -1267,7 +1215,6 @@ class Root(object):
         db_offline = cherrypy.request.db_offline
 
         cnfMap = None
-        idsumgen = None
         sumMap = None
 
         if online == 'file':
@@ -1282,21 +1229,19 @@ class Root(object):
                 db = db_online
 
                 cnfMap = self.cnfMap_online
-                idsumgen = self.idsumgen_online
                 sumMap = self.sumMap_online
 
             else:
                 db = db_offline
 
                 cnfMap = self.cnfMap
-                idsumgen = self.idsumgen
                 sumMap = self.sumMap
 
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
 
-            data = self.funcs.getSummaryItems(idsumgen, sumMap, ver, cnf, db, self.log)
+            data = self.funcs.getSummaryItems(sumMap, ver, cnf, db, self.log)
 
             if (data == None):
     #            print ("Exception - Error")
@@ -1308,20 +1253,16 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def export(self, _dc=101,  ver=-2, cnf=-2,online="False"):
-        import time
-        now = time.time()
+        from LocalConfig import state_dir
+        timer = Timer()
+
         db = None
-        db_online = cherrypy.request.db_online
-        db_offline = cherrypy.request.db_offline
-
         cnfMap = None
-
         if online == 'True' or online == 'true':
-            db = db_online
+            db = cherrypy.request.db_online
             cnfMap = self.cnfMap_online
-
         else:
-            db = db_offline
+            db = cherrypy.request.db_offline
             cnfMap = self.cnfMap
 
         cnf = int(cnf)
@@ -1333,15 +1274,19 @@ class Root(object):
         resp.success = True
         resp.children = []
 
-        config_file_name = self.conv.createConfig(ver, cnf, db, online, self.log, self.configDumpCounter, current_dir)
-        config_path = '/confdb/download/?filepath=' + str(config_file_name)
-        url = UrlString(1,config_path)
+        folder = tempfile.mkdtemp(dir = state_dir)
+        absolute_filename = self.conv.createConfig(ver, cnf, db, online, folder, use_cherrypy = True)
+        relative_filename = absolute_filename[len(state_dir):].lstrip('/')
+        if not relative_filename:
+            # FIXME need to handle the case where the dump failed
+            pass
+        config_path = base_url + '/download/?filepath=' + relative_filename
+        url = UrlString(1, config_path)
         resp.children.append(url)
-        print "Time: ", int(time.time() - now)
+        timer.stop()
+        self.log.info('export done to file %s in %0.1fs' % (absolute_filename, timer.elapsed))
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
     @cherrypy.tools.json_out()
@@ -1368,7 +1313,7 @@ class Root(object):
         print "CONFIG ID & NAME: ", config_id, config_obj.config_name
 
 
-        os.unlinke('temp.py') #CHANGED
+        os.unlink('temp.py')
 
         url = UrlString(config_id,"fake")
 
@@ -1430,23 +1375,24 @@ class Root(object):
         #assert isinstance(output.data, OrderedDict)
 
         return output.data
+
+
 class Download:
 
     def index(self, filepath):
-        # folder = os.environ['STATEDIR']
-        folder = os.environ.get('STATEDIR')
-        x = folder + "/" + filepath + '.py'
-        # x = current_dir + "/exported/" + filepath + '.py' #CHANGED
-        return serve_file(x, "application/x-download", "attachment")
+        from LocalConfig import state_dir
+        absolute_filename = state_dir + "/" + filepath
+        return serve_file(absolute_filename, "application/x-download", "attachment")
+
     index.exposed = True
 
+
 if __name__ == '__main__':
-    # Register the SQLAlchemy plugin
 
     # Load configuration
-#    from Config.Config import connectUrl, cpconfig, base_url
     from Config import *
 
+    # Register the SQLAlchemy plugin
     from sqlalchemy_plugin.saplugin import SAEnginePlugin
     from cherrypy.process.plugins import DropPrivileges
 
@@ -1475,6 +1421,16 @@ if __name__ == '__main__':
 #    cherrypy.quickstart(Root(), '', {'/': {'tools.db.on': True}})
     root = Root()
     root.download = Download()
+
+    # make sure the log files directory exists
+    if 'log.access_file' in cpconfig:
+        d = os.path.dirname(cpconfig['log.access_file'])
+        if not os.path.exists(d):
+            os.makedirs(d)
+    if 'log.error_file' in cpconfig:
+        d = os.path.dirname(cpconfig['log.error_file'])
+        if not os.path.exists(d):
+            os.makedirs(d)
 
     cherrypy.config.update(cpconfig)
     cherrypy.quickstart(root, base_url, {'/': {'tools.db.on': True}}) #Root()
