@@ -40,9 +40,9 @@ class DataBuilder(object):
         try:
             psets = self.queries.getConfGPsets(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getConfGPsets Error: ' + e.args[0]
+            msg = 'ERROR: getGlobalPsets: error in query ConfDbQueries.getConfGPsets(...):\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         template_params = None
 
@@ -50,9 +50,9 @@ class DataBuilder(object):
             try:
                 template_params = self.params_builder.gpsetParamsBuilder(gpset.id, self.queries, self.database, self.logger)
             except Exception as e:
-                msg = 'ERROR: Query gpsetParamsBuilder Error: ' + e.args[0]
+                msg = 'ERROR: getGlobalPsets: error in query ConfDbQueries.gpsetParamsBuilder(...):\n' + e.args[0]
                 self.logger.error(msg)
-                return result
+                raise
 
             result = result + "process." + gpset.name + ' = cms.PSet('
             if template_params:
@@ -60,10 +60,10 @@ class DataBuilder(object):
             else:
                 result += ' )\n'
 
-        if result == "":
-            return result
-        else:
-            return result + "\n"
+        if result:
+            result += "\n"
+
+        return result
 
 
     def getStreams(self):
@@ -78,9 +78,9 @@ class DataBuilder(object):
             datasets  = self.queries.getConfDatasets(self.version.id, self.database)
             relations = self.queries.getConfStrDatRels(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: Steams Query Error: ' + e.args[0]
+            msg = 'ERROR: getStreams: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
 
@@ -113,9 +113,9 @@ class DataBuilder(object):
             datasets = self.queries.getConfDatasets(self.version.id, self.database)
             datasets.sort(key=lambda par: par.name)
         except Exception as e:
-            msg = 'ERROR: Steams Query Error: ' + e.args[0]
+            msg = 'ERROR: getDatasetsPaths: error in query ConfDbQueries.getConfDatasets(...):\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         for dataset in datasets:
             result = result + self.indent_module + dataset.name + " = cms.vstring( "
@@ -124,9 +124,9 @@ class DataBuilder(object):
             try:
                 paths = self.queries.getDatasetPathids(self.version.id, dataset.id, self.database)
             except Exception as e:
-                msg = 'ERROR: Query getDatasetPathids Error: ' + e.args[0]
+                msg = 'ERROR: getDatasetsPaths: error in query ConfDbQueries.getDatasetPathids(...):\n' + e.args[0]
                 self.logger.error(msg)
-                return result
+                raise
 
             paths.sort(key=lambda par: par.name)
             if len(paths) == 0:
@@ -158,9 +158,9 @@ class DataBuilder(object):
             templates = self.queries.getEDSTemplates(self.version.id_release, self.database)
             conf2eds  = self.queries.getConfToEDSRel(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: EDSources Query Error: ' + e.args[0]
+            msg = 'ERROR: getEDSources: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         templates_dict = dict((x.id, x) for x in templates)
         conf2eds_dict = dict((x.id_edsource, x.order) for x in conf2eds)
@@ -186,9 +186,9 @@ class DataBuilder(object):
                 template     = self.queries.getEDSTemplateByEds(edsource.id, self.database)
                 tempelements = self.queries.getEDSTemplateParams(template.id, self.database)
             except Exception as e:
-                msg = 'ERROR: EDSources Query Error: ' + e.args[0]
+                msg = 'ERROR: getEDSources: error querying database:\n' + e.args[0]
                 self.logger.error(msg)
-                return ""
+                raise
 
             params = self.params_builder.buildParameterStructure(self.logger, tempelements, set_default = True)
             result = result + self.emitModule('source', 'Source', edsource.name, params)
@@ -208,9 +208,9 @@ class DataBuilder(object):
             templates = self.queries.getESSTemplates(self.version.id_release, self.database)
             conf2ess =  self.queries.getConfToESSRel(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: ESSource Query Error: ' + e.args[0]
+            msg = 'ERROR: getESSource: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         templates_dict = dict((x.id, x) for x in templates)
         modules_dict = dict((x.id, x) for x in modules)
@@ -238,9 +238,9 @@ class DataBuilder(object):
             templates = self.queries.getESMTemplates(self.version.id_release, self.database)
             conf2esm  = self.queries.getConfToESMRel(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: ESModules Query Error: ' + e.args[0]
+            msg = 'ERROR: getESModules: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         templates_dict = dict((x.id, x) for x in templates)
         modules_dict = dict((x.id, x) for x in modules)
@@ -266,9 +266,9 @@ class DataBuilder(object):
             services  = self.queries.getConfServices(self.version.id, self.database)
             templates = self.queries.getRelSrvTemplates(self.version.id_release, self.database)
         except Exception as e:
-            msg = 'ERROR: Services Query Error: ' + e.args[0]
+            msg = 'ERROR: getServices: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         templates_dict = dict((x.id, x) for x in templates)
 
@@ -309,9 +309,9 @@ class DataBuilder(object):
             self.logger.info('getModules: getModuleParamItemsOne(...) [%.1fs]' % t1.elapsed)
 
         except Exception as e:
-            msg = 'ERROR: getModules: ' + e.args[0]
+            msg = 'ERROR: getModules: error:\n' + e.args[0]
             self.logger.error(msg)
-            return None
+            raise
 
         t2 = Timer()
         t3 = Timer()
@@ -353,9 +353,9 @@ class DataBuilder(object):
         try:
             endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getEndPaths Error: ' + e.args[0]
+            msg = 'ERROR: getOutputModules: error in query ConfDbQueries.getEndPaths(...):\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         for path in endpaths:
             outmodule = self.queries.getOumStreamid(path.id, self.database, self.logger)
@@ -404,9 +404,9 @@ class DataBuilder(object):
             paths    = self.queries.getPaths(self.version.id, self.database, self.logger)
             endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            msg = 'ERROR: getSequences: error querying database:\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         written_sequences = set()
         elements = None
@@ -417,9 +417,9 @@ class DataBuilder(object):
                 elements = self.queries.getCompletePathSequences(path.id, self.version.id, self.database, self.logger)
                 items    = self.queries.getCompletePathSequencesItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
-                msg = 'ERROR: Sequences Query Error: ' + e.args[0]
+                msg = 'ERROR: getSequences: error querying database:\n' + e.args[0]
                 self.logger.error(msg)
-                return result
+                raise
 
             elements_dict = dict((element.id, element) for element in elements)
 
@@ -449,9 +449,9 @@ class DataBuilder(object):
         try:
             paths = self.queries.getPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            msg = 'ERROR: getPaths: error in query ConfDbQueries.getPaths(...):\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         for path in paths:
             result = result + "process." + path.name + " = " + "cms.Path( "
@@ -460,9 +460,9 @@ class DataBuilder(object):
                 elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
                 items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                msg = 'ERROR: getPaths: error querying database:\n' + e.args[0]
                 self.logger.error(msg)
-                return None
+                raise
 
             elements_dict = dict((element.id, element) for element in elements)
             pathitems = []
@@ -489,9 +489,9 @@ class DataBuilder(object):
         try:
             paths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: Query getPaths Error: ' + e.args[0]
+            msg = 'ERROR: getEndPaths: error in query ConfDbQueries.getEndPaths(...):\n' + e.args[0]
             self.logger.error(msg)
-            return result
+            raise
 
         for path in paths:
             result = result + "process." + path.name + " = " + "cms.EndPath( "
@@ -500,9 +500,9 @@ class DataBuilder(object):
                 elements = self.queries.getPathElements(path.id, self.version.id, self.database, self.logger)
                 items    = self.queries.getPathItems(path.id, self.version.id, self.database, self.logger)
             except Exception as e:
-                msg = 'ERROR: Paths Query Error: ' + e.args[0]
+                msg = 'ERROR: getEndPaths: error querying database:\n' + e.args[0]
                 self.logger.error(msg)
-                return None
+                raise
 
             elements_dict = dict((element.id, element) for element in elements)
             pathitems = []
@@ -535,7 +535,7 @@ class DataBuilder(object):
             paths    = self.queries.getPaths(self.version.id, self.database, self.logger)
             endpaths = self.queries.getEndPaths(self.version.id, self.database, self.logger)
         except Exception as e:
-            msg = 'ERROR: getSchedule: error querying database: ' + e.args[0]
+            msg = 'ERROR: getSchedule: error querying database:\n' + e.args[0]
             self.logger.error(msg)
             return 'process.HLTSchedule = cms.Schedule( )'
 
