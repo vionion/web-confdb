@@ -12,6 +12,7 @@ import logging
 import logging.handlers
 import cherrypy
 import os
+import tempfile
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 from cherrypy.lib.static import serve_file
