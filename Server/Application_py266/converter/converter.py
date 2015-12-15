@@ -35,7 +35,7 @@ class Converter(object):
                 if kwargs and 'exc_info' in kwargs and kwargs['exc_info']:
                     traceback = True
                 else:
-                    traceback=False
+                    traceback = False
                 self.error(msg, '', lvl, traceback)
 
             def debug(self, msg, *args, **kwargs):
@@ -114,13 +114,20 @@ class Converter(object):
             # single threaded version
             import itertools
             task.initialize(online, version, use_cherrypy)
-            for key, val in itertools.imap(task.worker, tasks):
-                parts[key] = val
+            task_iterator = itertools.imap(task.worker, tasks)
         else:
             # multiprocess version
             pool = multiprocessing.Pool(processes = self.threads, initializer = task.initialize, initargs = (online, version, use_cherrypy))
-            for key, val in pool.imap_unordered(task.worker, tasks):
-                parts[key] = val
+            task_iterator = pool.imap_unordered(task.worker, tasks)
+
+        for (key, value, error) in task_iterator:
+            parts[key] = value
+            if error:
+                self.logger.critical(error)
+                return None
+
+        # cleanup the task pool
+        if self.threads != 1:
             pool.close()
             pool.join()
 

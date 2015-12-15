@@ -10,6 +10,7 @@ from utils import Timer
 logger      = None
 databuilder = None
 
+
 def initialize(online, version, use_cherrypy):
     # configure the logger
     global logger
@@ -41,10 +42,18 @@ def worker(args):
     label, method = args
 
     # call the requested method
-    logger.info('%s: call to DataBuilder.%s' % (label, method))
-    t = Timer()
-    data = getattr(databuilder, method)()
-    t.stop()
-    logger.info('%s: done [%.1fs]' % (label, t.elapsed))
-    return label, data
+    try:
+        logger.info('%s: call to DataBuilder.%s' % (label, method))
+        t = Timer()
+        data = getattr(databuilder, method)()
+        t.stop()
+        logger.info('%s: done [%.1fs]' % (label, t.elapsed))
+        return label, data, None
+
+    except:
+        import StringIO
+        import traceback
+        buffer = StringIO.StringIO()
+        traceback.print_exc(file = buffer)
+        return label, None, buffer.getvalue()
 
