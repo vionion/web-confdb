@@ -1207,13 +1207,39 @@ class ConfDbQueries(object):
         return smExps
 
 
-    def getModules(self,id_ver=-2, db=None, log = None):
+    def getModules(self, id_ver=-2, db = None, log = None):
 
         if (id_ver == -2 or db == None):
             log.error('ERROR: getModules - input parameters error')
 
-        query = db.query(Pathelement).filter(Pathelement.paetype == 1).filter(Pathelement.id == Pathitems.id_pae).filter(Pathitems.id_pathid == Pathidconf.id_pathid).filter(Pathidconf.id_confver == id_ver)
-
+        query = db.query(PathelementFull).from_statement(text("""SELECT DISTINCT
+                u_paelements.id AS id,
+                u_paelements.name AS name,
+                u_paelements.paetype AS paetype,
+                u_mod2templ.id_templ AS id_templ,
+                u_moduletemplates.name AS temp_name,
+                u_moduletypes.type AS mtype
+            FROM
+                u_mod2templ,
+                u_moduletemplates,
+                u_modt2rele,
+                u_confversions,
+                u_moduletypes,
+                u_paelements,
+                u_pathid2pae,
+                u_pathid2conf
+            WHERE
+                u_moduletypes.id = u_moduletemplates.id_mtype
+            AND u_moduletemplates.id = u_modt2rele.id_modtemplate
+            AND u_modt2rele.id_release = u_confversions.id_release
+            AND u_confversions.id = :version
+            AND u_moduletemplates.id = u_mod2templ.id_templ
+            AND u_mod2templ.id_pae = u_paelements.id
+            AND u_paelements.paetype = 1
+            AND u_paelements.id = u_pathid2pae.id_pae
+            AND u_pathid2pae.id_pathid = u_pathid2conf.id_pathid
+            AND u_pathid2conf.id_confver = :version
+            ORDER BY name""")).params(version = id_ver)
         elements = query.all()
 
         return elements

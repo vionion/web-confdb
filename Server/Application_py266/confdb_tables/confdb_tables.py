@@ -95,6 +95,19 @@ class Pathelement(Base):
         select([Moduletypes.mtype]).where(and_(Moduletypes.id == ModTemplate.id_mtype, ModTemplate.id == ModToTemp.id_templ, ModToTemp.id_pae == id))
     )
 
+
+class PathelementFull(Base):
+    # nome della tabella
+    __tablename__ = 'u_paelements, u_mod2templ, u_moduletemplates, u_moduletypes'
+
+    id        = Column('id', Integer, primary_key=True)
+    name      = Column(String)
+    paetype   = Column(Integer)
+    id_templ  = Column(Integer)
+    temp_name = Column(String)
+    mtype     = Column(String)
+
+
 class Pathitems(Base):
     __tablename__ = 'u_pathid2pae'
 
