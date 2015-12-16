@@ -3,7 +3,7 @@
 import os
 import tempfile
 
-from ConfDBAuth.ConfDBAuth import *
+from ConfDBAuth import *
 
 # local confguration for CherryPy
 cpconfig = {

@@ -1,11 +1,10 @@
-from Config import Config
-from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from confdb_tables.confdb_tables import Base
 from data_builder import DataBuilder
 from utils import Timer
+from Config import *
 
 logger      = None
 databuilder = None
