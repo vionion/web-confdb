@@ -145,8 +145,7 @@ class DataBuilder(object):
         return result + "\n"
 
 
-    def getEDSources(self):
-
+    def getSource(self):
         result = ""
 
         modules = None
@@ -158,45 +157,24 @@ class DataBuilder(object):
             templates = self.queries.getEDSTemplates(self.version.id_release, self.database)
             conf2eds  = self.queries.getConfToEDSRel(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: getEDSources: error querying database:\n' + e.args[0]
+            msg = 'ERROR: getSource: error querying database:\n' + e.args[0]
             self.logger.error(msg)
             raise
 
         templates_dict = dict((x.id, x) for x in templates)
+        modules_dict = dict((x.id, x) for x in modules)
         conf2eds_dict = dict((x.id_edsource, x.order) for x in conf2eds)
 
-        edsources = []
+        for module in modules:
+            if (templates_dict.has_key(module.id_template) and conf2eds_dict.has_key(module.id)):
+                template = templates_dict.get(module.id_template)
+                template_params = self.params_builder.edSourceParamsBuilder(module.id, self.queries, self.database, self.logger)
+                result = result + self.emitModule('source', 'Source', template.name, template_params)
 
-        for m in modules:
-            if (templates_dict.has_key(m.id_template) and conf2eds_dict.has_key(m.id)):
-                temp = templates_dict.get(m.id_template)
-                c2e = conf2eds_dict.get(m.id)
-                eds = EDSource(m.id, m.id_template, temp.name, c2e)
-                eds.gid = m.id
-            if (eds != None):
-                edsources.append(eds)
-
-        edsources.sort(key=lambda par: par.order)
-
-        template = None
-        tempelements = None
-
-        for edsource in edsources:
-            try:
-                template     = self.queries.getEDSTemplateByEds(edsource.id, self.database)
-                tempelements = self.queries.getEDSTemplateParams(template.id, self.database)
-            except Exception as e:
-                msg = 'ERROR: getEDSources: error querying database:\n' + e.args[0]
-                self.logger.error(msg)
-                raise
-
-            params = self.params_builder.buildParameterStructure(self.logger, tempelements, set_default = True)
-            result = result + self.emitModule('source', 'Source', edsource.name, params)
-
-        return result
+        return result + "\n"
 
 
-    def getESSource(self):
+    def getESSources(self):
         result = ""
 
         modules = None
@@ -208,7 +186,7 @@ class DataBuilder(object):
             templates = self.queries.getESSTemplates(self.version.id_release, self.database)
             conf2ess =  self.queries.getConfToESSRel(self.version.id, self.database)
         except Exception as e:
-            msg = 'ERROR: getESSource: error querying database:\n' + e.args[0]
+            msg = 'ERROR: getESSources: error querying database:\n' + e.args[0]
             self.logger.error(msg)
             raise
 
@@ -226,7 +204,6 @@ class DataBuilder(object):
 
 
     def getESModules(self):
-
         result = ""
 
         modules = None

@@ -1724,21 +1724,16 @@ class Exposed(object):
         edsources = []
         resp.children = []
 
-#        print "Building ED Source"
+#        print "Building EDSource"
         for m in modules:
-            if (templates_dict.has_key(m.id_template) and conf2eds_dict.has_key(m.id)):
-                temp = templates_dict.get(m.id_template)
-                c2e = conf2eds_dict.get(m.id)
-#                print "EDS: ", m.id, m.id_template, temp.name, c2e
+            if (m.id_template in templates_dict and m.id in conf2eds_dict):
+                temp = templates_dict[m.id_template]
+                c2e = conf2eds_dict[m.id]
                 eds = EDSource(m.id, m.id_template, "Source", temp.name, c2e)
                 eds.gid = m.id
-
-            else:
-                log.error('ERROR: ED Source Error Key') #print "ERROR KEY"
-
-            if (eds != None):
                 edsources.append(eds)
-
+            else:
+                log.error('ERROR: EDSource key error')
 
         edsources.sort(key=lambda par: par.order)
         resp.children.extend(edsources)
