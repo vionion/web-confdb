@@ -396,6 +396,7 @@ class ConfDbQueries(object):
                 u_moelements.moetype moetype,
                 u_moelements.paramtype paramtype,
                 u_moelements.tracked tracked,
+                u_moelements.hex hex,
                 u_moelements.value value,
                 u_moelements.valuelob valuelob
             FROM

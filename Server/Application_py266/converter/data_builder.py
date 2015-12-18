@@ -561,7 +561,10 @@ class DataBuilder(object):
             return value
 
     def decode_bool(self, value):
-        if value == '0':
+        if value is None:
+            # FIXME return None or raise an exception, instead ?
+            return False
+        elif value == '0':
             return False
         elif value == '1':
             return True
@@ -569,11 +572,33 @@ class DataBuilder(object):
             # FIXME raise an exception ?
             return False
 
+    def decode_int(self, value):
+        if value is None:
+            # FIXME return None or raise an exception, instead ?
+            return 0
+        else:
+            return int(value)
+
     def decode_uint32(self, value):
-        return int(value) % 2**32
+        if value is None:
+            # FIXME return None or raise an exception, instead ?
+            return 0
+        else:
+            return int(value) % 2**32
 
     def decode_uint64(self, value):
-        return int(value) % 2**64
+        if value is None:
+            # FIXME return None or raise an exception, instead ?
+            return 0
+        else:
+            return int(value) % 2**64
+
+    def decode_float(self, value):
+        if value is None:
+            # FIXME return None or raise an exception, instead ?
+            return 0.
+        else:
+            return float(value)
 
     def decode_vstring(self, value):
         if value[0] == '{' and value[-1] == '}':
@@ -658,22 +683,22 @@ class DataBuilder(object):
             value = self.decode_bool(parameter.value)
             string = ' ' + format(value) + ' '
         elif type in ( 'int32', 'int64' ):
-            value = int(parameter.value)
+            value = self.decode_int(parameter.value)
             string = ' ' + format(value) + ' '
         elif type in ( 'uint32', ):
             value = self.decode_uint32(parameter.value)
-            if parameter.value[0:2] == '0x':
+            if parameter.hex:
                 string = ' 0x' + format(value, '08x') + ' '
             else:
                 string = ' ' + format(value) + ' '
         elif type in ( 'uint64', ):
             value = self.decode_uint64(parameter.value)
-            if parameter.value[0:2] == '0x':
+            if parameter.hex:
                 string = ' 0x' + format(value, '016x') + ' '
             else:
                 string = ' ' + format(value) + ' '
         elif type in ( 'double', ) :
-            value = float(parameter.value)
+            value = self.decode_float(parameter.value)
             string = ' ' + self.format_double(value) + ' '
         elif type in ( 'PSet', ) :
             string = '\n' + ',\n'.join(self.emitParameter(v) for v in parameter.children) + '\n' + indent
