@@ -18,7 +18,6 @@ else:
 
 # Load configuration
 from Config import *
-from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 connectionString = ConnectionString()
 
 # Register the SQLAlchemy plugin

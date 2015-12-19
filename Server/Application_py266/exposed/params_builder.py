@@ -46,7 +46,7 @@ class ParamsBuilder():
                 stack.pop()
                 prev = parents.pop()
 
-            item = Parameter(p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked)
+            item = Parameter(p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked, p.hex)
             item.default = set_default
             # the parameter is a PSet or VPSet
             if item.moetype == 3 or item.moetype == 2:

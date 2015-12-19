@@ -1,14 +1,14 @@
-from Config import Config
-from Config.ConfDBAuth.ConfDBAuth import ConnectionString
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from confdb_tables.confdb_tables import Base
 from data_builder import DataBuilder
 from utils import Timer
+from Config import *
 
 logger      = None
 databuilder = None
+
 
 def initialize(online, version, use_cherrypy):
     # configure the logger
@@ -41,10 +41,18 @@ def worker(args):
     label, method = args
 
     # call the requested method
-    logger.info('%s: call to DataBuilder.%s' % (label, method))
-    t = Timer()
-    data = getattr(databuilder, method)()
-    t.stop()
-    logger.info('%s: done [%.1fs]' % (label, t.elapsed))
-    return label, data
+    try:
+        logger.info('%s: call to DataBuilder.%s' % (label, method))
+        t = Timer()
+        data = getattr(databuilder, method)()
+        t.stop()
+        logger.info('%s: done [%.1fs]' % (label, t.elapsed))
+        return label, data, None
+
+    except:
+        import StringIO
+        import traceback
+        buffer = StringIO.StringIO()
+        traceback.print_exc(file = buffer)
+        return label, None, buffer.getvalue()
 

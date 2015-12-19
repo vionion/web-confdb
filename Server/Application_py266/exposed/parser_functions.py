@@ -163,8 +163,8 @@ class Parser_Functions(object):
 
         for key in config_obj.edSources_dict:
             ed_source = EDSource(config_obj.edSources_dict[key].id, config_obj.edSources_dict[key].template, "Source", config_obj.edSources_dict[key].name)
-            ed_source.gid = config_obj.edSources_dict[key].id
             if (ed_source != None):
+                ed_source.gid = config_obj.edSources_dict[key].id
                 edSources.append(ed_source)
 
         edSources.sort(key=lambda par: par.order)

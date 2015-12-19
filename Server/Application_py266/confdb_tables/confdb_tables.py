@@ -95,6 +95,19 @@ class Pathelement(Base):
         select([Moduletypes.mtype]).where(and_(Moduletypes.id == ModTemplate.id_mtype, ModTemplate.id == ModToTemp.id_templ, ModToTemp.id_pae == id))
     )
 
+
+class PathelementFull(Base):
+    # nome della tabella
+    __tablename__ = 'u_paelements, u_mod2templ, u_moduletemplates, u_moduletypes'
+
+    id        = Column('id', Integer, primary_key=True)
+    name      = Column(String)
+    paetype   = Column(Integer)
+    id_templ  = Column(Integer)
+    temp_name = Column(String)
+    mtype     = Column(String)
+
+
 class Pathitems(Base):
     __tablename__ = 'u_pathid2pae'
 
@@ -203,6 +216,7 @@ class ModuleitemFull(Base):
     moetype   = Column('moetype',   Integer)
     paramtype = Column('paramtype', String)
     tracked   = Column('tracked',   Integer)
+    hex       = Column('hex',       Integer)
     value     = Column('value',     String)
     valuelob  = Column('valuelob',  CLOB)
 
@@ -221,6 +235,7 @@ class ModTelement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 class ModTemp2Rele(Base):
     # nome della tabella
@@ -296,6 +311,7 @@ class SrvTempElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 class Service(Base):
     __tablename__ = 'u_services'
@@ -323,15 +339,10 @@ class SrvElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-
-
-
-
-
+    hex = Column(Integer)
 
 
 #------------ Streams ------------------------------------------------------------
-
 
 class Stream(Base):
     __tablename__ = 'u_streams'
@@ -476,6 +487,7 @@ class ESMTempElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 #-------------------- ES Module and elements ------------------
 class ESModule(Base):
@@ -508,8 +520,7 @@ class ESMElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
-
-
+    hex = Column(Integer)
 
 
 #-------------------- Output Module elements ------------------
@@ -527,6 +538,7 @@ class OumElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 #------------- Global PSET and Elements ---------------
 class Globalpset(Base):
@@ -557,6 +569,7 @@ class GpsetElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 #-------------- ED SOURCE Templates and Elements --------
 class EDSourceTemplate(Base):
@@ -587,6 +600,7 @@ class EDSTempElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 
 #------------ ED SOURCE and Elements -----------------
@@ -620,6 +634,8 @@ class EDSElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
+
 
 #-------------- ES SOURCE Templates and Elements --------
 class ESSourceTemplate(Base):
@@ -650,6 +666,7 @@ class ESSTempElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
 
 
 #------------ ES SOURCE and Elements -----------------
@@ -683,3 +700,5 @@ class ESSElement(Base):
     value = Column(String)
     valuelob = Column(CLOB)
     tracked = Column(Integer)
+    hex = Column(Integer)
+

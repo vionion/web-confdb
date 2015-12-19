@@ -1276,18 +1276,20 @@ class Root(object):
 
         folder = tempfile.mkdtemp(dir = state_dir)
         absolute_filename = self.conv.createConfig(ver, cnf, db, online, folder, use_cherrypy = True)
+        if absolute_filename is None:
+            # handle the case where the dump failed
+            resp.success = False
+            self.log.info('export failed')
+            return schema.dump(resp).data
+
         relative_filename = absolute_filename[len(state_dir):].lstrip('/')
-        if not relative_filename:
-            # FIXME need to handle the case where the dump failed
-            pass
         config_path = base_url + '/download/?filepath=' + relative_filename
         url = UrlString(1, config_path)
         resp.children.append(url)
         timer.stop()
         self.log.info('export done to file %s in %0.1fs' % (absolute_filename, timer.elapsed))
 
-        output = schema.dump(resp)
-        return output.data
+        return schema.dump(resp).data
 
     @cherrypy.tools.json_out()
     @cherrypy.expose
