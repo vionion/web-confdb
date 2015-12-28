@@ -1,6 +1,6 @@
 # Class: Parser_Functions
 
-from confdb_queries.confdb_queries import ConfDbQueries
+from confdb_v2.queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
 from item_wrappers.Pathitem import *
@@ -21,7 +21,7 @@ from utils import *
 class Parser_Functions(object):
     summaryItemCounter = Counter()
 
-    def getGPsetsFromFile(self, config_id, config_dict=None):
+    def getGPsetsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         resp = Response()
         resp.children = []
@@ -41,7 +41,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getGPsetsItemsFromFile(self, config_id, gPsetId, config_dict=None):
+    def getGPsetsItemsFromFile(self, config_id, gPsetId, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         gpset = config_obj.global_pset_dict.get(gPsetId)
@@ -58,7 +58,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getStreamsFromFile(self, config_id, config_dict=None):
+    def getStreamsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         streams_data = {}
 
@@ -89,7 +89,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getDataSetItemsFromFile(self, config_id, dataSet_id,config_dict=None):
+    def getDataSetItemsFromFile(self, config_id, dataSet_id,config_dict):
         config_obj = config_dict.get(int(config_id))
 
         paths = []
@@ -121,7 +121,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEvcoStatementsFromFile(self, config_id, evco_id, config_dict=None):
+    def getEvcoStatementsFromFile(self, config_id, evco_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         statements = []
@@ -157,7 +157,7 @@ class Parser_Functions(object):
         return output.data
 
 
-    def getEdSourceFromFile(self, config_id, config_dict=None):
+    def getEdSourceFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         edSources = []
 
@@ -180,7 +180,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEdSourceItemsFromFile(self, config_id, source_id, config_dict=None):
+    def getEdSourceItemsFromFile(self, config_id, source_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         edSource = config_obj.edSources_dict.get(source_id)
@@ -197,7 +197,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEsSourcesFromFile(self, config_id, config_dict=None):
+    def getEsSourcesFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         esSources = []
 
@@ -221,7 +221,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEsSourceItemsFromFile(self, config_id, esSource_id, config_dict=None):
+    def getEsSourceItemsFromFile(self, config_id, esSource_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         esSource = config_obj.esSources_dict.get(esSource_id)
@@ -238,7 +238,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEsModulesFromFile(self, config_id, config_dict=None):
+    def getEsModulesFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         esModules = []
 
@@ -262,7 +262,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEsModulesItemsFromFile(self, config_id, esModule_id, config_dict=None):
+    def getEsModulesItemsFromFile(self, config_id, esModule_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         esModule = config_obj.esModules_dict.get(esModule_id)
@@ -279,7 +279,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getServiceFromFile(self, config_id, config_dict=None):
+    def getServiceFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         services = []
 
@@ -302,7 +302,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getServiceItemsFromFile(self, config_id, service_id, config_dict=None):
+    def getServiceItemsFromFile(self, config_id, service_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         service = config_obj.services_dict.get(service_id)
@@ -319,7 +319,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getModulesFromFile(self, config_id, config_dict=None):
+    def getModulesFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         modules = []
 
@@ -342,7 +342,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getModDetailsFromFile(self, config_id, module_id, config_dict=None):
+    def getModDetailsFromFile(self, config_id, module_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         module = config_obj.modules_dict.get(module_id)
@@ -362,7 +362,7 @@ class Parser_Functions(object):
         return output.data
 
 
-    def getModuleItemsFromFile(self, config_id, module_id, config_dict=None):
+    def getModuleItemsFromFile(self, config_id, module_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         module = config_obj.modules_dict.get(module_id)
@@ -382,7 +382,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEndPathsFromFile(self, config_id, config_dict=None):
+    def getEndPathsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         endPaths = []
         i = 0
@@ -407,7 +407,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getEndPathItemsFromFile(self, config_id, endPath_id=-1, config_dict=None):
+    def getEndPathItemsFromFile(self, config_id, endPath_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         endPathItems = []
         i = 0
@@ -446,7 +446,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getOutmodDetails(self, config_id, outputModule_id, config_dict=None):
+    def getOutmodDetails(self, config_id, outputModule_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         outputModule = config_obj.endPathModules.get(outputModule_id)
@@ -489,7 +489,7 @@ class Parser_Functions(object):
 
         return items
 
-    def buildComponentChildren(self, children, i, config_obj, config_dict=None):
+    def buildComponentChildren(self, children, i, config_obj):
         moduleItems = []
 
         for key in children:
@@ -511,7 +511,7 @@ class Parser_Functions(object):
 
         return moduleItems, i
 
-    def getPathsFromFile(self, config_id, config_dict=None):
+    def getPathsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         paths = []
         i = 0
@@ -536,7 +536,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getPathItemsFromFile(self, config_id, path_id=-1, config_dict=None):
+    def getPathItemsFromFile(self, config_id, path_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         pathItems = []
         i = 0
@@ -572,7 +572,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getPathDetailsFromFile(self, config_id, path_id=-1, config_dict=None):
+    def getPathDetailsFromFile(self, config_id, path_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         pathDetail = None
@@ -617,7 +617,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def buildPathItemChildren(self, children, i, config_id, path_id, config_dict=None):
+    def buildPathItemChildren(self, children, i, config_id, path_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         children_list = []
 
@@ -641,7 +641,7 @@ class Parser_Functions(object):
 
         return children_list, i
 
-    def getSummaryColumnsFromFile(self, config_id, config_dict=None):
+    def getSummaryColumnsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         columns = []
 
@@ -671,7 +671,7 @@ class Parser_Functions(object):
 
         return output.data
 
-    def getSummaryItemsFromFile(self, config_id, config_dict=None):
+    def getSummaryItemsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
         items = {}
 
@@ -840,7 +840,7 @@ class Parser_Functions(object):
             # PUT CODE FOR LEVEL1_SEED_EXPRESSION
             return LV1_value
 
-    def getCnfDetailsFromFile(self, config_id, config_dict=None):
+    def getCnfDetailsFromFile(self, config_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
         version = FileVersion(config_id, config_obj.config_name)

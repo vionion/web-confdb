@@ -104,49 +104,49 @@ class ParamsBuilder():
 
 
     @staticmethod
-    def serviceParamsBuilder(sid = -2, queries = None, db = None, log = None):
+    def serviceParamsBuilder(id, queries, session, logger):
         q = ( queries.getSrvTemplateBySrv,
               queries.getSrvTemplateParams,
               queries.getServiceParamElements )
-        return ParamsBuilder.buildFromTemplateAndModule(db, log, q, sid)
+        return ParamsBuilder.buildFromTemplateAndModule(session, logger, q, id)
 
     @staticmethod
-    def serviceTemplateParamsBuilder(sid = -2, queries = None, db = None, log = None):
-        return ParamsBuilder.buildParameters(db, log, queries.getSrvTemplateParams, sid, set_default = True)
+    def serviceTemplateParamsBuilder(id, queries, session, logger):
+        return ParamsBuilder.buildParameters(session, logger, queries.getSrvTemplateParams, id, set_default = True)
 
     @staticmethod
-    def moduleParamsBuilder(mid = -2, queries = None, db = None, log = None):
+    def moduleParamsBuilder(mid, queries, session, logger):
         q = ( queries.getTemplateFromPae,
               queries.getTemplateParams,
               queries.getModuleParamItemsOne )
-        return ParamsBuilder.buildFromTemplateAndModule(db, log, q, mid)
+        return ParamsBuilder.buildFromTemplateAndModule(session, logger, q, mid)
 
     @staticmethod
-    def esModuleParamsBuilder(sid = -2, queries = None, db = None, log = None):
+    def esModuleParamsBuilder(id, queries, session, logger):
         q = ( queries.getESMTemplateByEsm,
               queries.getESMTemplateParams,
               queries.getESModParams )
-        return ParamsBuilder.buildFromTemplateAndModule(db, log, q, sid)
+        return ParamsBuilder.buildFromTemplateAndModule(session, logger, q, id)
 
     @staticmethod
-    def gpsetParamsBuilder(sid = -2, queries = None, db = None, log = None):
-        return ParamsBuilder.buildParameters(db, log, queries.getGpsetElements, sid)
+    def gpsetParamsBuilder(id, queries, session, logger):
+        return ParamsBuilder.buildParameters(session, logger, queries.getGpsetElements, id)
 
     @staticmethod
-    def outputModuleParamsBuilder(sid = -2, queries = None, db = None, log = None):
-        return ParamsBuilder.buildParameters(db, log, queries.getOUMElements, sid)
+    def outputModuleParamsBuilder(id, queries, session, logger):
+        return ParamsBuilder.buildParameters(session, logger, queries.getOUMElements, id)
 
     @staticmethod
-    def edSourceParamsBuilder(sid = -2, queries = None, db = None, log = None):
+    def edSourceParamsBuilder(id, queries, session, logger):
         q = ( queries.getEDSTemplateByEds,
               queries.getEDSTemplateParams,
               queries.getEDSourceParams )
-        return ParamsBuilder.buildFromTemplateAndModule(db, log, q, sid)
+        return ParamsBuilder.buildFromTemplateAndModule(session, logger, q, id)
 
     @staticmethod
-    def esSourceParamsBuilder(sid = -2, queries = None, db = None, log = None):
+    def esSourceParamsBuilder(id, queries, session, logger):
         q = ( queries.getESSTemplateByEss,
               queries.getESSTemplateParams,
               queries.getESSourceParams )
-        return ParamsBuilder.buildFromTemplateAndModule(db, log, q, sid)
+        return ParamsBuilder.buildFromTemplateAndModule(session, logger, q, id)
 

@@ -6,12 +6,12 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import Sequence
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
-from confdb_tables.confdb_tables import *
+from confdb_v2.tables import *
 
 __all__ = ['SAEngine']
 
 class SAEngine(object):
-    def __init__(self, connection_string=None):
+    def __init__(self, connection_string):
 
         self.log = logging.getLogger(__name__)
 

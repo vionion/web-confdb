@@ -1,4 +1,4 @@
-from confdb_queries.confdb_queries import ConfDbQueries
+from confdb_v2.queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
 from item_wrappers.Pathitem import *
@@ -11,7 +11,7 @@ from marshmallow import Schema, fields, pprint
 import string
 
 class SummaryBuilder():
-    def getPrescaleColumns(self, version=None, queries=None, db=None, log = None):
+    def getPrescaleColumns(self, version, queries, db, log):
         if (version == None or db == None or queries == None):
             log.error('ERROR: getPrescaleColumns - input parameters error')
 
@@ -52,7 +52,7 @@ class SummaryBuilder():
 
         return columns
 
-    def getL1Seeds(self, pats=None, id_rel=-2, queries=None, db=None, log = None):
+    def getL1Seeds(self, pats, id_rel, queries, db, log):
         if (pats == None or db == None or queries == None or id_rel == -2):
             log.error('ERROR: getL1Seeds - input parameters error')
 
@@ -271,7 +271,7 @@ class SummaryBuilder():
 
 #
 
-    def getSmartPrescales(self, ver_id = -1, id_rel = -1, streams = None, queries=None, db=None, log = None):
+    def getSmartPrescales(self, ver_id, id_rel, streams, queries, db, log):
         if (db == None or queries == None or streams == None):
             log.error('ERROR: getSmartPrescaler - input parameters error')
 
