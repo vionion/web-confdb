@@ -6,7 +6,7 @@
 
 class Service(object):
 
-    def __init__(self, id=0, template_id = -1, release_id = -1, name="", s_type=""):
+    def __init__(self, id = 0, template_id = -1, release_id = -1, name = "", s_type = ""):
         self.id = id
         self.gid = -1
         self.template_id = template_id
@@ -17,7 +17,7 @@ class Service(object):
 
 class PathDetails(object):
 
-    def __init__(self, id=0, name="", labels=None, values=[],author="", description=""):
+    def __init__(self, id = 0, name = "", labels = None, values = [], author = "", description = ""):
         self.gid = id
         self.name = name
         self.labels = labels
@@ -27,7 +27,7 @@ class PathDetails(object):
 
 class Streamitem(object):
 
-    def __init__(self, id=0, fractodisk = -1, name="", s_type=""):
+    def __init__(self, id = 0, fractodisk = -1, name = "", s_type = ""):
         self.id = id
         self.gid = -1
         self.name = name
@@ -37,7 +37,7 @@ class Streamitem(object):
 
 class ESModuleDetails(object):
 
-    def __init__(self, id=0, id_templ = -1, name="", mclass = "", order = -1):
+    def __init__(self, id = 0, id_templ = -1, name = "", mclass = "", order = -1):
         self.id = id
         self.gid = -1
         self.id_templ = id_templ
@@ -47,7 +47,7 @@ class ESModuleDetails(object):
 
 class OutputModuleDetails(object):
 
-    def __init__(self, id=0, name="", mclass = "", author="", stream="", streamid = -1):
+    def __init__(self, id = 0, name = "", mclass = "", author = "", stream = "", streamid = -1):
         self.id = id
         self.gid = -1
         self.name = name
@@ -58,7 +58,7 @@ class OutputModuleDetails(object):
 
 class GlobalPset(object):
 
-    def __init__(self, id=0, name="", tracked = -1):
+    def __init__(self, id = 0, name = "", tracked = -1):
         self.id = id
         self.gid = -1
         self.name = name
@@ -66,7 +66,7 @@ class GlobalPset(object):
 
 class EDSource(object):
 
-    def __init__(self, id=0, id_templ = -1, name="", tclass= "", order = -1):
+    def __init__(self, id = 0, id_templ = -1, name = "", tclass = "", order = -1):
         self.id = id
         self.gid = -1
         self.id_templ = id_templ
@@ -76,7 +76,7 @@ class EDSource(object):
 
 class ESSource(object):
 
-    def __init__(self, id=0, id_templ = -1, name="", tclass = "", order = -1):
+    def __init__(self, id = 0, id_templ = -1, name = "", tclass = "", order = -1):
         self.id = id
         self.gid = -1
         self.id_templ = id_templ
@@ -86,20 +86,20 @@ class ESSource(object):
 
 class SummaryColumn(object):
 
-    def __init__(self, gid=-1, name="", order = -1):
+    def __init__(self, gid = -1, name = "", order = -1):
         self.gid = gid
         self.name = name
         self.order = order
 
 class SummaryValue(object):
 
-    def __init__(self, label="", value = ""):
+    def __init__(self, label = "", value = ""):
         self.label = label
         self.value = value
 
 class Summaryitem(object):
 
-    def __init__(self, id=0, name="", sit="", leaf = False, icon = ""):
+    def __init__(self, id = 0, name = "", sit = "", leaf = False, icon = ""):
         self.id = id
         self.gid = -1
         self.name = name
@@ -114,25 +114,25 @@ class ListContainer(object):
         self.children = []
 
 class SmartPrescale(object):
-    def __init__(self,stream=-1):
+    def __init__(self, stream = -1):
         self.stream = stream
         self.children = {}
 
 class UrlString(object):
-    def __init__(self,gid=0,url=""):
+    def __init__(self, gid = 0, url = ""):
         self.gid = gid
         self.url = url
 
 #-------------------- Added By Husam ----------------------
 class PathObj(object):
-    def __init__(self, id=-1, id_path=-1, name="", pit = ""):
+    def __init__(self, id = -1, id_path = -1, name = "", pit = ""):
         self.id = id
         self.id_path = id_path
         self.name = name
         self.pit = pit
 
 class FileModuleDetails(object):
-    def __init__(self, id=0, name="", mt="", mclass = ""):
+    def __init__(self, id = 0, name = "", mt = "", mclass = ""):
         self.id = id
         self.gid = -1
         self.name = name
@@ -140,7 +140,7 @@ class FileModuleDetails(object):
         self.mclass = mclass
 
 class FilePathitem(object):
-    def __init__(self, id=0, name="", id_pathid= 0, paetype = -1, order = -1, operator = 0):
+    def __init__(self, id = 0, name = "", id_pathid = 0, paetype = -1, order = -1, operator = 0):
         self.id = id
         self.gid = -2
         self.name = name
@@ -152,7 +152,7 @@ class FilePathitem(object):
         self.children = []
 
 class FileParameter(object):
-    def __init__(self, id=0, name="", value="", paetype = -1, partype="", order = -1, track=False):
+    def __init__(self, id = 0, name = "", value = "", paetype = -1, partype = "", order = -1, track = False):
         self.id = id
         self.name = name
         self.value = value
@@ -165,7 +165,7 @@ class FileParameter(object):
         self.children = []
 
 class FileEvcoParameter(object):
-    def __init__(self, id=0, statement_type="", class_name="", module_element="", extra_name="", process_name=""):
+    def __init__(self, id = 0, statement_type = "", class_name = "", module_element = "", extra_name = "", process_name = ""):
         self.id = id
         self.classn = class_name
         self.modulel = module_element
@@ -174,6 +174,6 @@ class FileEvcoParameter(object):
         self.statementtype = statement_type
 
 class FileVersion(object):
-    def __init__(self, id=0, name=""):
+    def __init__(self, id = 0, name = ""):
         self.id = id
         self.name = name

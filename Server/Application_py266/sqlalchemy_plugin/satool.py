@@ -5,7 +5,7 @@ import os
 __all__ = [ 'SATool' ]
 
 class SATool(cherrypy.Tool):
-    def __init__(self,current_dir="",log=None):
+    def __init__(self, current_dir = "", log = None):
         """
         The SA tool is responsible for associating a SA session
         to the SA engine and attaching it to the current request.

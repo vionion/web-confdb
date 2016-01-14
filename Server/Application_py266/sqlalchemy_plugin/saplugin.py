@@ -6,12 +6,12 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import Sequence
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
-from confdb_tables.confdb_tables import *
+from confdb_v2.tables import *
 
 __all__ = ['SAEnginePlugin']
 
 class SAEnginePlugin(plugins.SimplePlugin):
-    def __init__(self, bus, connection_string=None):
+    def __init__(self, bus, connection_string):
         """
         The plugin is registered to the CherryPy engine and therefore
         is part of the bus (the engine *is* a bus) registery.
@@ -24,8 +24,7 @@ class SAEnginePlugin(plugins.SimplePlugin):
 
 #        self.sa_engine = None
 #        self.connection_string = connection_string
-#        self.session = scoped_session(sessionmaker(autoflush=True,
-#                                                   autocommit=False))
+#        self.session = scoped_session(sessionmaker(autoflush=True, autocommit=False))
 
         self.sa_engine_online = None
         self.connection_string_online = connection_string.connectUrlonline

@@ -2,7 +2,7 @@
 #
 # Class: Converter
 
-from confdb_queries.confdb_queries import ConfDbQueries
+from confdb_v2.queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
 from item_wrappers.Pathitem import *
@@ -22,7 +22,7 @@ class Converter(object):
     def __init__(self, threads = 4):
         self. threads = threads
 
-    def createConfig(self, ver=-2, cnf=-2, db = None, online = "False", folder = "", use_cherrypy = False):
+    def createConfig(self, ver, cnf, db, online, folder, use_cherrypy = False):
 
         if use_cherrypy:
             import cherrypy
@@ -68,7 +68,7 @@ class Converter(object):
         version = None
         release = None
         try:
-            version = DataBuilder.getRequestedVersion(ver, cnf, db)
+            version = DataBuilder.getRequestedVersion(ver, cnf, db, self.logger)
         except Exception as e:
             msg = 'ERROR: Query getRequestedVersion Error: ' + e.args[0]
             self.logger.error(msg)

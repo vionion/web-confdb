@@ -6,7 +6,7 @@
 
 class FolderItem(object):
 
-    def __init__(self, id=0, name="", fitype="", id_parent = -1, created = None):
+    def __init__(self, id = 0, name = "", fitype = "", id_parent = -1, created = None):
         self.id = id
         self.gid = 0
         self.name = name

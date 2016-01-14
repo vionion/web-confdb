@@ -111,7 +111,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allpathitems(self, _dc=101, ver=-2, cnf=-2,node=1, itype="",online="False", filter=""):
+    def allpathitems(self, _dc = 101, ver = -2, cnf = -2,node = 1, itype = "",online = "False", filter = ""):
 
         db = None
         db_online = cherrypy.request.db_online
@@ -170,7 +170,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def pathdetails(self, _dc=101, ver=-2, cnf=-2,node=1, pid=-2,online="False"):
+    def pathdetails(self, _dc = 101, ver = -2, cnf = -2,node = 1, pid = -2,online = "False"):
 
 #        db = cherrypy.request.db
 
@@ -223,7 +223,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allmoditems(self, _dc=101, length=1, node=1, mid=-2, pid=-2, epit = "", allmod="false", online="False", verid=-1):
+    def allmoditems(self, _dc = 101, length = 1, node = 1, mid = -2, pid = -2, epit = "", allmod = "false", online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -282,7 +282,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def directories(self,_dc=101, node = "", gid = -2, online="False"):
+    def directories(self,_dc = 101, node = "", gid = -2, online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -320,7 +320,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def versions(self, _dc=101, cid = 1, online="False"):
+    def versions(self, _dc = 101, cid = 1, online = "False"):
 
         db = None
         db_online = cherrypy.request.db_online
@@ -349,7 +349,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def moddetails(self, _dc=101, mid=0, pid=0,online="False", verid=-1):
+    def moddetails(self, _dc = 101, mid = 0, pid = 0,online = "False", verid = -1):
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
@@ -394,7 +394,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allmodules(self, _dc=101, ver=-2, cnf=-2,online="False"):
+    def allmodules(self, _dc = 101, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -439,7 +439,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allservices(self, _dc=101, ver=-2, cnf=-2, node=-1, online="False"):
+    def allservices(self, _dc = 101, ver = -2, cnf = -2, node = -1, online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -483,7 +483,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allsrvitems(self, _dc=101, node=1, sid=-2,online="False", verid=-1):
+    def allsrvitems(self, _dc = 101, node = 1, sid = -2,online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -523,7 +523,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allstreamitems(self, _dc=101,  ver=-2, cnf=-2, node=-1,online="False"):
+    def allstreamitems(self, _dc = 101,  ver = -2, cnf = -2, node = -1,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -574,7 +574,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def evcostatements(self, _dc=101, strid=-1,online="False", verid=-1):
+    def evcostatements(self, _dc = 101, strid = -1,online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -616,7 +616,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def cnfdetails(self, _dc=101, ver=-2, cnf=-2,online="False"):
+    def cnfdetails(self, _dc = 101, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -660,7 +660,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allesmodules(self, _dc=101, node=-2, ver=-2, cnf=-2,online="False"):
+    def allesmodules(self, _dc = 101, node = -2, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -701,7 +701,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allesmoditems(self, _dc=101, node=-2, mid=-2,online="False", verid=-1):
+    def allesmoditems(self, _dc = 101, node = -2, mid = -2,online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -736,7 +736,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allseqitems(self, _dc=101, node=-2, ver=-2, cnf=-2,online="False"):
+    def allseqitems(self, _dc = 101, node = -2, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -776,7 +776,7 @@ class Root(object):
     #Get a the list of items in an end path
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allendpathitems(self, _dc=101, ver=-2, cnf=-2,node=1, itype="",online="False"):
+    def allendpathitems(self, _dc = 101, ver = -2, cnf = -2,node = 1, itype = "",online = "False"):
 
 #        db = cherrypy.request.db
 
@@ -841,7 +841,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def outmoddetails(self, _dc=101, mid=0, pid=0,online="False", verid=-1):
+    def outmoddetails(self, _dc = 101, mid = 0, pid = 0,online = "False", verid = -1):
 
         db = None
         db_online = cherrypy.request.db_online
@@ -885,7 +885,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allgpsets(self, _dc=101, ver=-2, cnf=-2, node=-1,online="False"):
+    def allgpsets(self, _dc = 101, ver = -2, cnf = -2, node = -1,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -917,7 +917,7 @@ class Root(object):
             cnf = int(cnf)
             ver = int(ver)
             cnf = cnfMap.get(cnf)
-            data = self.funcs.getAllGlobalPsets(cnf,ver,gpsMap,db)
+            data = self.funcs.getAllGlobalPsets(cnf, ver, gpsMap, db, self.log)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allgpsets - data returned null object')
@@ -927,7 +927,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allgpsetitems(self, _dc=101, node=1, gid=-2, verid=-1, online="False"):
+    def allgpsetitems(self, _dc = 101, node = 1, gid = -2, verid = -1, online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -966,7 +966,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def edsource(self, _dc=101, node=-2, ver=-2, cnf=-2,online="False"):
+    def edsource(self, _dc = 101, node = -2, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1009,7 +1009,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def alledsourceitems(self, _dc=101, node=-2, mid=-2,online="False", verid=-1):
+    def alledsourceitems(self, _dc = 101, node = -2, mid = -2,online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -1043,7 +1043,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def essource(self, _dc=101, node=-2, ver=-2, cnf=-2,online="False"):
+    def essource(self, _dc = 101, node = -2, ver = -2, cnf = -2,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1083,7 +1083,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allessourceitems(self, _dc=101, node=-2, mid=-2,online="False", verid=-1):
+    def allessourceitems(self, _dc = 101, node = -2, mid = -2,online = "False", verid = -1):
 #        db = cherrypy.request.db
 
         db = None
@@ -1118,7 +1118,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def alldatasetitems(self, _dc=101, dstid=-2, ver=-2, cnf=-2, node=-1,online="False"):
+    def alldatasetitems(self, _dc = 101, dstid = -2, ver = -2, cnf = -2, node = -1,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1169,7 +1169,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allsummarycolumns(self, _dc=101, ver=-2, cnf=-2, node=-1,online="False"):
+    def allsummarycolumns(self, _dc = 101, ver = -2, cnf = -2, node = -1,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1207,7 +1207,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allsummaryitems(self, _dc=101,  ver=-2, cnf=-2, sit='',node=-1,online="False"):
+    def allsummaryitems(self, _dc = 101,  ver = -2, cnf = -2, sit = '',node = -1,online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1252,7 +1252,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def export(self, _dc=101,  ver=-2, cnf=-2,online="False"):
+    def export(self, _dc = 101,  ver = -2, cnf = -2,online = "False"):
         from LocalConfig import state_dir
         timer = Timer()
 
@@ -1293,7 +1293,7 @@ class Root(object):
 
     @cherrypy.tools.json_out()
     @cherrypy.expose
-    def upload(self, pythonfile=None):
+    def upload(self, pythonfile = None):
         data = pythonfile.file.read(9999999)
 
         temp_file = open('temp.py', 'wb')
@@ -1332,7 +1332,7 @@ class Root(object):
         return output.data
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def confname(self, _dc=101, name=""):
+    def confname(self, _dc = 101, name = ""):
 
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
@@ -1391,13 +1391,7 @@ class Download:
 
 if __name__ == '__main__':
 
-    # Load configuration
-    from Config import *
-
-    # Register the SQLAlchemy plugin
-    from sqlalchemy_plugin.saplugin import SAEnginePlugin
-    from cherrypy.process.plugins import DropPrivileges
-
+#    from cherrypy.process.plugins import DropPrivileges
 #    dr = DropPrivileges(cherrypy.engine, uid=1000, gid=1000)
 #    dr = DropPrivileges(cherrypy.engine) #-- UNCOMMENT
 #    dr.subscribe() #-- UNCOMMENT
@@ -1406,21 +1400,18 @@ if __name__ == '__main__':
 #    d = Daemonizer(cherrypy.engine)  # -- UNCOMMENT
 #    d.subscribe()  # -- UNCOMMENT
 
+    # Load configuration
+    from Config import *
     connectionString = ConnectionString()
 
-#    dr = DropPrivileges(cherrypy.engine, uid=1000, gid=1000)
-#    dr.subscribe()
-
-#    SAEnginePlugin(cherrypy.engine, connectUrl).subscribe()
+    # Register the SQLAlchemy plugin
+    from sqlalchemy_plugin.saplugin import SAEnginePlugin
     SAEnginePlugin(cherrypy.engine, connectionString).subscribe()
 
     # Register the SQLAlchemy tool
     from sqlalchemy_plugin.satool import SATool
     cherrypy.tools.db = SATool(current_dir,cherrypy.log)
 
-
-#    cherrypy.config.update({'server.socket_host': '0.0.0.0','server.socket_port': 80, 'log.access_file':"logs/accessLog.log", 'log.error_file': "logs/errorLog.log", 'log.screen': True})
-#    cherrypy.quickstart(Root(), '', {'/': {'tools.db.on': True}})
     root = Root()
     root.download = Download()
 

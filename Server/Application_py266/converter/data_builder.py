@@ -4,7 +4,7 @@
 
 import itertools
 import re
-from confdb_queries.confdb_queries import ConfDbQueries
+from confdb_v2.queries import ConfDbQueries
 from item_wrappers.FolderItem import *
 from item_wrappers.ModuleDetails import *
 from item_wrappers.Pathitem import *
@@ -74,9 +74,9 @@ class DataBuilder(object):
         relations = None
 
         try:
-            streams   = self.queries.getConfStreams(self.version.id, self.database)
-            datasets  = self.queries.getConfDatasets(self.version.id, self.database)
-            relations = self.queries.getConfStrDatRels(self.version.id, self.database)
+            streams   = self.queries.getConfStreams(self.version.id, self.database, self.logger)
+            datasets  = self.queries.getConfDatasets(self.version.id, self.database, self.logger)
+            relations = self.queries.getConfStrDatRels(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: getStreams: error querying database:\n' + e.args[0]
             self.logger.error(msg)
@@ -92,7 +92,7 @@ class DataBuilder(object):
 
             new_result = ""
             for dataset in datasets:
-                if(stream.id == relations_dict.get(dataset.id)):
+                if (stream.id == relations_dict.get(dataset.id)):
                     new_result = new_result + "'" + dataset.name + "'" + ",\n" + self.indent_module + self.indent_parameter
 
             if new_result != "":
@@ -110,7 +110,7 @@ class DataBuilder(object):
         result = "process.datasets = cms.PSet(\n"
 
         try:
-            datasets = self.queries.getConfDatasets(self.version.id, self.database)
+            datasets = self.queries.getConfDatasets(self.version.id, self.database, self.logger)
             datasets.sort(key=lambda par: par.name)
         except Exception as e:
             msg = 'ERROR: getDatasetsPaths: error in query ConfDbQueries.getConfDatasets(...):\n' + e.args[0]
@@ -122,7 +122,7 @@ class DataBuilder(object):
 
             paths = None
             try:
-                paths = self.queries.getDatasetPathids(self.version.id, dataset.id, self.database)
+                paths = self.queries.getDatasetPathids(self.version.id, dataset.id, self.database, self.logger)
             except Exception as e:
                 msg = 'ERROR: getDatasetsPaths: error in query ConfDbQueries.getDatasetPathids(...):\n' + e.args[0]
                 self.logger.error(msg)
@@ -153,9 +153,9 @@ class DataBuilder(object):
         conf2eds = None
 
         try:
-            modules   = self.queries.getConfEDSource(self.version.id, self.database)
-            templates = self.queries.getEDSTemplates(self.version.id_release, self.database)
-            conf2eds  = self.queries.getConfToEDSRel(self.version.id, self.database)
+            modules   = self.queries.getConfEDSource(self.version.id, self.database, self.logger)
+            templates = self.queries.getEDSTemplates(self.version.id_release, self.database, self.logger)
+            conf2eds  = self.queries.getConfToEDSRel(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: getSource: error querying database:\n' + e.args[0]
             self.logger.error(msg)
@@ -182,9 +182,9 @@ class DataBuilder(object):
         conf2ess = None
 
         try:
-            modules =   self.queries.getConfESSource(self.version.id, self.database)
-            templates = self.queries.getESSTemplates(self.version.id_release, self.database)
-            conf2ess =  self.queries.getConfToESSRel(self.version.id, self.database)
+            modules =   self.queries.getConfESSource(self.version.id, self.database, self.logger)
+            templates = self.queries.getESSTemplates(self.version.id_release, self.database, self.logger)
+            conf2ess =  self.queries.getConfToESSRel(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: getESSources: error querying database:\n' + e.args[0]
             self.logger.error(msg)
@@ -211,9 +211,9 @@ class DataBuilder(object):
         conf2esm = None
 
         try:
-            modules   = self.queries.getConfESModules(self.version.id, self.database)
-            templates = self.queries.getESMTemplates(self.version.id_release, self.database)
-            conf2esm  = self.queries.getConfToESMRel(self.version.id, self.database)
+            modules   = self.queries.getConfESModules(self.version.id, self.database, self.logger)
+            templates = self.queries.getESMTemplates(self.version.id_release, self.database, self.logger)
+            conf2esm  = self.queries.getConfToESMRel(self.version.id, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: getESModules: error querying database:\n' + e.args[0]
             self.logger.error(msg)
@@ -240,8 +240,8 @@ class DataBuilder(object):
         templates = None
 
         try:
-            services  = self.queries.getConfServices(self.version.id, self.database)
-            templates = self.queries.getRelSrvTemplates(self.version.id_release, self.database)
+            services  = self.queries.getConfServices(self.version.id, self.database, self.logger)
+            templates = self.queries.getRelSrvTemplates(self.version.id_release, self.database, self.logger)
         except Exception as e:
             msg = 'ERROR: getServices: error querying database:\n' + e.args[0]
             self.logger.error(msg)
@@ -708,24 +708,24 @@ class DataBuilder(object):
 
 
     @staticmethod
-    def getRequestedVersion(ver, cnf, db):
+    def getRequestedVersion(ver, cnf, db, logger):
 
         ver_id = -1
         version = None
         queries = DataBuilder.queries
 
-        if((ver == -2) and (cnf == -2)):
-            print "VER CNF ERROR"
+        if (ver == -2) and (cnf == -2):
+            logger.error('getRequestedVersion: invalid version')
 
-        elif(cnf != -2 and cnf != -1):
-            configs = queries.getConfVersions(cnf, db)
+        elif (cnf != -2 and cnf != -1):
+            configs = queries.getConfVersions(cnf, db, logger)
             configs.sort(key=lambda par: par.version, reverse=True)
             ver_id = configs[0].id
-            version = queries.getVersion(ver_id, db)
+            version = queries.getVersion(ver_id, db, logger)
 
-        elif(ver != -2):
+        elif (ver != -2):
             ver_id = ver
-            version = queries.getVersion(ver, db)
+            version = queries.getVersion(ver, db, logger)
 
         return version
 

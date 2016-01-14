@@ -1,7 +1,7 @@
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-from confdb_tables.confdb_tables import Base
+from confdb_v2.tables import Base
 from data_builder import DataBuilder
 from utils import Timer
 from Config import *

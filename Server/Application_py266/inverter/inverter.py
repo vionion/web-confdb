@@ -153,7 +153,7 @@ class Inverter(object):
     endPaths_dict = None
     schedule_dict = None
 
-    def readConfig(self, file, config_id, log=None):
+    def readConfig(self, file, config_id, log):
 
         self.idgen = Counter()
         self.temp_dict = OrderedDict()

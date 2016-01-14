@@ -26,9 +26,6 @@ engine = SAEngine(connectionString)
 engine.start()
 session = None
 
-from utils import *
-#cnfMap = UniqueMapping()
-
 import logging
 # create console handler and set level to debug
 console = logging.StreamHandler()
@@ -51,7 +48,7 @@ else:
 from converter.converter import Converter
 converter = Converter()
 
-from confdb_queries.confdb_queries import ConfDbQueries
+from confdb_v2.queries import ConfDbQueries
 queries = ConfDbQueries()
 ver = queries.getConfigurationByName(name, session, logger)
 cnf = -1

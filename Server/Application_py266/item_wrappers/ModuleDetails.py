@@ -6,7 +6,7 @@
 
 class ModuleDetails(object):
 
-    def __init__(self, id=0, name="", mti=0, author="", mclass = ""):
+    def __init__(self, id = 0, name = "", mti = 0, author = "", mclass = ""):
         self.id = id
         self.gid = -1
         self.name = name
