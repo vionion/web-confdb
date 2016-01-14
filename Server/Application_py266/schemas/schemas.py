@@ -61,6 +61,7 @@ class PathItemSchema(Schema):
     operator = fields.Integer()
     pit = fields.Method("get_item_type")
     order = fields.Method("get_order")
+    orig_id = fields.Method("get_id")
     leaf = fields.Method("get_leaf")
     Name = fields.Method("get_Name")
     icon = fields.Method("get_icon")
@@ -79,6 +80,9 @@ class PathItemSchema(Schema):
         else:
             return obj.name
 
+    def get_id(self,obj):
+        return obj.id
+    
     def get_order(self,obj):
         return obj.order
 
@@ -115,7 +119,7 @@ class PathItemSchema(Schema):
             return False
 
     class Meta:
-        fields = ("gid", "Name", "id_pathid", "pit","order","id_parent","leaf", "icon","expanded","children", "operator")
+        fields = ("gid", "Name", "id_pathid", "pit","order","id_parent","leaf", "orig_id", "icon","expanded","children", "operator")
         ordered = True
 
 class PathsItemSchema(Schema):

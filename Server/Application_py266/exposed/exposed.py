@@ -18,13 +18,14 @@ from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
 import re
+import itertools
 
 class Exposed(object):
 
     queries = ConfDbQueries()
     params_builder = ParamsBuilder()
     summary_builder = SummaryBuilder()
-
+    simple_counter = 0
 
     #Returns the path items (Sequences and Modules)
     #@params: patsMap: map of paths database ids
@@ -1487,73 +1488,115 @@ class Exposed(object):
         return output.data
 
 
-    def getAllSequences(self, seqsMap, modsMap, cnf, ver, db, log):
+    def skipSequence(self, counter, items, level):
+        while(counter < len(items) and items[counter].lvl >= level):
+            counter = counter + 1
+        return counter
+    
+    def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, idgen_new):
+        children = []
+        
+        while(counter < len(items) and items[counter].lvl == level):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+            item.gid = self.simple_counter #idgen_new
+            self.simple_counter = self.simple_counter + 1
+            counter = counter + 1
+            if item.paetype == 2:
+                if item.name in written_sequences:
+                    item.expanded = False     
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new)
 
-        if (seqsMap == None or modsMap == None or cnf == -1 or db == None or ver == -1):
-            log.error('ERROR: getAllSequences - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
+                    for child in new_children:
+                        item.children.append(child)
+                else:
+                    item.expanded = False
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new)
 
+                    for child in new_children:
+                        item.children.append(child)
+
+                    written_sequences.add(item.name)
+                    built_sequences.add(item)
+                
+            children.append(item)
+            
+        return counter, children, written_sequences, built_sequences, idgen_new
+    
+    def getAllSequences(self, cnf, ver, db, log):
+        
+        #params check
+        if (cnf == -1 or db == None or ver == -1):
+#            print ("PARAMETERS EXCEPTION HERE")
+            log.error('ERROR: getAllSequences - input parameters error')
+        
         queries = self.queries
-
+        
         ver_id = -1
         version = None
-
+        
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
-
+        
         id_p = 0
-#        id_p = patsMap.get(gid)
+        self.simple_counter = 1
 
         resp = Response()
         schema = ResponsePathItemSchema()
         #Retreive all the sequences and their items of the path
 
-        #Retreive the module template
+        try:
+            paths    = queries.getPaths(ver_id, db, log)
+            endpaths = queries.getEndPaths(ver_id, db, log)
+        except Exception as e:
+            msg = 'ERROR: getAllSequences: error querying database for Paths and EndPaths:\n' + e.args[0]
+            log.error(msg)
+        
+        built_sequences = set() 
+        written_sequences = set()
         elements = None
         items = None
 
-        try:
-            elements = queries.getConfSequences(ver_id, db, log)
-            items = queries.getConfSequencesItems(ver_id, db, log)
-        except:
-            log.error('ERROR: Query getConfSequences/getConfSequencesItems Error')
-            return None
+        for path in itertools.chain(paths, endpaths):
+            try:
+                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
+                items    = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
+            except Exception as e:
+                msg = 'ERROR: getSequences: error querying database for getCompletePathSequences and Items:\n' + e.args[0]
+                self.logger.error(msg)
+#                raise
 
-#        if (elements == None or items == None):
-#            return None
+            elements_dict = dict((element.id, element) for element in elements)
 
-#        print "RESULTS LEN: ", len(items), len(elements)
+            counter = 0
+            idgen_new = 1
 
-        items_dict = dict((x.id, x) for x in items)
-        elements_dict = dict((x.id, x) for x in elements)
+            while counter < len(items):
+                elem = elements_dict[items[counter].id_pae]
+                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                item.gid = self.simple_counter #idgen_new
+                self.simple_counter = self.simple_counter + 1
+                counter = counter + 1
+                if item.paetype == 2:
+                    if item.name in written_sequences:
+                        counter = self.skipSequence(counter, items, item.lvl+1)
+                    else:       
+                        counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new)
 
-        seq = {}
-
-#        print "Building the Sequences: "
-        #Build all the sequences
-        for p in items:
-            elem = elements_dict[p.id_pae]
-            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order)
-            if (item.paetype == 2):
-                item.gid = seqsMap.put(elem)
-                item.expanded = False
-                seq[item.id]=item
-
-            # It is a module
-            else:
-                item.gid = modsMap.put(elem)
-                seq[p.id_parent].children.insert(p.order, item)
-
-#        print "Sequences Built"
-#        seqs = seq.viewvalues()
-        seqs = seq.values()
-
+                        for child in new_children:
+                            item.children.append(child)
+    
+                        written_sequences.add(item.name)
+                        item.expanded = False
+                        built_sequences.add(item)
+        
         resp.success = True
-        resp.children = seqs
-
+        resp.children = built_sequences
+        
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
+        
         return output.data
+        
 
 
     def getOUTModuleDetails(self, mod_id, pat_id, db, log):

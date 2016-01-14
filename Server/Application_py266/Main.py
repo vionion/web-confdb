@@ -736,39 +736,92 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allseqitems(self, _dc = 101, node = -2, ver = -2, cnf = -2,online = "False"):
-#        db = cherrypy.request.db
+    def allseqitems(self, _dc=101, node=-2, ver=-2, cnf=-2,online="False"):
 
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
 
-        seqsMap = None
-        modsMap = None
         cnfMap = None
-
+            
         if online == 'True' or online == 'true':
+            print 'db = db_online'
             db = db_online
-
-            seqsMap = self.seqsMap_online
-            modsMap = self.modsMap_online
             cnfMap = self.cnfMap_online
-
+            
         else:
             db = db_offline
-            seqsMap = self.seqsMap
-            modsMap = self.modsMap
             cnfMap = self.cnfMap
-
+            
         cnf = int(cnf)
         ver = int(ver)
         cnf = cnfMap.get(cnf)
-        data = self.funcs.getAllSequences(seqsMap, modsMap, cnf,ver,db, self.log)
+        data = self.funcs.getAllSequences(cnf,ver,db, self.log)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allseqitems - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the Sequence modules")
+        
+        return data
+    
 
+    #Get a the list of items in an end path 
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def allseqmoditems(self, _dc=101, node=1, mid=-2, pid=-2, online="False", verid=-2, cnf=-2):
+#        db = cherrypy.request.db
+
+        db = None
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        
+        if online == 'True' or online == 'true':
+            print 'db = db_online'
+            db = db_online
+            
+        else:
+            db = db_offline
+        
+        pid = int(pid)
+        mid = int(mid)
+        
+        data = None
+      
+        data = self.funcs.getModuleItems(mid, db, self.log)
+
+        
+        if (data == None):
+#            print ("Exception - Error")
+            self.log.error('ERROR: allmoditems - data returned null object')
+            cherrypy.HTTPError(500, "Error in retreiving the Module Parameters")
+            
+        return data
+    
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def seqmoddetails(self, _dc=101, mid=0, pid=0,online="False",verid=-1):
+#        db = cherrypy.request.db
+        
+        db = None
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        
+        if online == 'True' or online == 'true':
+            print 'db = db_online'
+            db = db_online
+            
+        else:
+            db = db_offline
+        
+        mid = int(mid)
+        pid = int(pid)
+
+        data = self.funcs.getModuleDetails(mid,pid,db, self.log)    
+        if (data == None):
+#            print ("Exception - Error")
+            self.log.error('ERROR: moddetails - data returned null object')
+            cherrypy.HTTPError(500, "Error in retreiving the Module details")
+        
         return data
 
 
