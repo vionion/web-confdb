@@ -1467,16 +1467,18 @@ if __name__ == '__main__':
 
     root = Root()
     root.download = Download()
-
+    
     # make sure the log files directory exists
-    if 'log.access_file' in cpconfig:
-        d = os.path.dirname(cpconfig['log.access_file'])
-        if not os.path.exists(d):
-            os.makedirs(d)
-    if 'log.error_file' in cpconfig:
-        d = os.path.dirname(cpconfig['log.error_file'])
-        if not os.path.exists(d):
-            os.makedirs(d)
+    deploy_env = os.environ.get('DEPLOY_ENV')
+    if deploy_env is not "CMSWEB":
+        if 'log.access_file' in cpconfig:
+            d = os.path.dirname(cpconfig['log.access_file'])
+            if not os.path.exists(d):
+                os.makedirs(d)
+        if 'log.error_file' in cpconfig:
+            d = os.path.dirname(cpconfig['log.error_file'])
+            if not os.path.exists(d):
+                os.makedirs(d)
 
     cherrypy.config.update(cpconfig)
     cherrypy.quickstart(root, base_url, {'/': {'tools.db.on': True}}) #Root()
