@@ -1480,5 +1480,5 @@ if __name__ == '__main__':
             if not os.path.exists(d):
                 os.makedirs(d)
 
-    cherrypy.config.update(cpconfig)
+        cherrypy.config.update(cpconfig)
     cherrypy.quickstart(root, base_url, {'/': {'tools.db.on': True}}) #Root()
