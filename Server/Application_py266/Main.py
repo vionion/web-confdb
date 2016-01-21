@@ -1470,7 +1470,7 @@ if __name__ == '__main__':
     
     # make sure the log files directory exists
     deploy_env = os.environ.get('DEPLOY_ENV')
-    if deploy_env is not "CMSWEB":
+    if deploy_env != "CMSWEB":
         if 'log.access_file' in cpconfig:
             d = os.path.dirname(cpconfig['log.access_file'])
             if not os.path.exists(d):
