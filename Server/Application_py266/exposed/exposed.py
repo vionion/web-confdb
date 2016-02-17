@@ -2194,7 +2194,7 @@ class Exposed(object):
                         if hasSmartPrescale:
                             if smart_paths.has_key(p.name):
 
-                                pat_id = str(d.id) + "pat"
+                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
                                 pat.gid = sumMap.put(pat, pat_id)
 
@@ -2241,7 +2241,7 @@ class Exposed(object):
 
                             # Put The path with prescales 0
                             else:
-                                pat_id = str(d.id) + "pat"
+                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
                                 pat.gid = sumMap.put(pat, pat_id)
 
@@ -2268,7 +2268,7 @@ class Exposed(object):
 
                                 paths[pat.gid] = pat
                         else:
-                            pat_id = str(d.id) + "pat"
+                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                             pat = Summaryitem(p.id, p.name,"pat", True,'resources/Path_3.ico')
                             pat.gid = sumMap.put(pat, pat_id)
 
