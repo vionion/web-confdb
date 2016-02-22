@@ -2195,7 +2195,8 @@ class Exposed(object):
                             if smart_paths.has_key(p.name):
 
                                 pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
-                                pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
+#                                pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
+                                pat = Summaryitem(pat_id,(p.name),"pat", True,'resources/Path_3.ico')
                                 pat.gid = sumMap.put(pat, pat_id)
 
                                 if not paths.has_key(pat.gid):
