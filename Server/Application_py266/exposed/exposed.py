@@ -2164,7 +2164,8 @@ class Exposed(object):
 
         for d in datasets:
             if (d.id == -1):
-                print "Unassigned Paths"
+#                print "Unassigned Paths"
+                log.error("Warning: Unassigned Paths")
             else:
                 si = Summaryitem(d.id, d.name,"dat", False, 'resources/Dataset.ico')
 
@@ -2194,10 +2195,10 @@ class Exposed(object):
                         if hasSmartPrescale:
                             if smart_paths.has_key(p.name):
 
-                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
+#                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
 #                                pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
                                 pat = Summaryitem(pat_id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, pat_id)
+                                pat.gid = sumMap.put(pat, False)
 
                                 if not paths.has_key(pat.gid):
 
@@ -2242,9 +2243,9 @@ class Exposed(object):
 
                             # Put The path with prescales 0
                             else:
-                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
+#                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, pat_id)
+                                pat.gid = sumMap.put(pat, False)
 
                                 values = zero_values
 
@@ -2269,9 +2270,9 @@ class Exposed(object):
 
                                 paths[pat.gid] = pat
                         else:
-                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
+#                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                             pat = Summaryitem(p.id, p.name,"pat", True,'resources/Path_3.ico')
-                            pat.gid = sumMap.put(pat, pat_id)
+                            pat.gid = sumMap.put(pat, False)
 
                             if not paths.has_key(pat.gid):
 
