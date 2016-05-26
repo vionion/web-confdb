@@ -10,20 +10,33 @@ class Counter(object):
         self.__counter += 1
         return self.__counter
 
+"""
+Quasi-unique mapping between keys and values.
 
+If `put` is called with a value not yet in the UniqueMapping,
+insert the new element and return its key.
+
+If `put` is called with a value already in the UniqueMapping,
+  - if `unique` is True, return the key of the last element 
+    inserted with the same value;
+  - if `unique if False, insert the new element and return 
+    the new key.
+"""
 class UniqueMapping(object):
 
     def __init__(self, counter):
         self.__counter = counter
-        self.__dict = bidict.bidict()
+        self.__dict = dict()
+        self.__inv  = dict()
 
     def put(self, item, unique = True):
         value = item.id
-        if unique and value in self.__dict.inv:
-            return self.__dict.inv[value]
+        if unique and value in self.__inv:
+            return self.__inv[value]
         else:
             key = self.__counter.getNext()
             self.__dict[key] = value
+            self.__inv[value] = key
             return key
 
     def get(self, key):
