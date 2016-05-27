@@ -1135,7 +1135,7 @@ class ConfDbQueries(object):
         if (db == None or ver == -2 or idis == None):
                 log.error('ERROR: getAllDatsPatsRels - input parameters error')
 
-        dprels = db.query(PathidToStrDst).filter(PathidToStrDst.id_datasetid.in_(idis)).all()
+        dprels = db.query(func.max(PathidToStrDst.id), PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).filter(PathidToStrDst.id_datasetid.in_(idis)).group_by(PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).all()
 
         return dprels
 
