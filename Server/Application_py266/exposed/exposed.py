@@ -2158,7 +2158,7 @@ class Exposed(object):
             si = Summaryitem(s.id, s.name,"str", False,'resources/Stream.ico')
             streams_dict[s.id] = si
 
-            si.gid = sumMap.put(si,"str")
+            si.gid = sumMap.put(si)
 
 #        print "Built stream"
 
@@ -2198,7 +2198,7 @@ class Exposed(object):
 #                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
 #                                pat = Summaryitem(pat_id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, False)
+                                pat.gid = sumMap.put(pat, unique = False)
 
                                 if not paths.has_key(pat.gid):
 
@@ -2245,7 +2245,7 @@ class Exposed(object):
                             else:
 #                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, False)
+                                pat.gid = sumMap.put(pat, unique = False)
 
                                 values = zero_values
 
@@ -2272,7 +2272,7 @@ class Exposed(object):
                         else:
 #                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                             pat = Summaryitem(p.id, p.name,"pat", True,'resources/Path_3.ico')
-                            pat.gid = sumMap.put(pat, False)
+                            pat.gid = sumMap.put(pat, unique = False)
 
                             if not paths.has_key(pat.gid):
 
@@ -2311,7 +2311,7 @@ class Exposed(object):
                         si.children.extend(paths.values())
 
 #                si.children.extend(paths)
-                si.gid = sumMap.put(si,"dat")
+                si.gid = sumMap.put(si)
 
                 streams_dict.get(streamid).children.append(si)
 
