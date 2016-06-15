@@ -182,18 +182,16 @@ Ext.define('CmsConfigExplorer.view.details.DetailsController', {
         
         else if (newCard.getConfig("title") == 'SEQUENCES') {
             
-//            cid = this.getViewModel().get("idCnf");
-//            vid = this.getViewModel().get("idVer");
-//            
-//            var esmTab = this.lookupReference('sequenceTab');
-//            var vm = esmTab.getViewModel();
-//            console.log("Loading Sequences");
-//            vm.getStore('seqitems').load({params: {cnf: cid, ver: vid}});
-//            console.log("Loaded Sequences");
-//            
-//            vm.set( "idCnf", cid );
-//            vm.set( "idVer", vid );
-
+            var cid = this.getViewModel().get("idCnf");
+            var vid = this.getViewModel().get("idVer");
+            var online = this.getViewModel().get("online");
+            
+            var seqTab = this.lookupReference('sequenceTab');
+            
+            seqTab.getViewModel().set( "idCnf", cid );
+            seqTab.getViewModel().set( "idVer", vid );
+            seqTab.getViewModel().set( "online", online );
+            
         }
         
         else if (newCard.getConfig("title") == 'GLOBAL PSET') {

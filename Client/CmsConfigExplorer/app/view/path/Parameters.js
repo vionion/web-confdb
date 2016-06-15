@@ -19,7 +19,7 @@ Ext.define("CmsConfigExplorer.view.path.Parameters",{
     controller: "path-parameters",
 
     listeners:{
-        cusTooltipActivate: 'onTooltipActivate',
+//        cusTooltipActivate: 'onTooltipActivate',
         scope: 'controller'
     },
 //    

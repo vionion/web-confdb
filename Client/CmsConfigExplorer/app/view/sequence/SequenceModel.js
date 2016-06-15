@@ -2,7 +2,8 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceModel', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.sequence-sequence',
     
-    requires:['CmsConfigExplorer.model.Sequenceitem'],
+    requires:['CmsConfigExplorer.model.Sequenceitem',
+             'CmsConfigExplorer.model.SeqModuleitem'],
     
     data: {
         name: 'CmsConfigExplorer',
@@ -37,22 +38,19 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceModel', {
         seqparameters:{
             
                 type:'tree',
-                model:'CmsConfigExplorer.model.Moduleitem',
+                model:'CmsConfigExplorer.model.SeqModuleitem',
                 autoLoad:false,
             
                 root: {
                     expanded: false,
-                    text: "Params",
+//                    text: "Params",
                     gid: -1
                 },
             
                 listeners: {
-                    load: function(store, records, successful, operation, node, eOpts) {
-                            var id = operation.config.node.get('gid')
-                            if (id == -1){
-                               operation.config.node.expand() 
-                            }
-                    }
+                    load: 'onSeqparametersLoad',
+                    scope: 'controller'
+
                 }
             
             }

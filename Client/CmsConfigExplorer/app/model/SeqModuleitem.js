@@ -1,16 +1,20 @@
-Ext.define('CmsConfigExplorer.model.Sequenceitem', {
+Ext.define('CmsConfigExplorer.model.SeqModuleitem', {
     extend: 'CmsConfigExplorer.model.Base',
     
     fields: [
         { name: 'name', type: 'string' },
-        { name: 'pit', type: 'string' }
+        { name: 'mit', type: 'string' },
+        { name: 'value', type: 'string' },
+        { name: 'tracked', type: 'int' },
+//        { name: 'default', type: 'int' },
+        { name: 'isDefault', type: 'string' },
+        { name: 'paramtype', type: 'string' }
 
     ],
     
     proxy: {
         type: 'ajax',
-        url : 'allseqitems',
-        timeout : 480000,
+        url : 'allseqmoditems',
         headers: {'Content-Type': "application/json" },
         limitParam: '',
         pageParam: '',

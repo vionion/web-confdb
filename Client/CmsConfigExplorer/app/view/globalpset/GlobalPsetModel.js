@@ -47,13 +47,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetModel', {
                 },
             
                 listeners: {
-                    load: function(store, records, successful, operation, node, eOpts) {
-                        var id = operation.config.node.get('gid')
-                        if (id == -1){
-                           operation.config.node.expand() 
-                        }
-                            
-                    }
+                    load: 'onGpsetparamsLoad'
                 }
             
             }

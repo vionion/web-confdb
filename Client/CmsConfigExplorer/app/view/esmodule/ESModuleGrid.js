@@ -19,11 +19,11 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleGrid',{
         selection: '{selectedESModule}'
  
     },
-    
-    listeners: {
-        rowclick: 'onGridESModuleClick',
-        scope: 'controller'    
-    },
+//    
+//    listeners: {
+//        rowclick: 'onGridESModuleClick',
+//        scope: 'controller'    
+//    },
     viewConfig: {
         loadingHeight: 100
     },

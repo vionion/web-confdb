@@ -15,7 +15,7 @@ Ext.define("CmsConfigExplorer.view.sequence.ModuleDetails",{
     paddingBottom: 5,
 
     listeners:{
-      cusSeqModDetLoaded: 'onSeqModDetLoaded'  
+      cusSeqModDetLoad: 'onSeqModDetLoaded'  
     },
     
     layout: 'border',

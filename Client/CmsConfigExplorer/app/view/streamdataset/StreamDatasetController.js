@@ -109,13 +109,18 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetController', {
         var sdView = this.getView();                     
 //        pathtreepanel = sdView.lookupReference('datasetpathsPanel');
         pathtreepanel = sdView.lookupReference('datasetPathsTree');
-        pathtree = pathtreepanel //.lookupReference('datasetPathsTree');   
+        pathtree = pathtreepanel; //.lookupReference('datasetPathsTree');   
         
         if(pathtree.isMasked()){
-            pathtree.setLoading( false );
+            pathtree.setLoading(false);
 //            this.lookupReference('pathTree').unmask();
-        }    
-        store.getRoot().expand();
+        }
+        
+        if(store.getRoot().hasChildNodes()){
+            store.getRoot().expand();      
+        }
+        
+//        store.getRoot().expand();
     }
     
     ,onStreamitemsBeforeLoad: function(store, operation, eOpts) {
@@ -131,6 +136,25 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetController', {
         
         store.getRoot().expand();
         
+    }
+    
+    ,onDatasetpathsBeforeload: function( store, operation, eOpts ){
+        
+        var lastOpt = this.getViewModel().get("lastPathsOpt");
+        
+        if(lastOpt !== null){
+            lastOpt.abort();
+        }
+        
+        var sdView = this.getView();                     
+        pathtreepanel = sdView.lookupReference('datasetPathsTree');
+        pathtree = pathtreepanel;
+        
+        if(!pathtree.isMasked()){
+            pathtree.setLoading("Loading Paths");
+        }
+        
+        this.getViewModel().set("lastPathsOpt",operation);
     }
     
 });

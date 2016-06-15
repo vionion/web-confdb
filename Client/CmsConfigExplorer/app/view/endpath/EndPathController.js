@@ -358,6 +358,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         
         var model = this.getViewModel();
         var trf = model.get("trf");
+        var triCond = false;
 
         if(this.lookupReference('endParamGrid').isMasked()){
             this.lookupReference('endParamGrid').setLoading( false );
@@ -365,98 +366,111 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         
         var spgrid  = this.lookupReference("endSpGrid");
         
-        if (trf){
-//            this.lookupReference("endCentralContainer").this.lookupReference("endSpGrid").show();
-            var found = false, i = 0, records_len = records.length, sp_store, counter = 1;
+//        if (trf){
             
-//            console.log(records_len);
+            try{
             
-            while(!found && i<records_len){
-                
-//                console.log(i);
-//                console.log(found);
-                
-                var rec = records[i];//.getAt(i);
-                
-//                console.log(rec);
-                
-                if (rec.get("name") == "triggerConditions") {
-//                    console.log("found");    
-                    found = true;
-                }else {
-                    i++;
+//              this.lookupReference("endCentralContainer").this.lookupReference("endSpGrid").show();
+                var found = false, i = 0, records_len = records.length, sp_store, counter = 1;
+
+    //            console.log(records_len);
+
+                while(!found && i<records_len){
+
+    //                console.log(i);
+    //                console.log(found);
+
+                    var rec = records[i];//.getAt(i);
+
+    //                console.log(rec);
+
+                    if (rec.get("name") == "triggerConditions") {
+    //                    console.log("found");    
+                        found = true;
+                        triCond = true;
+                    }else {
+                        i++;
+                    }
                 }
-            }
+
+                if (found){
+
+                    var sp_store = this.lookupReference("endSpGrid").getViewModel().getStore('endspexpressions');
+
+    //                sp_store = model.getStore('endspexpressions');
+
+                    sp_store.removeAll(); 
+
+                    var trf_expression  = records[i].get("rendervalue");
+
+    //                trf_expression = trf_expression.replace(/{/gi, "");
+    //                trf_expression = trf_expression.replace(/}/gi, "");
+    //                trf_expression = trf_expression.replace(/\s/gm, '');
+    //                trf_expression = trf_expression.replace(/["]+/g,"");
+
+                    var expressions = trf_expression.split(',');
+                    var prescale = 1, e, parts, pre_str, part_one, terms, ter;
+
+                    for (e in expressions){
+
+                        prescale = 1;
+
+                        parts = expressions[e].split('/');
+
+                            if (parts.length == 2){
+
+                                pre_str = parts[1];
+                                pre_str = pre_str.replace(/{/gi, "");
+                                pre_str = pre_str.replace(/}/gi, "");
+                                pre_str = pre_str.replace(/\s/gm, '');
+                                pre_str = pre_str.replace(/["]+/g,"");
+
+                                prescale = parseInt(pre_str, 10);
+                            }
+
+                            part_one = parts[0]; 
+
+                            part_one = part_one.replace(/\(/g,"");
+                            part_one = part_one.replace(/\)/g,"");
+
+                            part_one = part_one.replace(/"/g,"");  
+
+                            terms = part_one.split(' OR ');
+
+                            for (ter in terms) {
+                                var sp_item = {};
+                                term = terms[ter];
+                                term = term.replace(/{/gi, "");
+                                term = term.replace(/}/gi, "");
+                                term = term.replace(/\s/gm, '');
+                                term = term.replace(/["]+/g,"");
+
+                                sp_item['gid'] = counter;
+    //                            sp_item['path'] = terms[ter];
+                                sp_item['path'] = term;
+                                sp_item['smprescale'] = prescale;
+                                counter++;
+                                sp_store.add(sp_item);
+
+                            }
+                    }                          
+                }
+                if (triCond){
+                    
+                    spgrid.show();
+                    var label = spgrid.lookupReference('epsmatches');
+                    label.setValue(sp_store.getCount());
+                    
+                }
+
+    //            spgrid.collapse(); 
+
+                
+            } catch (e) {
+                console.log(e);
+            }   
             
-            if (found){
-                
-                var sp_store = this.lookupReference("endSpGrid").getViewModel().getStore('endspexpressions');
-                
-//                sp_store = model.getStore('endspexpressions');
-                
-                sp_store.removeAll(); 
-                
-                var trf_expression  = records[i].get("rendervalue");
-
-//                trf_expression = trf_expression.replace(/{/gi, "");
-//                trf_expression = trf_expression.replace(/}/gi, "");
-//                trf_expression = trf_expression.replace(/\s/gm, '');
-//                trf_expression = trf_expression.replace(/["]+/g,"");
-
-                var expressions = trf_expression.split(',');
-                var prescale = 1, e, parts, pre_str, part_one, terms, ter;
-
-                for (e in expressions){
-                    
-                    prescale = 1;
-                    
-                    parts = expressions[e].split('/');
-
-                        if (parts.length == 2){
-                            
-                            pre_str = parts[1];
-                            pre_str = pre_str.replace(/{/gi, "");
-                            pre_str = pre_str.replace(/}/gi, "");
-                            pre_str = pre_str.replace(/\s/gm, '');
-                            pre_str = pre_str.replace(/["]+/g,"");
-
-                            prescale = parseInt(pre_str, 10);
-                        }
-
-                        part_one = parts[0]; 
-                    
-                        part_one = part_one.replace(/\(/g,"");
-                        part_one = part_one.replace(/\)/g,"");
-
-                        part_one = part_one.replace(/"/g,"");  
-                    
-                        terms = part_one.split(' OR ');
-
-                        for (ter in terms) {
-                            var sp_item = {};
-                            term = terms[ter];
-                            term = term.replace(/{/gi, "");
-                            term = term.replace(/}/gi, "");
-                            term = term.replace(/\s/gm, '');
-                            term = term.replace(/["]+/g,"");
-                            
-                            sp_item['gid'] = counter;
-//                            sp_item['path'] = terms[ter];
-                            sp_item['path'] = term;
-                            sp_item['smprescale'] = prescale;
-                            counter++;
-                            sp_store.add(sp_item);
-                            
-                        }
-                }                          
-            } 
-            
-//            spgrid.collapse(); 
-            spgrid.show();
-            var label = spgrid.lookupReference('epsmatches');
-            label.setValue(sp_store.getCount()); 
-            
-        }
+//        }
         
         var id = operation.config.node.get('gid');
         if (id == -1){

@@ -78,6 +78,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
                 });
 
                 cp.insert(1,preTab); 
+                cp.setActiveTab(1);
             }
             else{
                 

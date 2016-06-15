@@ -1,6 +1,9 @@
 Ext.define('CmsConfigExplorer.view.sequence.ModuleDetailsModel', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.sequence-moduledetails',
+    
+    requires: ['CmsConfigExplorer.model.SeqModuledetails'],
+    
     data: {
         name: '',
         author: '',
@@ -11,7 +14,7 @@ Ext.define('CmsConfigExplorer.view.sequence.ModuleDetailsModel', {
         seqmoddetails:{
 
     //                type:'tree',
-                    model:'CmsConfigExplorer.model.ESModuledetails',
+                    model:'CmsConfigExplorer.model.SeqModuledetails',
                     autoLoad:false,
 
                     listeners: {

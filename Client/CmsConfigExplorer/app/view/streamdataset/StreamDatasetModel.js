@@ -13,7 +13,8 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetModel', {
         first: true,
         online: "False",
         current_dat: "",
-        current_evc: ""
+        current_evc: "",
+        lastPathsOpt: null
     },
     
     stores:
@@ -56,6 +57,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetModel', {
                 },
             
                 listeners: {
+                    beforeload: 'onDatasetpathsBeforeload',
                     load: 'onDatasetpathsLoad',
                     scope: 'controller'
                 }

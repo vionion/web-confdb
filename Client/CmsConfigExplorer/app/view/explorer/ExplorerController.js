@@ -11,7 +11,7 @@ Ext.define('CmsConfigExplorer.view.explorer.ExplorerController', {
     onExplorerRender:function(p, eOpts){
         
         this.getViewModel().getStore('folderitems').load({params: {gid: -1}});
-                
+          
     },
     
     onHomeClick: function(){
@@ -24,6 +24,7 @@ Ext.define('CmsConfigExplorer.view.explorer.ExplorerController', {
         //console.log('in parent, got dblclick event');
         //console.log(cid);
         var view = this.getView();
+        // var cid = (-1)*cid;
         view.fireEvent('custFwdOpenLastVers',cid,online);
     },
     

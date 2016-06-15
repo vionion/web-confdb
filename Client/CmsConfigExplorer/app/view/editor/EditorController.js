@@ -3,21 +3,57 @@ Ext.define('CmsConfigExplorer.view.editor.EditorController', {
     alias: 'controller.editor-editor',
 
     onExportedsLoad: function( store, records, successful, eOpts ){
-        var det = records[0];
-        var urlString = det.get("url");
         
-        window.location = urlString;
+        if(successful){
+            var det = records[0];
+            var urlString = det.get("url");
+
+            window.location = urlString;
+
+            var loading = this.lookupReference('loadingtext');
+            loading.setHidden(true);
+
+            var loadinggif = this.lookupReference('loadinggif');
+            loadinggif.setHidden(true)
+
+            var expbutton = this.lookupReference('exportbutton');
+            expbutton.enable();
+
+            store.removeAll();
+        }
+        else{
+            
+            var loading = this.lookupReference('loadingtext');
+            loading.setHidden(true);
+
+            var loadinggif = this.lookupReference('loadinggif');
+            loadinggif.setHidden(true)
+
+            var expbutton = this.lookupReference('exportbutton');
+            expbutton.enable();
+            
+//            Ext.Msg.alert('Error', 'Export not completed.');
+            
         
-        var loading = this.lookupReference('loadingtext');
-        loading.setHidden(true);
+            Ext.Msg.show({
+                title:'Error',
+                message: 'Export not completed.',
+                buttons: Ext.Msg.OK,
+                icon: Ext.Msg.ERROR,
+                width: 200,
+                height: 150,
+                scrollable: false,
+                closeAction: 'destroy',
+                fn: function(btn) {
+                    if (btn === 'ok') {
+                        this.close();
+                    }
+                }
+            });
+            
+        }
         
-        var loadinggif = this.lookupReference('loadinggif');
-        loadinggif.setHidden(true)
-        
-        var expbutton = this.lookupReference('exportbutton');
-        expbutton.enable();
-        
-        store.removeAll();
+
 //        
 //        console.log('getCount()');
 //        console.log(store.getCount().toString());

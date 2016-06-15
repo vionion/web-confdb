@@ -42,18 +42,24 @@ Ext.define("CmsConfigExplorer.view.editor.Editor",{
                             width: 30, //"10%",
                             height: 30 //"80%",
 //                            margin: "0 0 0 50"
-                        },{
+                        },
+                        
+                        {
                             xtype: 'tbtext',
                             bind: {
                                  text: '<b>HLT Configuration Editor - {appversion}</b>' 
                             }
                             
                         },
+                        '-',
                         {
                             text: 'Home',
                             listeners: {
                                 click: 'onHomeClick',
-                                scope: 'controller'
+                                scope: 'controller',
+                                style: {
+                                    border: false
+                                }    
                             }
                         },
                         {
@@ -63,21 +69,34 @@ Ext.define("CmsConfigExplorer.view.editor.Editor",{
                                 scope: 'controller'
                             }
                         },
+                        '-',
                         {
-                            text: 'Details View',
+                            text: '<b style="color:white;">Details View</b>',
                             reference: 'detailsbutton',
+                            border: 2,
+                            style: {
+                                borderColor: '#194de6',
+                                borderStyle: 'solid',
+                                background: '#194de6'
+                            },
                             listeners: {
                                 click: 'onDetailsClick',
                                 scope: 'controller'
                             }
                         },
                         {
-                            text: 'Summary View',
+                            text: '<b style="color:white;">Summary View</b>',
                             disabled: true,
                             reference: 'summarybutton',
                             listeners: {
                                 click: 'onSummaryClick',
                                 scope: 'controller'
+                            },
+                            border: 2,
+                            style: {
+                                borderColor: '#194de6',
+                                borderStyle: 'solid',
+                                background: '#194de6'
                             }
                         },
                         {

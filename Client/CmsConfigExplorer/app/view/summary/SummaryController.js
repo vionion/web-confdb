@@ -55,7 +55,7 @@ Ext.define('CmsConfigExplorer.view.summary.SummaryController', {
                             width: 270,
 //                            flex: 2,
                             sortable: false,
-                            align: 'right' 
+                            align: 'left' 
             };
         mycolumns.push(treecolumn);
 //        var group = { 
@@ -174,7 +174,10 @@ Ext.define('CmsConfigExplorer.view.summary.SummaryController', {
 //            plugins: 'clipboard',
             plugins: [
                 {
-                    ptype: 'clipboard'
+                    ptype: 'clipboard',
+                    system: 'raw',
+                    memory: 'raw',
+                    source: ['raw','system'] 
                 }
             ],
 
@@ -187,7 +190,10 @@ Ext.define('CmsConfigExplorer.view.summary.SummaryController', {
                 columnSelect: true,            
 //                checkboxSelect: true,
 //                checkboxColumnIndex: 'last', 
-                pruneRemoved: false
+                pruneRemoved: false,
+                mode: 'MULTI',
+                rowSelect: false,
+                showHeaderCheckbox: false 
             },
             tbar: [
                 {
@@ -221,7 +227,7 @@ Ext.define('CmsConfigExplorer.view.summary.SummaryController', {
                 {
                     labelWidth: 80,
                     xtype: 'textfield',
-                    fieldLabel: 'Ssearch ',
+                    fieldLabel: 'Search ',
                     reference: 'trigfield',                    
     //                triggerWrapCls: 'x-form-clear-trigger',
                     triggers:{
@@ -295,7 +301,8 @@ Ext.define('CmsConfigExplorer.view.summary.SummaryController', {
         var columns = vm.get('columns'); 
         
         store.getRoot().cascadeBy( function(record) {
-                        if(record.get('icon') == 'resources/Path_3.ico'){
+                        var icon = record.get('icon');
+                        if(icon == 'resources/Path_3.ico' || icon == 'resources/Stream.ico'){
                             var values = record.get('values');
                             var count = values.length;
                             for (index = 0; index < count; index++){

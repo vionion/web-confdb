@@ -17,25 +17,7 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
         type: 'border'
     },
     
-//    listeners:{
-//        custSetVerId: 'onSetVerId'
-//    },
-    
     items: [
-        {
-            xtype: 'toolbar',
-            region: 'north',
-            paddingLeft: 5,
-            items:[ 
-                    {
-                        xtype: 'textfield',
-                        fieldLabel: 'Search',
-                        labelWidth: 47,
-                        enableKeyEvents: true,
-                        disabled: true
-                    }
-                ]
-        },
         {
             region: 'west',
             flex: 1,
@@ -63,46 +45,29 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
         height: '100%',
         
         layout:{
-            type:  'fit'
+            type:  'vbox'
 //            align: 'stretch'
         },
         
         items:[
-//            {
-//                xtype: 'container',
-//                layout:{
-//                    type: 'vbox',
-//                    align: 'stretch'
-//                },
-//                items:[
-//                    {
-//                        xtype: 'seqmoduledetails',
-//        //                width: '100%',
-//                        height: '25%',
-//                        title: 'Module Details',
-//                        collapsible: true,
-//                        split: true
-//                    },
-//                    {
-//                        xtype: 'seqparameters',
-//                        split: true,
-//                        flex: 2,
-//        //                layout: 'fit',
-//                        loadMask: true,
-//        //                width: '100%',
-//                        height: '75%'
-//                    }
-//                    
-//                ]
-//                
-//            }
-//            ,{            
-//                xtype: 'sequencedetails',
-////                hidden: true,
-//                split: true,
-//                title: 'Sequence Details',
-//                height: '100%'          
-//            }
+                {
+                    xtype: 'seqmoduledetails',
+                    width: '100%',
+                    height: '25%',
+                    title: 'Module Details',
+                    collapsible: true,
+                    split: true
+                },
+                {
+                    xtype: 'seqparameters',
+                    split: true,
+                    flex: 2,
+    //                layout: 'fit',
+                    loadMask: true,
+                    width: '100%',
+                    height: '75%'
+                }
+
         ]
         
     }    

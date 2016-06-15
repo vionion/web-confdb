@@ -13,7 +13,7 @@ Ext.define('CmsConfigExplorer.view.editor.EditorModel', {
         appversion: 'v1.2.2',
         cnfname: "",
         link: "",
-        expLink: '/download/?filepath=/Users/vdaponte/GitHub/web-confdb/Client/dossier sans titre/DomainConceptsDescriptons.pdf'
+        expLink: '/download/?filepath=/Users/vdaponte/Dropbox/dossier sans titre/DomainConceptsDescriptons.pdf'
     },
     stores:
     {        

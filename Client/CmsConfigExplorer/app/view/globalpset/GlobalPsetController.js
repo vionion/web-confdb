@@ -55,11 +55,12 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
         
         var cp = this.lookupReference("centralGpsetPanel");
         
-        this.lookupReference("gpsetParamsTree").expand();
+//        this.lookupReference("gpsetParamsTree").expand();
         
         var grid = this.lookupReference("gpsetParamsTree");
         grid.fireEvent( "cusTooltipActivate", grid );
         
+        grid.setLoading("Loading Gpset Modules parameters");
     },
     
     onSortAlphaPaths: function(){
@@ -171,4 +172,17 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
         this.lookupReference('gpsetTree').setLoading( "Loading Global Psets" );
         
     }
+    
+    ,onGpsetparamsLoad: function(store, records, successful, operation, node, eOpts) {
+        var id = operation.config.node.get('gid')
+        if (id == -1){
+           operation.config.node.expand() 
+        }
+        
+        if(this.lookupReference("gpsetParamsTree").isMasked()){
+            this.lookupReference("gpsetParamsTree").setLoading(false);
+        }
+
+    }
+    
 });

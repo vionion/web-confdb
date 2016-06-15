@@ -3,15 +3,8 @@ Ext.define('CmsConfigExplorer.view.sequence.ModuleDetailsController', {
     alias: 'controller.sequence-moduledetails',
     
     onSeqModDetailsLoad: function(store, records, successful, operation, node, eOpts){
-//        var form = this.lookupReference('modDetails');
-//        var form_vm = form.getViewModel();
         
         var first = records[0];
-        
-//        form_vm.set( "name", first.get('name') );
-//        form_vm.set( "author", first.get('author') );
-//        form_vm.set( "class", first.get('mclass') );
-//        form_vm.set( "type", first.get('mt') );
         
         var name = this.lookupReference('seqModDetailsName');
         var author = this.lookupReference('seqModDetailsAuthor');

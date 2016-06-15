@@ -15,7 +15,9 @@ Ext.define("CmsConfigExplorer.view.details.Details",{
         'CmsConfigExplorer.view.globalpset.*',
         'CmsConfigExplorer.view.edsource.EDSource',
         'CmsConfigExplorer.view.essource.*',
-        'CmsConfigExplorer.view.streamdataset.StreamDataset'
+        'CmsConfigExplorer.view.streamdataset.StreamDataset',
+        'CmsConfigExplorer.view.sequence.Sequence',
+        'CmsConfigExplorer.view.sequence.*'
     ],
     
 //    reference: 'detailsview',
@@ -52,6 +54,10 @@ Ext.define("CmsConfigExplorer.view.details.Details",{
                 xtype: 'endpathtab'
             }
             ,{
+                title: 'SEQUENCES',
+                xtype: 'sequencetab'
+            }
+            ,{
                 title: 'MODULES',
                 xtype: 'moduletab'
             }
@@ -79,10 +85,7 @@ Ext.define("CmsConfigExplorer.view.details.Details",{
                 title: 'GLOBAL PSET',
                 xtype: 'globalpsettab'
             }
-//                        ,{
-//                            title: 'SEQUENCES',
-//                            xtype: 'sequencetab'
-//                        }
+            
 //                        ,
 //                        {
 //                            title: 'SUBTABLES',

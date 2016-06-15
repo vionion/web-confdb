@@ -97,6 +97,7 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPathDetails",{
             reference: 'pathDescriptionArea',
             height: '40%',
             flex:2,
+            editable: false,
             fieldLabel: 'Description',
             labelAlign: 'top'
         }
