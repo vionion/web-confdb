@@ -1135,7 +1135,8 @@ class ConfDbQueries(object):
         if (db == None or ver == -2 or idis == None):
                 log.error('ERROR: getAllDatsPatsRels - input parameters error')
 
-        dprels = db.query(func.max(PathidToStrDst.id), PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).filter(PathidToStrDst.id_datasetid.in_(idis)).group_by(PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).all()
+        #dprels = db.query(PathidToStrDst).filter(PathidToStrDst.id_datasetid.in_(idis)).all()
+	dprels = db.query(func.max(PathidToStrDst.id), PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).filter(PathidToStrDst.id_datasetid.in_(idis)).group_by(PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).all()
 
         return dprels
 
@@ -1144,7 +1145,7 @@ class ConfDbQueries(object):
         if (db == None or idis == None):
                 log.error('ERROR: getL1SeedsPathItems - input parameters error')
 
-        l1s_items = db.query(Pathitems).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'HLTLevel1GTSeed').filter(ModToTemp.id_pae == Pathitems.id_pae).filter(Pathitems.id_pathid.in_(idis)).order_by(Pathitems.id_pathid).all()
+        l1s_items = db.query(Pathitems).filter(ModToTemp.id_templ == ModTemplate.id).filter(or_(ModTemplate.name == 'HLTLevel1GTSeed', ModTemplate.name == 'HLTL1TSeed')).filter(ModToTemp.id_pae == Pathitems.id_pae).filter(Pathitems.id_pathid.in_(idis)).order_by(Pathitems.id_pathid).all()
 
         return l1s_items
 
@@ -1164,7 +1165,7 @@ class ConfDbQueries(object):
         if (db == None or id_rel == None):
                 log.error('ERROR: getL1SeedsTemplate - input parameters error')
 
-        l1s_temp = db.query(ModTemplate).filter(ModTemplate.name == 'HLTLevel1GTSeed').filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).first()
+        l1s_temp = db.query(ModTemplate).filter(or_(ModTemplate.name == 'HLTLevel1GTSeed', ModTemplate.name == 'HLTL1TSeed')).filter(ModTemp2Rele.id_modtemp == ModTemplate.id).filter(ModTemp2Rele.id_release == id_rel).first()
 
         return l1s_temp
 
@@ -1272,9 +1273,76 @@ class ConfDbQueries(object):
 
     def getConfigurationByName(self, name, db, log):
         if (db == None or name == ""):
-                log.error('ERROR: getConfigurationByName - input parameters error')
-                return None
+            log.error('ERROR: getConfigurationByName - input parameters error')
+            return None
 
         confVer = db.query(Version).filter(Version.name == name).first()
 
         return confVer.id
+
+
+    #Returns the module "HtlPrescaler" from an End Path if present
+    #@params: 
+    #         
+    #     id_pathid: id of the end path table in the confDB
+    #     db: database session object
+    #
+    def getEndPathPrescaleMod(self, id_pathid = None ,db=None, log = None):
+
+        if (db == None or id_pathid == None):
+            log.error('ERROR: getEndPathPrescaleMod - input parameters error')
+
+        ep_pre_mod = db.query(Pathitems).filter(ModToTemp.id_templ == ModTemplate.id).filter(ModTemplate.name == 'HLTPrescaler').filter(ModToTemp.id_pae == Pathitems.id_pae).filter(Pathitems.id_pathid == id_pathid).order_by(Pathitems.id_pathid).all()
+
+        return ep_pre_mod
+
+    #Returns the Endpaths from a SET of Streams
+    #@params: 
+    #         
+    #         ver_id: id of the ConfVersion
+    #         idis: list of streamids 
+    #         db: database session object
+    #
+    def getEndPathsFromStreams(self, ver_id, idis, db, log):
+
+        if (ver_id == -2 or db == None):
+            log.error('ERROR: getEndPathsFromStreams - input parameters error')
+            
+        endpaths = db.query(Pathids).filter(PathidToOutM.id_streamid.in_(idis)).filter(PathidToOutM.id_pathid == Pathids.id).filter(Pathids.isEndPath == 1).all()
+
+        return endpaths
+
+    #Returns the relations between Streamids and output modules and end paths for a SET of Streams
+    #@params: 
+    #         
+    #     ver_id: id of the ConfVersion
+    #     idis: list of streamids 
+    #     db: database session object
+    #
+    def getOumStreamRels(self, ver_id, idis, db, log):
+
+        if (ver_id == -2 or db == None):
+            log.error('ERROR: getOumStreamRels - input parameters error')
+        
+        query = db.query(func.max(PathidToOutM.id), PathidToOutM.id_streamid, PathidToOutM.id_pathid).filter(PathidToOutM.id_streamid.in_(idis)).group_by(PathidToOutM.id_streamid, PathidToOutM.id_pathid) 
+        rels = query.all()
+
+        return rels 
+    
+    #Returns the id of the Configuration quieried on its name
+    #@params:
+    #
+    #     name: name of the Configuration to retreive
+    #     
+    #     db: database session object
+    #
+    def getMenuByName(self, name = "", db=None, log = None): 
+        if (db == None or name == ""):
+                log.error('ERROR: getMenuByName - input parameters error')
+                return None
+        
+        conf = db.query(Configuration).filter(Configuration.name == name).first()
+        
+        print "RESULT CNF: " + str(conf)
+        
+        return conf.id

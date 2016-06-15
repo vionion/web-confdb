@@ -50,7 +50,8 @@ Ext.define('CmsConfigExplorer.view.main.Main', {
             listeners:{
                 exploreDatabase: 'onExploreDatabaseForward',
                 importPython: 'onImportPythonForward',
-                beforerender: 'onBeforeHomeRender'
+                beforerender: 'onBeforeHomeRender',
+                pathEntered: 'onMenu'
 //                custFwdOpenLastVers: 'onCustFwdOpenLastVers'
             }
         }

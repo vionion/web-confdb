@@ -1287,6 +1287,8 @@ class Exposed(object):
         for e in evcontents:
             si = Streamitem(e.id,-1, e.name,"evc")
             si.gid = evcMap.put(si)
+	    log_msg = "EVCO: " + str(si.gid) + " " + str(e.id) + " " + str(e.name)
+	    log.error(log_msg)
             si.id_stream = -2
             evco_dict[e.id] = si
 
@@ -1302,10 +1304,20 @@ class Exposed(object):
                 if (evco.id_stream == -2):
                     evco.id_stream = s.id
                     evco_dict[evco.id] = evco
+		    log_msg = "EVCO IN STREAM: " + str(evco.gid) + " " + str(evco.id) + " " + str(evco.name)
+            	    log.error(log_msg)
+		    evc_get_gid	= evcMap.get(evco.gid)
+                    log_msg2 = "EVCO GET ID FROM GID: " + str(evc_get_gid)
+                    log.error(log_msg2)
                     si.children.append(evco)
                 else:
                     new_evco = Streamitem(evco.id,-1, evco.name,"evc")
-                    new_evco.gid = evcMap.put(new_evco, unique = False)
+                    new_evco.gid = evcMap.put(new_evco, False)
+		    log_msg = "EVCO IN STREAM UNIQUE FALSE: " + str(new_evco.gid) + " " + str(new_evco.id) + " " + str(new_evco.name)
+		    log.error(log_msg)
+		    evc_get_gid = evcMap.get(new_evco.gid)
+		    log_msg2 = "EVCO GET ID FROM GID: " + str(evc_get_gid)
+		    log.error(log_msg2)
                     si.children.append(new_evco)
             else:
                 evcoOut.append(si)
@@ -2086,9 +2098,11 @@ class Exposed(object):
             log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
             output = schema.dump(resp)
             return output.data
-
+	streams_dict = dict((x.id, x) for x in streams)
         dats_dict = dict((x.id, x) for x in datasets)
+
         idis = dats_dict.keys()
+	str_idis = streams_dict.keys()
 
 #        print "Got stream dat rel"
 
@@ -2102,16 +2116,24 @@ class Exposed(object):
 
             dprels = self.queries.getAllDatsPatsRels(ver_id, idis, db, log)
 #            print "Got paths dat rels"
+	    
+	    #get realations output modules - streams
+            oumrels = self.queries.getOumStreamRels(ver_id, str_idis, db, log)
+
+            # #get associated end path
+            endpaths = self.queries.getEndPathsFromStreams(ver_id, str_idis, db, log)
 
         except:
-            log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
+            log.error('ERROR: getPaths/getAllDatsPatsRels/getOumStreamRels/getEndPathsFromStreams Error')
             output = schema.dump(resp)
             return output.data
 
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
-        streams_dict = dict((x.id, x) for x in streams)
+        #streams_dict = dict((x.id, x) for x in streams)
         pats_dict = dict((x.id, x) for x in pats)
         dprels_dict = {}
+	oum_relations_dict = dict((x.id_streamid, x.id_pathid) for x in oumrels)
+        endpaths_dict = dict((x.id, x.name) for x in endpaths)
 
 #        print "Got dicts"
 
@@ -2154,13 +2176,61 @@ class Exposed(object):
         #---- Building streams and datasets
         evcoOut = []
         streams_dict = {}
+	oum_rels_keys = oum_relations_dict.keys()
+        end_path_prescale_dict = {}
+
         for s in streams:
             si = Summaryitem(s.id, s.name,"str", False,'resources/Stream.ico')
-            streams_dict[s.id] = si
+            
+	    try:
 
-            si.gid = sumMap.put(si)
+                if s.id in oum_rels_keys:
+
+                    endp_id = oum_relations_dict[s.id]
+
+                    #Check for "HltPrescale" module
+                    oumpre = self.queries.getEndPathPrescaleMod(endp_id, db, log)
+                
+                    if oumpre is not None and len(oumpre) > 0:
+
+                        pre_item = EndPathPrescale(s.id)
+
+                        p_name = endpaths_dict[endp_id]
+
+                        # Insert End Path Prescales
+
+                        # get the prescale from the table dict
+                        if(preRows_dict.has_key(p_name)):
+                            r_i = preRows_dict.get(p_name)
+                            param_values = preRows[r_i].children[1].value
+                            values = map(int, re.findall('\d+', param_values)) 
+
+                            if(not(len(labels) == len(values))):
+                                log.error("PRESCALE ERROR: NOT SAME CARDINALITY")
+
+                        else:
+                            values = one_values
+
+                        # fill the sumitem
+                        i2 = 0
+                        for c in columns:
+                            pre_item.prescales[c.name] = values[i2]
+                            sv = c.name + "###" + str(values[i2])
+                            si.values.append(sv)
+                            i2 = i2 + 1
+
+                        end_path_prescale_dict[s.id] = pre_item
+
+            except:
+                log.error('ERROR: End Path Prescales not retreived') 
+
+	    streams_dict[s.id] = si
+
+            si.gid = sumMap.put(si,"str")
 
 #        print "Built stream"
+	
+	ep_pre_keys = end_path_prescale_dict.keys()
 
         for d in datasets:
             if (d.id == -1):
@@ -2198,7 +2268,7 @@ class Exposed(object):
 #                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
 #                                pat = Summaryitem(pat_id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, unique = False)
+                                pat.gid = sumMap.put(pat, False)
 
                                 if not paths.has_key(pat.gid):
 
@@ -2221,17 +2291,45 @@ class Exposed(object):
                                     sp_value = smart_paths[p.name]
                                     smpr = "smart_pre" + "###" + str(sp_value)
                                     pat.values.append(smpr)
+					
+				    #--STREAM - END PATH PRESCALE ------------------
 
-                                    for c in columns:
+                                    if streamid in ep_pre_keys:
+                                        # APPLY END PATH PRESCALE
 
-                                        sp_value = smart_paths[p.name]
-                                        pre_value = int(values[i2])
+                                        ep_item = end_path_prescale_dict[streamid]
+                                        for c in columns:
 
-                                        new_value = sp_value*pre_value
+                                            ep_pre_val = ep_item.prescales[c.name]
+                                            pre_value = int(values[i2])*int(ep_pre_val)
+                                            new_value = sp_value*pre_value
+                                            
+                                            sv = c.name + "###" + str(new_value)
+                                            pat.values.append(sv)
+                                            i2 = i2 + 1
 
-                                        sv = c.name + "###" + str(new_value) #str(values[i2])
-                                        pat.values.append(sv)
-                                        i2 = i2 + 1
+                                    else:
+                                        #ONLY SMART
+
+                                        for c in columns:
+
+                                            pre_value = int(values[i2])
+                                            new_value = sp_value*pre_value
+                                            
+                                            sv = c.name + "###" + str(new_value)
+                                            pat.values.append(sv)
+                                            i2 = i2 + 1  
+
+#                                    for c in columns:
+#
+#                                        sp_value = smart_paths[p.name]
+#                                        pre_value = int(values[i2])
+#
+#                                        new_value = sp_value*pre_value
+#
+#                                        sv = c.name + "###" + str(new_value) #str(values[i2])
+#                                        pat.values.append(sv)
+#                                        i2 = i2 + 1
 
                                     #----- Include l1 seeds ----------------------
                                     if l1seeds is not None:
@@ -2245,7 +2343,7 @@ class Exposed(object):
                             else:
 #                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
-                                pat.gid = sumMap.put(pat, unique = False)
+                                pat.gid = sumMap.put(pat, False)
 
                                 values = zero_values
 
@@ -2272,7 +2370,7 @@ class Exposed(object):
                         else:
 #                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
                             pat = Summaryitem(p.id, p.name,"pat", True,'resources/Path_3.ico')
-                            pat.gid = sumMap.put(pat, unique = False)
+                            pat.gid = sumMap.put(pat, False)
 
                             if not paths.has_key(pat.gid):
 
@@ -2289,13 +2387,38 @@ class Exposed(object):
 
                                 else:
                                     values = one_values
+				
+				#--- END PATH PRESCALES ----------------------------------
+                                if streamid in ep_pre_keys:
+                                    # APPLY END PATH PRESCALE
 
-                                i2 = 0
-                                for c in columns:
+                                    ep_item = end_path_prescale_dict[streamid]
+                                    i2 = 0
+                                    for c in columns:
 
-                                    sv = c.name + "###" + str(values[i2])
-                                    pat.values.append(sv)
-                                    i2 = i2 + 1
+                                        ep_pre_val = ep_item.prescales[c.name]
+                                        new_value = int(values[i2])*int(ep_pre_val)
+                                        
+                                        sv = c.name + "###" + str(new_value)
+                                        pat.values.append(sv)
+                                        i2 = i2 + 1
+
+                                else:
+                                    #ONLY PATH PRESCALE
+
+                                    i2 = 0
+                                    for c in columns:
+
+                                        sv = c.name + "###" + str(values[i2])
+                                        pat.values.append(sv)
+                                        i2 = i2 + 1
+
+#                                i2 = 0
+#                                for c in columns:
+#
+#                                    sv = c.name + "###" + str(values[i2])
+#                                    pat.values.append(sv)
+#                                    i2 = i2 + 1
 
                                 #----- Include l1 seeds ----------------------
     #                            print 'str(len(pat.values)) ', str(len(pat.values))
@@ -2311,7 +2434,7 @@ class Exposed(object):
                         si.children.extend(paths.values())
 
 #                si.children.extend(paths)
-                si.gid = sumMap.put(si)
+                si.gid = sumMap.put(si,"dat")
 
                 streams_dict.get(streamid).children.append(si)
 
@@ -2337,21 +2460,52 @@ class Exposed(object):
     def getRoutedConfig(self, cnfMap, name, db, log):
 
         queries = self.queries
+	pattern = re.compile("[V][0-9]+$")
 
         if (cnfMap == None or name == "" or db == None):
             log.error('ERROR: getRoutedConfig - input parameters error' + self.log_arguments(name=name))
             return -1
 
         confVer_id = -1
+	
+	path_tokens = name.split('/')
+        last_token = path_tokens[-1]
 
-        try:
-            #get Config by Name
-            confVer_id = queries.getConfigurationByName(name, db, log)
+#        try:
+#            #get Config by Name
+#            confVer_id = queries.getConfigurationByName(name, db, log)
+#
+#        except Exception as e:
+#            msg = 'ERROR: Query getConfigurationByName Error: ' + e.args[0]
+#            log.error(msg)
+#            return -1
+	
+	if pattern.match(last_token) is not None:
 
-        except Exception as e:
-            msg = 'ERROR: Query getConfigurationByName Error: ' + e.args[0]
-            log.error(msg)
-            return -1
+            #There is the VERSION NUMBER
+            try:
+                #get Config by Name
+                confVer_id = queries.getConfigurationByName(name, db, log)
+
+            except Exception as e:
+                msg = 'ERROR: Query getConfigurationByName Error: ' + e.args[0]
+                log.error(msg)
+                return -1
+        
+        else:   
+
+            #NO Version number: the last version is chosen
+            try:
+                #get Config by Name
+                conf_id = queries.getMenuByName(name, db, log)
+
+            except Exception as e:
+                msg = 'ERROR: Query getMenuByName Error: ' + e.args[0]
+                log.error(msg)
+                return -1
+
+            version = self.getRequestedVersion(-2, conf_id, db, log)
+            confVer_id = version.id
 
         return confVer_id
 

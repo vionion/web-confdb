@@ -177,3 +177,8 @@ class FileVersion(object):
     def __init__(self, id = 0, name = ""):
         self.id = id
         self.name = name
+
+class EndPathPrescale(object):
+    def __init__(self, streamid):
+        self.streamid = streamid
+        self.prescales = {}  

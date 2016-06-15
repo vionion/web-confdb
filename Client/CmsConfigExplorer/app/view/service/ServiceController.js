@@ -382,7 +382,16 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
                             'Ext.grid.plugin.Clipboard'
                         ],
                     
-                        plugins: 'clipboard',
+                        // plugins: 'clipboard',
+                        
+                        plugins: [
+                            {
+                                ptype: 'clipboard',
+                                system: 'raw',
+                                memory: 'raw',
+                                source: ['raw','system'] 
+                            }
+                        ],
                         
                         reference: 'prescaleGrid',
                         region: 'center',

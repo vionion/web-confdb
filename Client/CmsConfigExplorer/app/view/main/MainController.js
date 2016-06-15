@@ -24,9 +24,11 @@ Ext.define('CmsConfigExplorer.view.main.MainController', {
         'menu/:id' : 'onMenu'
     },
     
+    // onPathEntered: function
+
     onMenu : function(id) {
         var view = this.getView();
-//        console.log("In ROUTE HANDLER");
+       // console.log("In ROUTE on MENU HANDLER");
 //        console.log(id);
 //        console.log(window.location.hash);
         
@@ -169,7 +171,7 @@ Ext.define('CmsConfigExplorer.view.main.MainController', {
         var view = this.getView();
         //console.log("In Main controller");
         
-//        view.remove("home",true);
+        //        view.remove("home",true);
         
         //Add Explorer
         var dbe =  Ext.create({
@@ -337,12 +339,16 @@ Ext.define('CmsConfigExplorer.view.main.MainController', {
         var view = this.getView();
         //console.log("In Main controller");
         
+        var oldHome = this.lookupReference('home');
+        view.remove(oldHome,true);
+
         //Add Explorer
         var home =  Ext.create({
             xtype: 'home',
             listeners:{
                 exploreDatabase: 'onExploreDatabaseForward',
-                importPython: 'onImportPythonForward'
+                importPython: 'onImportPythonForward',
+                pathEntered: 'onMenu'
             }
          });
         var appv =  this.getViewModel().get("appversion");

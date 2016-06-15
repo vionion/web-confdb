@@ -22,7 +22,7 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
             header: false,
             border: false,
             region: "north",
-            height: "30%",
+            height: "25%",
 //            width: "100%",
             layout:{
                 type: 'vbox',
@@ -36,20 +36,20 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
         //            border: "0 0 1 0",
 
         //            stretch: true,
-        //            margin: "0 0 0 0",
+                   margin: "30 0 0 0",
                     layout: {
                                 type: 'hbox',
                                 align: 'middle'
-//                                pack: 'center'             
+                                // pack: 'center'             
                             },
                     items:[
                         {
                             //logo
                             xtype: "image",
                             src: "resources/cms-logo.png",
-                            width: 120, //"10%",
-                            height: 120, //"80%",
-                            margin: "0 0 0 50"
+                            width: 90, //"10%",
+                            height: 90, //"80%",
+                            margin: "0 20 0 85"
 
         //                    flex: 1,
         //                    padding: "0,20,0,20",
@@ -62,13 +62,16 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
         //                    align: 'middle',
         //                    padding: "0 0 0 50",
         //                    flex: 1,
-                            html: '<h1><font size="20" color="black" face="verdana"> CMS - HLT Configurations </font></h1>'
+                            html: '<h1><font size="20" color="#000066" face="helvetica"> HLT Configurations web eXplorer</font></h1>'
                         },
                         {
                             xtype: 'tbtext',
                             height : '30%',
                             bind:{
                                 text: '{appversion}'
+                            },
+                            style: {
+                                color: '#000066'
                             }
                         }         
                     ] 
@@ -77,7 +80,7 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
                     xtype: 'panel',
                     header: false,
                     border: false,
-                    width: "93%",
+                    width: "90%",
                     html: "<hr>"
                 }
             ]
@@ -85,7 +88,7 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
         {
         region: 'center',
         xtype: 'panel',
-        header: false,
+        header: false,        
 //        frame: true,
 //        border: false,
         layout: {
@@ -119,25 +122,25 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
                         width: 260, //"50%",
                         height: 60, //"40%",
                         scale   : 'large',
-                        margin: "50 0 0 0",
+                        margin: "40 0 0 0",
                         listeners: {
                                 click: 'onExploreDatabaseClick',
                                 scope: 'controller'
                         }
 //                        iconCls: ".main-button-icon"
-                    },
-                    {
-                        xtype: "button",
-                        textAlign: "center",
-                        disabled: true,
-//                        icon: "resources/db_button.jpeg",
-                        text: "<h3>Import Configuration</h3>",
-                        width: 260, //"50%",
-                        height: 60, //"40%",
-                        scale   : 'large',
-                        margin: "50 0 0 0"
-//                        iconCls: ".main-button-icon"
                     }
+//                     ,{
+//                         xtype: "button",
+//                         textAlign: "center",
+//                         disabled: true,
+// //                        icon: "resources/db_button.jpeg",
+//                         text: "<h3>Import Configuration</h3>",
+//                         width: 260, //"50%",
+//                         height: 60, //"40%",
+//                         scale   : 'large',
+//                         margin: "50 0 0 0"
+// //                        iconCls: ".main-button-icon"
+//                     }
                 ]
             },
             {
@@ -164,25 +167,25 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
                         width: 260, //"50%",
                         height: 60, //"40%",
                         scale   : 'large',
-                        margin: "50 0 0 0",
+                        margin: "40 0 0 0",
                         listeners: {
                                 click: 'onImportPythonClick',
                                 scope: 'controller'
                         }
 //                        iconCls: ".main-button-icon"
-                    },
-                    {
-                        xtype: "button",
-//                        icon: "resources/db_button.jpeg",
-                        textAlign: "center",
-                        disabled: true,
-                        text: "<h3>Run Custom Script</h3>",
-                        width: 260, //"50%",
-                        height: 60, //"40%",
-                        scale   : 'large',
-                        margin: "50 0 0 0"
-//                        iconCls: ".main-button-icon"
                     }
+//                     ,{
+//                         xtype: "button",
+// //                        icon: "resources/db_button.jpeg",
+//                         textAlign: "center",
+//                         disabled: true,
+//                         text: "<h3>Run Custom Script</h3>",
+//                         width: 260, //"50%",
+//                         height: 60, //"40%",
+//                         scale   : 'large',
+//                         margin: "50 0 0 0"
+// //                        iconCls: ".main-button-icon"
+//                     }
                 ]
             },
             {
@@ -205,27 +208,64 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
 //                        icon: "resources/db_button.jpeg",
                         textAlign: "center",
                         disabled: true,
-//                        text: "<h3>Feature T D</h3>",
+                        text: "<h3>Run Custom Script</h3>",
                         width: 260, //"50%",
                         height: 60, //"40%",
                         scale   : 'large',
-                        margin: "50 0 0 0"
-//                        iconCls: ".main-button-icon"
-                    },
-                    {
-                        xtype: "button",
-//                        icon: "resources/db_button.jpeg",
-                        textAlign: "center",
-                        disabled: true,
-//                        text: "<h3>Feature T D</h3>",
-                        width: 260, //"50%",
-                        height: 60, //"40%",
-                        scale   : 'large',
-                        margin: "50 0 0 0"
+                        margin: "40 0 0 0"
 //                        iconCls: ".main-button-icon"
                     }
+//                     ,{
+//                         xtype: "button",
+// //                        icon: "resources/db_button.jpeg",
+//                         textAlign: "center",
+//                         disabled: true,
+// //                        text: "<h3>Feature T D</h3>",
+//                         width: 260, //"50%",
+//                         height: 60, //"40%",
+//                         scale   : 'large',
+//                         margin: "50 0 0 0"
+// //                        iconCls: ".main-button-icon"
+//                     }
                 ]
             }
         ]
-    }]
+    }
+    ,{
+            region: 'south',
+            xtype: 'panel',
+            header: false,        
+            height: '52%',
+            width: '100%',
+            layout: {
+                type: 'vbox',
+                align: 'middle',
+                pack: 'start'
+            },
+            items: [
+                {
+                    xtype: 'textfield',
+                    margin: "5 0 0 0",
+                    labelWidth: 280,
+                    height: 100,
+                    width: '55%',
+                    labelSeparator: "",
+                    labelAlign: "top",
+                    labelClsExtra: 'label-center-align-class',
+                    fieldLabel: '<p><font size="9" color="#2e2eb8" face="helvetica"> Open Menu </font></p>', //# 194de6
+                    reference: 'openmenufield',
+                    emptyText: "Type the Menu name/path - Version is not mandatory",
+
+            //                triggerWrapCls: 'x-form-clear-trigger',
+                    listeners: {
+                        specialkey: 'onEnterKey',
+                        scope: 'controller'
+                        
+                    }
+
+                }
+            ]
+            
+        }
+    ]
 });
