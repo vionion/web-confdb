@@ -85,8 +85,8 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
         
         if(item_type == "mod"){
 
-            var mid = record.get("orig_id");
-//            var mid = record.get("gid");
+            // var mid = record.get("orig_id");
+            var mid = record.get("gid");
             var m_int = parseInt(mid);
             // m_int = (-1)*m_int;
             mid = m_int;

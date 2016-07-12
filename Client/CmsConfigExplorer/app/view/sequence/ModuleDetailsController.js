@@ -17,8 +17,8 @@ Ext.define('CmsConfigExplorer.view.sequence.ModuleDetailsController', {
         mtype.setValue( first.get('mt')  );
     },
     
-    onSeqModDetLoaded: function(mid,pid){
-        this.getViewModel().getStore('seqmoddetails').load({params: {mid: mid, pid: pid}});
+    onSeqModDetLoaded: function( mid, pid, online,idv, idc){
+        this.getViewModel().getStore('seqmoddetails').load({params: {mid: mid, pid: pid, online:online,verid:idv}});
     }
     
 });
