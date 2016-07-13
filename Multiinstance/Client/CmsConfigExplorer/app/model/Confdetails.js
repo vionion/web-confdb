@@ -1,0 +1,25 @@
+Ext.define('CmsConfigExplorer.model.Confdetails', {
+    extend: 'CmsConfigExplorer.model.Base',
+    
+    fields: [
+        { name: 'name', type: 'string' }
+
+    ],
+    
+     proxy: {
+        type: 'ajax',
+        url : 'cnfdetails',
+        headers: {'Content-Type': "application/json" },
+        limitParam: '',
+        pageParam: '',
+        sortParam: '',
+        //extraParams: {'itype':'{selectedPathitem.pit}'},
+        startParam : '',
+        reader: {
+            type: 'json',
+            rootProperty: 'children'
+        }
+//        lazyFill: true
+    }
+    
+});
