@@ -148,8 +148,8 @@ class SummaryBuilder():
                     if m_params_dict.has_key('L1TechTriggerSeeding'):
                         tech = m_params_dict.get('L1TechTriggerSeeding').value
 
-                    else:
-                        tech = l1seedTempParams_dict.get('L1TechTriggerSeeding').value
+                    elif l1seedTempParams_dict.has_key('L1TechTriggerSeeding'):
+                            tech = l1seedTempParams_dict.get('L1TechTriggerSeeding').value
 
                     if m_params_dict.has_key('L1SeedsLogicalExpression'):
                         par = m_params_dict.get('L1SeedsLogicalExpression')
@@ -190,8 +190,8 @@ class SummaryBuilder():
                     if m_params_dict.has_key('L1TechTriggerSeeding'):
                         tech = m_params_dict.get('L1TechTriggerSeeding').value
 
-                    else:
-                        tech = l1seedTempParams_dict.get('L1TechTriggerSeeding').value
+                    elif l1seedTempParams_dict.has_key('L1TechTriggerSeeding'):
+                            tech = l1seedTempParams_dict.get('L1TechTriggerSeeding').value
 
                     if m_params_dict.has_key('L1SeedsLogicalExpression'):
                         par = m_params_dict.get('L1SeedsLogicalExpression')
@@ -230,7 +230,7 @@ class SummaryBuilder():
                         if m_params_dict.has_key('L1TechTriggerSeeding'):
                             tech = m_params_dict.get('L1TechTriggerSeeding').value
 
-                        else:
+                        elif l1seedTempParams_dict.has_key('L1TechTriggerSeeding'):
                             tech = l1seedTempParams_dict.get('L1TechTriggerSeeding').value
 
                         if m_params_dict.has_key('L1SeedsLogicalExpression'):
