@@ -34,6 +34,41 @@ class Exposed(object):
     #         gid: path node generated id
     #         ver: version id
     #         db: database session object
+
+    def skipPathSequence(self, counter, items, level):
+        while(counter < len(items) and items[counter].lvl >= level):
+            counter = counter + 1
+        return counter
+
+    def getPathSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, idgen_new, seqsMap, idgen):
+        children = []
+        while(counter < len(items) and items[counter].lvl == level):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+
+            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            self.simple_counter = self.simple_counter + 1
+            counter = counter + 1
+            if item.paetype == 2:
+                if item.name in written_sequences:
+                    item.expanded = False
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, seqsMap, idgen)
+                    for child in new_children:
+                        item.children.append(child)
+
+                else:
+                    item.expanded = False
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, seqsMap, idgen)
+                    for child in new_children:
+                        item.children.append(child)
+
+                    written_sequences.add(item.name)
+                    built_sequences.add(item)
+                
+            children.append(item)
+            
+        return counter, children, written_sequences, built_sequences, idgen_new
+
     #
     def getPathItems(self, patsMap, seqsMap, modsMap, gid, ver, db, log):
 
@@ -64,63 +99,60 @@ class Exposed(object):
             return None
 
         #Elements construction
-#        print "RESULTS LEN: ", len(items), len(elements)
 
         items_dict = dict((x.id, x) for x in items)
         elements_dict = dict((x.id, x) for x in elements)
 
+        built_sequences = set()
+        written_sequences = set()
+        lvlZeroSeq_Dict = {}  
+
         seq = {}
-        lvlZeroSeq_Dict = {}
         idpaes = {}
 
-        #Build all the sequences
-        for p in items:
-            elem = elements_dict[p.id_pae]
-            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
+        #                                                                                                                   #                                                    
+        # ----------------------------------------------------------------------------------------------------------------- #
+        #       New Routine for sequences
+        #  
 
-            if (item.paetype == 2):
-                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                item.expanded = False
-                seq[item.gid]=item
-                idpaes[item.gid]=p.id_pae
-                if (item.lvl == 0):
-                    iid = item.id
-                    lvlZeroSeq_Dict[item.gid] = iid
+        elements_dict = dict((element.id, element) for element in elements)
 
-            # It is a module
-            else:
-                item.gid = modsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                id_par = item.id_parent
-#                idPae_values = idpaes.viewvalues()
-                idPae_values = idpaes.values()
-                lKeys = []
-                for key, value in idpaes.iteritems():
-                    if value == id_par:
-                        lKeys.append(key)
+        counter = 0
+        idgen_new = 1
 
-#                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]
+        while counter < len(items):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
 
-                for lKey in lKeys:
-                    childs = seq[lKey].children
-                    isIn = False
-                    for c in childs:
-                        if c.id == item.id:
-                            isIn = True
-                    if not isIn:
-                        seq[lKey].children.insert(p.order, item)
-#                seq[p.id_parent].children.insert(p.order, item)
+            self.simple_counter = self.simple_counter + 1
+            counter = counter + 1
+            
+            if item.paetype == 2:
+                
+                if item.lvl == 0:
+                    lvlZeroSeq_Dict[item.gid] = item.id
+                
+                if item.name in written_sequences:
+                    counter = self.skipPathSequence(counter, items, item.lvl+1)
+                else:
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, seqsMap, idgen)
+                    for child in new_children:
 
-#        seqs = seq.viewvalues()
-        seqs = seq.values()
-        for s in seqs:
-            if (s.lvl != 0):
-                id_par = s.id_parent
+                        item.children.append(child)
 
-                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]
+                    written_sequences.add(item.name)
+                    item.expanded = False
+                    built_sequences.add(item)
 
-                childs = seq[lKey].children
-                childs.insert(s.order, s)
-                childs.sort(key=lambda x: x.order, reverse=False)
+
+
+
+        #                                                                                                                   #                                                    
+        # ----------------------------------------------------------------------------------------------------------------- #
+        #     
+
+        seq = dict((x.gid, x) for x in built_sequences)
 
         #Retreive the lvl 0 of the path
         lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
@@ -136,8 +168,6 @@ class Exposed(object):
             pats.insert(item.order, item)
 
 #        #merge the sequences created
-#        for ss in seq.viewvalues():
-#            pats.insert(ss.order, ss)
 
         lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
         for lzseq in lvlZeroSeq_Dict_keys: #lvlZeroSeq_Dict.viewkeys(): #viewvalues():
@@ -196,56 +226,53 @@ class Exposed(object):
         elements_dict = dict((x.id, x) for x in elements)
 
         seq = {}
-        lvlZeroSeq_Dict = {}
         idpaes = {}
 
-        #Build all the sequences
-        for p in items:
-            elem = elements_dict[p.id_pae]
-            item = Pathitem(p.id_pae, elem.name, p.id_pathid, elem.paetype, p.id_parent, p.lvl, p.order, p.operator)
+        built_sequences = set()
+        written_sequences = set()
+        lvlZeroSeq_Dict = {} 
 
-            if (item.paetype == 2):
-                item.gid = seqsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                item.expanded = False
-                seq[item.gid]=item
-                idpaes[item.gid]=p.id_pae
-                if (item.lvl == 0):
-                    iid = item.id
-                    lvlZeroSeq_Dict[item.gid] = iid
+        #                                                                                                                   #                                                    
+        # ----------------------------------------------------------------------------------------------------------------- #
+        #       New Routine for sequences
+        #  
 
-            # It is a module
-            else:
-                item.gid = modsMap.put(elem, p.id_pathid, p.order, p.lvl)
-                id_par = item.id_parent
-#                idPae_values = idpaes.viewvalues()
-                idPae_values = idpaes.values()
-                lKeys = []
-                for key, value in idpaes.iteritems():
-                    if value == id_par:
-                        lKeys.append(key)
+        elements_dict = dict((element.id, element) for element in elements)
 
-#                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]
+        counter = 0
+        idgen_new = 1
 
-                for lKey in lKeys:
-                    childs = seq[lKey].children
-                    isIn = False
-                    for c in childs:
-                        if c.id == item.id:
-                            isIn = True
-                    if not isIn:
-                        seq[lKey].children.insert(p.order, item)
-#                seq[p.id_parent].children.insert(p.order, item)
+        while counter < len(items):
+            elem = elements_dict[items[counter].id_pae]
+            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
 
-        seqs = seq.values() #view
-        for s in seqs:
-            if (s.lvl != 0):
-                id_par = s.id_parent
+            self.simple_counter = self.simple_counter + 1
+            counter = counter + 1
+            
+            if item.paetype == 2:
+                
+                if item.lvl == 0:
+                    lvlZeroSeq_Dict[item.gid] = item.id
+                
+                if item.name in written_sequences:
+                    counter = self.skipPathSequence(counter, items, item.lvl+1)
+                else:
+                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, seqsMap, idgen)
+                    for child in new_children:
 
-                lKey = [key for key, value in idpaes.iteritems() if value == id_par][0]
+                        item.children.append(child)
 
-                childs = seq[lKey].children
-                childs.insert(s.order, s)
-                childs.sort(key=lambda x: x.order, reverse=False)
+                    written_sequences.add(item.name)
+                    item.expanded = False
+                    built_sequences.add(item)
+
+
+        #                                                                                                                   #                                                    
+        # ----------------------------------------------------------------------------------------------------------------- #
+        #
+
+        seq = dict((x.gid, x) for x in built_sequences)
 
         #Retreive the lvl 0 of the path
         lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
