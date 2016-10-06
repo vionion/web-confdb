@@ -46,7 +46,8 @@ class Exposed(object):
             elem = elements_dict[items[counter].id_pae]
             item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
-            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
             self.simple_counter = self.simple_counter + 1
             counter = counter + 1
             if item.paetype == 2:
@@ -123,7 +124,8 @@ class Exposed(object):
         while counter < len(items):
             elem = elements_dict[items[counter].id_pae]
             item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
 
             self.simple_counter = self.simple_counter + 1
             counter = counter + 1
@@ -245,7 +247,8 @@ class Exposed(object):
         while counter < len(items):
             elem = elements_dict[items[counter].id_pae]
             item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-            item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
+            item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
 
             self.simple_counter = self.simple_counter + 1
             counter = counter + 1
