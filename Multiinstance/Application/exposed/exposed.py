@@ -2287,7 +2287,7 @@ class Exposed(object):
             except:
                 log.error('ERROR: End Path Prescales not retreived') 
 
-	        streams_dict[s.id] = si
+	    streams_dict[s.id] = si
 
             si.gid = cache.sumMappingDictPut(src, si.id, "str", cache_session, log)
 
