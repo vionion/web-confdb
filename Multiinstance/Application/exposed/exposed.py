@@ -121,7 +121,9 @@ class Exposed(object):
 
         items_dict = dict((x.id, x) for x in items)
         elements_dict = dict((x.id, x) for x in elements)
+        
         written_sequences = set()
+        built_sequences = set()
 
         seq = {}
         lvlZeroSeq_Dict = {}
@@ -258,7 +260,9 @@ class Exposed(object):
 
         items_dict = dict((x.id, x) for x in items)
         elements_dict = dict((x.id, x) for x in elements)
+        
         written_sequences = set()
+        built_sequences = set()
 
         seq = {}
         lvlZeroSeq_Dict = {}
