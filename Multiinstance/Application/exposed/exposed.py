@@ -36,6 +36,7 @@ class Exposed(object):
 
     def getPathSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences):
         children = []
+        cache = self.cache
         while(counter < len(items) and items[counter].lvl == level):
             elem = elements_dict[items[counter].id_pae]
             item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
