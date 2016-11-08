@@ -34,9 +34,11 @@ class Exposed(object):
             counter = counter + 1
         return counter
 
-    def getPathSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, src):
+    def getPathSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, src, cache_session):
         children = []
+        queries = self.queries
         cache = self.cache
+
         while(counter < len(items) and items[counter].lvl == level):
             elem = elements_dict[items[counter].id_pae]
             item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
@@ -55,13 +57,13 @@ class Exposed(object):
             if item.paetype == 2:
                 if item.name in written_sequences:
                     item.expanded = False
-                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src)
+                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session)
                     for child in new_children:
                         item.children.append(child)
 
                 else:
                     item.expanded = False
-                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src)
+                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session)
                     for child in new_children:
                         item.children.append(child)
 
@@ -165,7 +167,7 @@ class Exposed(object):
                 if item.name in written_sequences:
                     counter = self.skipPathSequence(counter, items, item.lvl+1)
                 else:
-                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src)
+                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session)
                     for child in new_children:
 
                         item.children.append(child)
@@ -303,7 +305,7 @@ class Exposed(object):
                 if item.name in written_sequences:
                     counter = self.skipPathSequence(counter, items, item.lvl+1)
                 else:
-                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src)
+                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session)
                     for child in new_children:
 
                         item.children.append(child)
