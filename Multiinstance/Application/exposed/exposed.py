@@ -531,7 +531,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.outputModuleParamsBuilder(oumid, self.queries, db, log)
+        resp.children = self.params_builder.outputModuleParamsBuilder(id_p, self.queries, db, log)
 
         if (resp.children == None):
             return None
