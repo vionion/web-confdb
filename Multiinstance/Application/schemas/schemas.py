@@ -215,6 +215,7 @@ class ParametersSchema(Schema):
 
 class ParameterSchema(Schema):
     id = fields.Integer()
+    module_id = fields.Integer()
     name = fields.String()
     moetype = fields.Integer()
     paramtype = fields.String()
@@ -229,6 +230,7 @@ class ParameterSchema(Schema):
     icon = fields.Method("get_icon")
     rendervalue = fields.Method("get_rendervalue")
     isDefault = fields.Method("get_isDefault")
+    moduleId = fields.Method("get_moduleId")
     expanded = fields.Boolean()
     children = fields.Nested('self', many=True)
 
@@ -262,6 +264,9 @@ class ParameterSchema(Schema):
     def get_gid(self,obj):
         return obj.id
 
+    def get_moduleId(self,obj):
+        return obj.module_id
+
     def get_item_type(self, obj):
         if obj.moetype == 1:
             return 'par'
@@ -279,7 +284,7 @@ class ParameterSchema(Schema):
             return False
 
     class Meta:
-        fields = ("gid", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
+        fields = ("gid", "moduleId", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
         ordered = True
 
 #-----------------------------------Folder and Version Schemas -------------------------

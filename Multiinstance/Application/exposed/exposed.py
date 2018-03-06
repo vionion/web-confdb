@@ -3,6 +3,7 @@
 # to the exposed path in the Root class.
 #
 # Class: Exposed
+import json
 
 from confdb_v2.queries import ConfDbQueries
 from cachedb.queries import CacheDbQueries
@@ -91,13 +92,10 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = 0
-        itemtype = "pat"
-
         # id_p = patsMap.get(gid)
-        id_p = cache.patMappingDictGet(gid, src, itemtype, cache_session, log)
-	id_p = int(id_p)
-	log_msg = "id_p from GET: " + str(id_p)
+        ext_pat_id = cache.patMappingDictGetExternal(gid, src, "pat", cache_session, log)
+	ext_pat_id = int(ext_pat_id)
+	log_msg = "id_p from GET: " + str(ext_pat_id)
 	log.error(log_msg)
 	
         resp = Response()
@@ -109,8 +107,8 @@ class Exposed(object):
         items = None
 
         try:
-            elements = queries.getCompletePathSequences(id_p, ver, db, log)
-            items = queries.getCompletePathSequencesItems(id_p, ver, db, log)
+            elements = queries.getCompletePathSequences(ext_pat_id, ver, db, log)
+            items = queries.getCompletePathSequencesItems(ext_pat_id, ver, db, log)
         except Exception as e:
 	    msg = 'ERROR: Query getCompletePathSequences/Query getCompletePathSequencesItems Error: ' + e.args[0]
             log.error(msg)
@@ -187,8 +185,8 @@ class Exposed(object):
 
 
         #Retreive the lvl 0 of the path
-        lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
-        lvlzelems = queries.getLevelZeroPaelements(id_p, ver, db, log)
+        lista = queries.getLevelZeroPathItems(ext_pat_id, ver, db, log)
+        lvlzelems = queries.getLevelZeroPaelements(ext_pat_id, ver, db, log)
 
         lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
         pats = []
@@ -236,10 +234,10 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = 0
+        external_id = 0
         itemtype = "pat"
         # id_p = patsMap.get(gid)
-        id_p = cache.patMappingDictGet(gid, src, itemtype, cache_session, log)
+        external_id = cache.patMappingDictGetExternal(gid, src, itemtype, cache_session, log)
 
         resp = Response()
         schema = ResponsePathItemSchema()
@@ -250,8 +248,8 @@ class Exposed(object):
         items = None
 
         try:
-            elements = queries.getCompletePathSequences(id_p, ver, db, log)
-            items = queries.getCompletePathSequencesItems(id_p, ver, db, log)
+            elements = queries.getCompletePathSequences(external_id, ver, db, log)
+            items = queries.getCompletePathSequencesItems(external_id, ver, db, log)
         except:
             log.error('ERROR: Query Error')
             return None
@@ -322,8 +320,8 @@ class Exposed(object):
         seq = dict((x.gid, x) for x in built_sequences)
 
         #Retreive the lvl 0 of the path
-        lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
-        lvlzelems = queries.getLevelZeroPaelements(id_p, ver, db, log)
+        lista = queries.getLevelZeroPathItems(external_id, ver, db, log)
+        lvlzelems = queries.getLevelZeroPaelements(external_id, ver, db, log)
 
         lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
         pats = []
@@ -348,7 +346,7 @@ class Exposed(object):
         outmodule = None
 
         try:
-            outmodule = queries.getOumStreamid(id_p, db, log)
+            outmodule = queries.getOumStreamid(external_id, db, log)
 
         except:
             log.error('ERROR: Query getOumStreamid Error')
@@ -405,7 +403,7 @@ class Exposed(object):
 
         # cnf = cnfMap.get(cnf)
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
 #        print "CNF after get ", cnf
 
@@ -469,7 +467,7 @@ class Exposed(object):
 
         # cnf = cnfMap.get(cnf)
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
 #        print "CNF after get ", cnf
 
@@ -524,14 +522,14 @@ class Exposed(object):
         cache_session = request.db_cache
 
 #        print "OUMID: ", oumid
-        id_p = oumid #srvsMap.get(sid)
+        external_id = oumid #srvsMap.get(sid)
 #        print "ID_P: ", id_p, oumid
-        id_p = cache.patMappingDictGet(id_p, src, "oum", cache_session, log)
+        external_id = cache.patMappingDictGetExternal(external_id, src, "oum", cache_session, log)
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.outputModuleParamsBuilder(id_p, self.queries, db, log)
+        resp.children = self.params_builder.outputModuleParamsBuilder(external_id, self.queries, db, log)
 
         if (resp.children == None):
             return None
@@ -544,7 +542,11 @@ class Exposed(object):
 
         return output.data
 
+    def update_module_cache(self, mod_id, src, param_name, value, request, log):
 
+        cache = self.cache
+        cache_session = request.db_cache
+        cache.update_module(mod_id, param_name, value, cache_session, log)
 
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
@@ -555,37 +557,46 @@ class Exposed(object):
         cache_session = request.db_cache
 
         queries = self.queries
-        params = []
+        module_params = []
 
-        id_p = mid
+        internal_module_id = mid
 
         resp = Response()
         schema = ResponseParamSchema()
 
         if fromSequence:
-            id_p = cache.seqMappingDictGet(mid, src, "mod", cache_session, log)
+            internal_module_id = cache.seqMappingDictGetInternal(mid, src, "mod", cache_session, log)
 
         else:
             if (allmod == 'true'):
                 # MODULE TAB
-                id_p = cache.allmodMappingDictGet(mid, src, "mod", cache_session, log)
-            
+                internal_module_id = cache.allmodMappingDictGetInternal(mid, src, "mod", cache_session, log)
+
             else:
                 # PATH OR ENDPATH TAB
-                id_p = cache.patMappingDictGet(mid, src, "mod", cache_session, log)
+                internal_module_id = cache.patMappingDictGetInternal(mid, src, "mod", cache_session, log)
 
-	id_p = int(id_p)
-        params = self.params_builder.moduleParamsBuilder(id_p, queries, db, log)
+        module_params = cache.get_module(internal_module_id, cache_session, log)
 
-        if (params == None):
+        if module_params is None:
+            print('from db')
+            external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", log)
+
+            module_params = self.params_builder.moduleParamsBuilder(external_module_id, queries, db, log)
+            # we do it in order to put proper module_id even for items from template
+            for param in module_params:
+                param.module_id = internal_module_id
+
+            cache.put_module(internal_module_id, module_params, cache_session, log)
+            print('added to cache')
+
+        if module_params is None:
             return None
-
         resp.success = True
-        resp.children = params
+        resp.children = module_params
 
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -612,7 +623,7 @@ class Exposed(object):
         configs = None
 
         # dir_id = folMap.get(id_parent)
-        dir_id = cache.folMappingDictGet(id_parent, src, "fol", cache_session, log)
+        dir_id = cache.folMappingDictGetExternal(id_parent, src, "fol", cache_session, log)
 
         try:
             #get Child directories
@@ -816,7 +827,7 @@ class Exposed(object):
         if (cnf == -2 or db == None):
             log.error('ERROR: getVersionsByConfig - input parameters error' + self.log_arguments(conf_id=conf_id))
 
-        conf_id = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+        conf_id = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseVersionSchema()
@@ -863,7 +874,7 @@ class Exposed(object):
         schema = ResponseVersionSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         #DB Queries
         version = None
@@ -896,17 +907,15 @@ class Exposed(object):
         cache_session = request.db_cache
 
         if (pid == -2 or db == None):
-            log.error('ERROR: getPathDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, pat_id=pat_id))
+            log.error('ERROR: getPathDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, pat_id=ext_pat_id))
 
         resp = Response()
         schema = ResponsePathDetailsSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
         
-        pat_id = cache.patMappingDictGet(pid, src, "pat", cache_session, log)
-
-        pat_id = int(pat_id)
+        ext_pat_id = cache.patMappingDictGetExternal(pid, src, "pat", cache_session, log)
 
         #ToDo IdV_er / CNF
         ver_id = -1
@@ -929,10 +938,10 @@ class Exposed(object):
         prescale = None
         description = None
         try:
-            path = queries.getPathName(pat_id, ver_id, db, log)
+            path = queries.getPathName(ext_pat_id, ver_id, db, log)
             prescaleTemplate = queries.getConfPrescaleTemplate(id_rel, db, log)
             prescale = queries.getConfPrescale(ver_id, prescaleTemplate.id, db, log)
-            description = queries.getPathDescription(pat_id, ver_id, db, log)
+            description = queries.getPathDescription(ext_pat_id, ver_id, db, log)
         except:
             log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale/getPathDescription Error')
             return None
@@ -1078,13 +1087,13 @@ class Exposed(object):
         if (mod == -2 or pat == -2 or db == None):
             log.error('ERROR: getModuleDetails - input parameters error' + self.log_arguments(mod_id=mod, pat_id=pat))
 
-        mod_id = -1
+        external_id = -1
 
         if fromSequence:
-            mod_id = cache.seqMappingDictGet(mod, src, "mod", cache_session, log)
+            external_id = cache.seqMappingDictGetExternal(mod, src, "mod", cache_session, log)
         
         else:
-            mod_id = cache.patMappingDictGet(mod, src, "mod", cache_session, log)
+            external_id = cache.patMappingDictGetExternal(mod, src, "mod", cache_session, log)
 
 
         resp = Response()
@@ -1096,11 +1105,11 @@ class Exposed(object):
         module = None
 
         try:
-            template_id = queries.getModToTempByPae(mod_id, db, log)
+            template_id = queries.getModToTempByPae(external_id, db, log)
 #            print "TID:" , template_id.id_templ
             template = queries.getModTemplate(template_id.id_templ, db, log)
 
-            module = queries.getPaelement(mod_id, db, log)
+            module = queries.getPaelement(external_id, db, log)
 
         except:
             log.error('ERROR: Query getModToTempByPae/getModTemplate/getPaelement Error')
@@ -1109,7 +1118,7 @@ class Exposed(object):
 #        if (template_id == None or template == None or module == None):
 #            return None
 
-        md = ModuleDetails(mod_id, module.name, template.id_mtype, "", template.name)
+        md = ModuleDetails(external_id, module.name, template.id_mtype, "", template.name)
 
         resp.success = True
         resp.children = []
@@ -1141,7 +1150,7 @@ class Exposed(object):
 
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1227,7 +1236,7 @@ class Exposed(object):
         ver_id = -1
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log) 
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)
@@ -1294,7 +1303,7 @@ class Exposed(object):
         cache_session = request.db_cache
 
         id_p = sid
-        sid = cache.srvMappingDictGet(sid, src, "srv", cache_session, log)
+        sid = cache.srvMappingDictGetExternal(sid, src, "srv", cache_session, log)
 
         resp = Response()
         schema = ResponseParamSchema()
@@ -1327,7 +1336,7 @@ class Exposed(object):
         cache_session = request.db_cache
         
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)
@@ -1446,7 +1455,7 @@ class Exposed(object):
         evcostatements = None
         evcotostats = None
 
-        evc = cache.strMappingDictGet(evc, src, "evc", cache_session, log)
+        evc = cache.strMappingDictGetExternal(evc, src, "evc", cache_session, log)
 
         try:
             evcostatements = self.queries.getEvCoStatements(evc, db, log)
@@ -1501,7 +1510,7 @@ class Exposed(object):
         schema = ResponseESModuleDetailsSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1643,7 +1652,7 @@ class Exposed(object):
         cache_session = request.db_cache
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
         
         ver_id = -1
         version = None
@@ -1726,8 +1735,8 @@ class Exposed(object):
         if (mod_id == -2 or pat_id == -2 or db == None):
             log.error('ERROR: getOUTModuleDetails - input parameters error' + self.log_arguments(mod_id=mod_id, pat_id=pat_id))
 
-        mod_id = cache.patMappingDictGet(mod_id, src, "oum", cache_session, log)
-        pat_id = cache.patMappingDictGet(pat_id, src, "pat", cache_session, log)
+        # is it really mod id or pat id?
+        external_mod_id = cache.patMappingDictGetExternal(mod_id, src, "oum", cache_session, log)
 
         resp = Response()
         schema = ResponseOutputModuleDetailsSchema()
@@ -1735,7 +1744,7 @@ class Exposed(object):
         stream = None
 
         try:
-            stream = queries.getStreamid(mod_id, db, log)
+            stream = queries.getStreamid(external_mod_id, db, log)
         except:
             log.error('ERROR: Query getStreamid Error')
             return None
@@ -1744,7 +1753,7 @@ class Exposed(object):
 #            return None
 
         oumName = "hltOutput"+stream.name
-        oumd = OutputModuleDetails(mod_id, oumName, "", "", stream.name, mod_id)
+        oumd = OutputModuleDetails(external_mod_id, oumName, "", "", stream.name, external_mod_id)
 
         resp.success = True
         resp.children = []
@@ -1768,7 +1777,7 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
         
-        sid = cache.gpsMappingDictGet(sid, src, "gps", cache_session, log)
+        sid = cache.gpsMappingDictGetExternal(sid, src, "gps", cache_session, log)
 
         id_p = sid 
 
@@ -1806,7 +1815,7 @@ class Exposed(object):
         schema = ResponseGlobalPsetSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1861,7 +1870,7 @@ class Exposed(object):
             log.error('ERROR: getEDSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseEDSourceSchema()
@@ -1949,7 +1958,7 @@ class Exposed(object):
             log.error('ERROR: getESSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseESSourceSchema()
@@ -2043,9 +2052,9 @@ class Exposed(object):
         schema = ResponseDstPathsTreeSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
-        dstid = cache.strMappingDictGet(dstid, src, "dat", cache_session, log) 
+        dstid = cache.strMappingDictGetExternal(dstid, src, "dat", cache_session, log)
 
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
@@ -2106,7 +2115,7 @@ class Exposed(object):
         cache_session = request.db_cache
         
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = ResponseTree()
         schema = ResponseSummaryColumnSchema()
@@ -2134,7 +2143,7 @@ class Exposed(object):
         resp.success = False
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)

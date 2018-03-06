@@ -41,7 +41,7 @@ class Converter(object):
                 src = 0
 
             if (cnf != -2 and cnf != -1):
-                cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)    
+                cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
             # implement part of the logging interface in cherrypy logger
             def log(self, lvl, msg, *args, **kwargs):
