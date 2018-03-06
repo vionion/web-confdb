@@ -1,8 +1,8 @@
 
-Ext.define("CmsConfigExplorer.view.path.Parameters",{
+Ext.define("CmsConfigExplorer.view.param.Parameters",{
     extend: "Ext.tree.Panel",
     
-    requires:['CmsConfigExplorer.view.path.ParametersController'],
+    requires:['CmsConfigExplorer.view.param.ParametersController'],
     
     alias:'widget.parameters',
     
@@ -10,20 +10,21 @@ Ext.define("CmsConfigExplorer.view.path.Parameters",{
     
     plugins: {
         ptype: 'cellediting',
-        clicksToEdit: 1,
+        clicksToEdit: 2,
         listeners: {
-            beforeedit: 'onBeforeCellEdit'  
+            beforeedit: 'onBeforeCellEdit',
+            edit: 'onEditDone'
         }
     },
     
-    controller: "path-parameters",
+    controller: "parameters",
 
     listeners:{
-//        cusTooltipActivate: 'onTooltipActivate',
+        cusTooltipActivate: 'onTooltipActivate',
         scope: 'controller'
     },
 //    
-    bind:{
+    bind: {
         // bind store to view model "modules" store
         store:'{parameters}'
 //        selection: '{selectedModuleitem}'
@@ -39,8 +40,8 @@ Ext.define("CmsConfigExplorer.view.path.Parameters",{
     columns: [
         {
          xtype: 'treecolumn', 
-         header: 'Name', 
-         dataIndex: 'name', 
+         header: 'Name',
+         dataIndex: 'name',
          flex: 1
         ,editor: {
             xtype: 'textfield',
@@ -55,13 +56,12 @@ Ext.define("CmsConfigExplorer.view.path.Parameters",{
 //        },
         
         { xtype: 'gridcolumn', 
-         header: 'Value', 
-         dataIndex: 'rendervalue', 
+         header: 'Value',
+         dataIndex: 'rendervalue',
          flex: 1,
          editor: {
                 xtype: 'textarea',
-                editable : false
-
+                editable : true
             }
         },
         

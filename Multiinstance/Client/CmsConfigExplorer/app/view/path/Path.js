@@ -2,7 +2,7 @@
 Ext.define("CmsConfigExplorer.view.path.Path",{
     extend: "Ext.panel.Panel",
     
-    requires:['CmsConfigExplorer.view.path.Parameters',
+    requires:['CmsConfigExplorer.view.param.Parameters',
              'CmsConfigExplorer.view.path.Pathtree',
              'CmsConfigExplorer.view.path.ModuleDetails',
              'CmsConfigExplorer.view.path.PathDetails',
