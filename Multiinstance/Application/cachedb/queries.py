@@ -36,7 +36,7 @@ class CacheDbQueries(object):
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
             if internal_id is not None:
-                statement = select([func.uniqueMapping_put(str(internal_id), src, "patsMapping", unique, itemtype)])
+                statement = select([func.uniqueMapping_put(str(internal_id), "patsMapping", unique, itemtype)])
                 return_value = db.execute(statement)
                 return_value = return_value.first()
             else:
@@ -60,7 +60,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "patsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "patsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -87,7 +87,7 @@ class CacheDbQueries(object):
 
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), src, "endpatsMapping",unique, itemtype)])
+            statement = select([func.uniqueMapping_put(str(internal_id), "endpatsMapping",unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -108,7 +108,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "endpatsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "endpatsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -136,7 +136,7 @@ class CacheDbQueries(object):
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
             if internal_id is not None:
-                statement = select([func.uniqueMapping_put(str(internal_id), src, "allmodsMapping", unique, itemtype)])
+                statement = select([func.uniqueMapping_put(str(internal_id), "allmodsMapping", unique, itemtype)])
                 return_value = db.execute(statement)
                 return_value = return_value.first()
             else:
@@ -160,7 +160,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "allmodsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "allmodsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -187,7 +187,7 @@ class CacheDbQueries(object):
 
         try:
             dbid = str(dbid)
-            statement = select([func.uniqueMapping_put(dbid, src, "srvsMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(dbid, "srvsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -206,7 +206,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "srvsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "srvsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -233,7 +233,7 @@ class CacheDbQueries(object):
 
         try:
             dbid = str(dbid)
-            statement = select([func.uniqueMapping_put(dbid, src, "gpsMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(dbid, "gpsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -252,7 +252,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "gpsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "gpsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -282,7 +282,7 @@ class CacheDbQueries(object):
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
             # internal_id = dbid
-            statement = select([func.uniqueMapping_put(str(internal_id), src, "sumMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(str(internal_id), "sumMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -301,7 +301,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "sumMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "sumMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -327,7 +327,7 @@ class CacheDbQueries(object):
 
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), src, "seqsMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(str(internal_id), "seqsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -348,7 +348,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "seqsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "seqsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
         
@@ -375,7 +375,7 @@ class CacheDbQueries(object):
 
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), src, "strsMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(str(internal_id), "strsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -394,7 +394,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "strsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "strsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -421,7 +421,7 @@ class CacheDbQueries(object):
 
         try:
             dbid = str(dbid)
-            statement = select([func.uniqueMapping_put(dbid, src, "folsMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(dbid, "folsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
         
@@ -442,7 +442,7 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_get(gid, src, "folsMapping", itemtype)])
+            statement = select([func.uniqueMapping_get(gid, "folsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -521,7 +521,7 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_all_mod_mappings(self, external_id, src, cache, log):
+    def get_all_mod_mappings(self, external_id, cache, log):
 
         if external_id < 0 or cache is None:
             log.error('ERROR: get_all_mod_mappings - input parameters error')
@@ -529,7 +529,7 @@ class CacheDbQueries(object):
         mappings = []
         try:
             for table_name in ['allmodsMapping', 'patsMapping', 'seqsMapping']:
-                statement = select([func.getClientMappings(external_id, src, table_name, 'mod')])
+                statement = select([func.getClientMappings(external_id, table_name, 'mod')])
                 func_res = cache.execute(statement).fetchone()
                 if func_res[0] is not None:
                     mappings.extend(func_res[0])

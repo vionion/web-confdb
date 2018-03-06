@@ -18,5 +18,6 @@ class IdMapping(BaseCache):
     __tablename__ = 'ext2int_id_mapping'
     internal_id = Column('internal_id', Integer, primary_key=True)
     external_id = Column('external_id', Integer)
+    source = Column('source', Integer)
     itemtype = Column('itemtype', String)
 
