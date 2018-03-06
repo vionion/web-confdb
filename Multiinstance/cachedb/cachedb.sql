@@ -73,10 +73,10 @@ END;
     
 $$ LANGUAGE plpgsql;
 
-CREATE or REPLACE FUNCTION uniqueMapping_put(text, integer, text, integer, text) RETURNS integer AS $$             
+CREATE or REPLACE FUNCTION uniqueMapping_put(text, integer, text, integer, text) RETURNS integer AS $$
 DECLARE
-    src ALIAS FOR $2;
     srcid ALIAS FOR $1;
+    src ALIAS FOR $2;
     tab ALIAS FOR $3;
     uniq ALIAS FOR $4;
     ity ALIAS FOR $5;
@@ -108,3 +108,34 @@ END;
     
 $$ LANGUAGE plpgsql;
 
+
+--
+-- For all the modules, caching whole object as json.
+--
+CREATE TABLE modules_cache (id SERIAL PRIMARY KEY, module_id INTEGER, data JSON);
+
+--
+-- For mapping external (oracle) and internal entities' ids
+--
+CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id INTEGER, itemtype text);
+
+
+CREATE or REPLACE FUNCTION getClientMappings(integer, integer, text, text) RETURNS text[] AS $$
+DECLARE
+    external_id ALIAS FOR $1;
+    src ALIAS FOR $2;
+    tabl ALIAS FOR $3;
+    item_type ALIAS FOR $4;
+    result text[];
+    i INT;
+    rec record;
+BEGIN
+    i := 0;
+    FOR rec IN EXECUTE format('SELECT id FROM %s WHERE dbid = %L AND source = %L AND itemtype = %L', tabl, external_id, src, item_type) LOOP
+        result[i] := rec.id;
+        i := i+1;
+    END LOOP;
+    RETURN result;
+END;
+
+$$ LANGUAGE plpgsql;
