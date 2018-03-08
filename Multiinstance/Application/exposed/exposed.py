@@ -565,22 +565,22 @@ class Exposed(object):
         schema = ResponseParamSchema()
 
         if fromSequence:
-            internal_module_id = cache.seqMappingDictGetInternal(mid, src, "mod", cache_session, log)
+            internal_module_id = cache.seqMappingDictGetInternal(mid, "mod", cache_session, log)
 
         else:
             if (allmod == 'true'):
                 # MODULE TAB
-                internal_module_id = cache.allmodMappingDictGetInternal(mid, src, "mod", cache_session, log)
+                internal_module_id = cache.allmodMappingDictGetInternal(mid, "mod", cache_session, log)
 
             else:
                 # PATH OR ENDPATH TAB
-                internal_module_id = cache.patMappingDictGetInternal(mid, src, "mod", cache_session, log)
+                internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
 
         module_params = cache.get_module(internal_module_id, cache_session, log)
 
         if module_params is None:
             print('from db')
-            external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", log)
+            external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", src, log)
 
             module_params = self.params_builder.moduleParamsBuilder(external_module_id, queries, db, log)
             # we do it in order to put proper module_id even for items from template

@@ -5,47 +5,47 @@
 -- 
 -- For all the items in the Path tree: paths, sequences and modules. 
 --
-CREATE TABLE patsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE patsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the EndPath tree: paths, sequences, modules and output modules. 
 --
-CREATE TABLE endpatsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE endpatsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Module tab. 
 --
-CREATE TABLE allmodsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE allmodsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Service tab. 
 --
-CREATE TABLE srvsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE srvsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Global Psets tab. 
 --
-CREATE TABLE gpsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE gpsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Summray View: Streams, Datasets, and Paths. 
 --
-CREATE TABLE sumMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE sumMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Folder Explorer View: Folders and Configurations. 
 --
-CREATE TABLE folsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE folsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Streams Tab: Streams, Datasets, and Event Content. 
 --
-CREATE TABLE strsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE strsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 -- 
 -- For all the items in the Sequence tab: sequences and modules. 
 --
-CREATE TABLE seqsMapping (id SERIAL PRIMARY KEY, dbid text, itemtype text);
+CREATE TABLE seqsMapping (id SERIAL PRIMARY KEY, dbid INTEGER, itemtype text);
 
 
 -- Functions put and get
@@ -57,12 +57,12 @@ DECLARE
     tab ALIAS FOR $2;
     ity ALIAS FOR $3;
     _found integer;
-    result text;
+    result integer;
 BEGIN
-    EXECUTE format('SELECT 1 FROM %s WHERE %s.id = %L AND %s.itemtype = %L', tab, tab, gid, tab, tab, ity);
+    EXECUTE format('SELECT 1 FROM %s WHERE %s.id = %L AND %s.itemtype = %L', tab, tab, gid, tab, ity);
     GET DIAGNOSTICS _found = ROW_COUNT;
     IF _found > 0 
-    THEN EXECUTE format('SELECT %s.dbid FROM %s WHERE %s.id = %L AND %s.itemtype = %L', tab, tab, tab, gid, tab, tab, ity)
+    THEN EXECUTE format('SELECT %s.dbid FROM %s WHERE %s.id = %L AND %s.itemtype = %L', tab, tab, tab, gid, tab, ity)
     INTO result;
     RETURN result;
     ELSE
@@ -72,7 +72,7 @@ END;
     
 $$ LANGUAGE plpgsql;
 
-CREATE or REPLACE FUNCTION uniqueMapping_put(text, text, integer, text) RETURNS integer AS $$
+CREATE or REPLACE FUNCTION uniqueMapping_put(integer, text, integer, text) RETURNS integer AS $$
 DECLARE
     srcid ALIAS FOR $1;
     tab ALIAS FOR $2;
@@ -82,18 +82,18 @@ DECLARE
     _found2 integer;
     result integer;
 BEGIN
-    EXECUTE format('SELECT 1 FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, tab, srcid, tab, ity);
+    EXECUTE format('SELECT 1 FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, srcid, tab, ity);
     GET DIAGNOSTICS _found = ROW_COUNT;
     IF _found > 0 AND uniq = 1 
-    THEN EXECUTE format('SELECT %s.id FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, tab, tab, srcid, tab, ity)
+    THEN EXECUTE format('SELECT %s.id FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, tab, srcid, tab, ity)
     INTO result;
     RETURN result;
     ELSE
         EXECUTE format('LOCK TABLE %s IN ACCESS EXCLUSIVE MODE',tab);
-        EXECUTE format('SELECT 1 FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L',tab, tab, tab, srcid, tab, ity);
+        EXECUTE format('SELECT 1 FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L',tab, tab, srcid, tab, ity);
         GET DIAGNOSTICS _found2 = ROW_COUNT;
         IF _found2 > 0 AND uniq = 1 
-        THEN EXECUTE format('SELECT %s.id FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, tab, tab, srcid, tab, ity)
+        THEN EXECUTE format('SELECT %s.id FROM %s WHERE %s.dbid = %L AND %s.itemtype = %L', tab, tab, tab, srcid, tab, ity)
         INTO result;
         RETURN result;
         ELSE

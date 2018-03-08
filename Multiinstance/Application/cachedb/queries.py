@@ -34,9 +34,9 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
             if internal_id is not None:
-                statement = select([func.uniqueMapping_put(str(internal_id), "patsMapping", unique, itemtype)])
+                statement = select([func.uniqueMapping_put(internal_id, "patsMapping", unique, itemtype)])
                 return_value = db.execute(statement)
                 return_value = return_value.first()
             else:
@@ -52,7 +52,7 @@ class CacheDbQueries(object):
 
     # this method returns internal id for item, which is for Postgres cache, in our case, and it is unique
     # also, it is mapped 1:1 to Oracle id and 1:M to client ids in Postgres
-    def patMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def patMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: patMappingDictGet - input parameters error')
@@ -74,8 +74,8 @@ class CacheDbQueries(object):
 
     # this method returns external id for item, which is for Oracle, in our case, and it is unique
     def patMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.patMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.patMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def endpatMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -86,8 +86,8 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), "endpatsMapping",unique, itemtype)])
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
+            statement = select([func.uniqueMapping_put(internal_id, "endpatsMapping",unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -100,7 +100,7 @@ class CacheDbQueries(object):
 
     # this method returns internal id for item, which is for Postgres cache, in our case, and it is unique
     # also, it is mapped 1:1 to Oracle id and 1:M to client ids in Postgres
-    def endpatMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def endpatMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: patMappingDictGet - input parameters error')
@@ -122,8 +122,8 @@ class CacheDbQueries(object):
 
     # this method returns external id for item, which is for Oracle, in our case, and it is unique
     def endpatMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.endpatMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.endpatMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def allmodMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -134,9 +134,9 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
             if internal_id is not None:
-                statement = select([func.uniqueMapping_put(str(internal_id), "allmodsMapping", unique, itemtype)])
+                statement = select([func.uniqueMapping_put(internal_id, "allmodsMapping", unique, itemtype)])
                 return_value = db.execute(statement)
                 return_value = return_value.first()
             else:
@@ -152,7 +152,7 @@ class CacheDbQueries(object):
 
     # this method returns internal id for item, which is for Postgres cache, in our case, and it is unique
     # also, it is mapped 1:1 to Oracle id and 1:M to client ids in Postgres
-    def allmodMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def allmodMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: allmodMappingDictGet - input parameters error')
@@ -174,8 +174,8 @@ class CacheDbQueries(object):
 
     # this method returns external id for item, which is for Oracle, in our case, and it is unique
     def allmodMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.allmodMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.allmodMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def srvMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -186,7 +186,6 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            dbid = str(dbid)
             statement = select([func.uniqueMapping_put(dbid, "srvsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
@@ -198,7 +197,7 @@ class CacheDbQueries(object):
 
         return return_value[0]
 
-    def srvMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def srvMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: srvMappingDictGet - input parameters error')
@@ -220,8 +219,8 @@ class CacheDbQueries(object):
 
     # for now they are the same, we don't map external to internal and to client ids, client id is unique
     def srvMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.srvMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.srvMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return internal_id
 
     def gpsMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -232,7 +231,6 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            dbid = str(dbid)
             statement = select([func.uniqueMapping_put(dbid, "gpsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
@@ -244,7 +242,7 @@ class CacheDbQueries(object):
 
         return return_value[0]
 
-    def gpsMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def gpsMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: gpsMappingDictGet - input parameters error')
@@ -266,8 +264,8 @@ class CacheDbQueries(object):
 
     # for now they are the same, we don't map external to internal and to client ids, client id is unique
     def gpsMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.gpsMappingDictGetInternal(gid, src, itemtype, db, log)
-        # external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.gpsMappingDictGetInternal(gid, itemtype, db, log)
+        # external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return internal_id
 
     #this causes bugs for some reason (before my changes):
@@ -280,9 +278,9 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
             # internal_id = dbid
-            statement = select([func.uniqueMapping_put(str(internal_id), "sumMapping", unique, itemtype)])
+            statement = select([func.uniqueMapping_put(internal_id, "sumMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -293,7 +291,7 @@ class CacheDbQueries(object):
 
         return return_value[0]
 
-    def sumMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def sumMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: sumMappingDictGet - input parameters error')
@@ -314,8 +312,8 @@ class CacheDbQueries(object):
         return internal_id
 
     def sumMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.sumMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.sumMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def seqMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -326,8 +324,8 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), "seqsMapping", unique, itemtype)])
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
+            statement = select([func.uniqueMapping_put(internal_id, "seqsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -340,7 +338,7 @@ class CacheDbQueries(object):
 
     # this method returns internal id for item, which is for Postgres cache, in our case, and it is unique
     # also, it is mapped 1:1 to Oracle id and 1:M to client ids in Postgres
-    def seqMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def seqMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: seqMappingDictGet - input parameters error')
@@ -362,8 +360,8 @@ class CacheDbQueries(object):
 
     # this method returns external id for item, which is for Oracle, in our case, and it is unique
     def seqMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.seqMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.seqMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def strMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -374,8 +372,8 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            internal_id = self.get_internal_id(db, dbid, itemtype, log)
-            statement = select([func.uniqueMapping_put(str(internal_id), "strsMapping", unique, itemtype)])
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
+            statement = select([func.uniqueMapping_put(internal_id, "strsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -386,7 +384,7 @@ class CacheDbQueries(object):
 
         return return_value[0]
 
-    def strMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def strMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: strMappingDictGet - input parameters error')
@@ -408,8 +406,8 @@ class CacheDbQueries(object):
 
     # for now they are the same, we don't map external to internal and to client ids, client id is unique
     def strMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.strMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.strMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
     def folMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
@@ -420,7 +418,6 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            dbid = str(dbid)
             statement = select([func.uniqueMapping_put(dbid, "folsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
@@ -434,7 +431,7 @@ class CacheDbQueries(object):
 
     # this method returns internal id for item, which is for Postgres cache, in our case, and it is unique
     # also, it is mapped 1:1 to Oracle id and 1:M to client ids in Postgres
-    def folMappingDictGetInternal(self, gid, src, itemtype, db, log):
+    def folMappingDictGetInternal(self, gid, itemtype, db, log):
 
         if (id == -1 or db == None):
             log.error('ERROR: folMappingDictGet - input parameters error')
@@ -456,8 +453,8 @@ class CacheDbQueries(object):
 
     # this method returns external id for item, which is for Oracle, in our case, and it is unique
     def folMappingDictGetExternal(self, gid, src, itemtype, db, log):
-        internal_id = self.folMappingDictGetInternal(gid, src, itemtype, db, log)
-        external_id = self.get_external_id(db, internal_id, itemtype, log)
+        internal_id = self.folMappingDictGetInternal(gid, itemtype, db, log)
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return internal_id
 
 
@@ -542,7 +539,7 @@ class CacheDbQueries(object):
 
         return int_mappings
 
-    def get_internal_id(self, cache, ext_id, itemtype, log):
+    def get_internal_id(self, cache, ext_id, itemtype, src, log):
         try:
             # using postgres function because of multithreading of this requests
             # in this case postgres handles it by itself
@@ -550,9 +547,10 @@ class CacheDbQueries(object):
 
             mapping = cache.query(IdMapping).filter(
                 IdMapping.external_id == ext_id).filter(
+                IdMapping.source == src).filter(
                 IdMapping.itemtype == itemtype).first()
             if mapping is None:
-                internal_id = self.put_external_id(cache, ext_id, itemtype, log)
+                internal_id = self.put_external_id(cache, ext_id, itemtype, src, log)
             else:
                 internal_id = mapping.internal_id
 
@@ -562,10 +560,11 @@ class CacheDbQueries(object):
             return None
         return internal_id
 
-    def get_external_id(self, cache, int_id, itemtype, log):
+    def get_external_id(self, cache, int_id, itemtype, src, log):
         try:
             mapping = cache.query(IdMapping).filter(
                 IdMapping.internal_id == int_id).filter(
+                IdMapping.source == src).filter(
                 IdMapping.itemtype == itemtype).first()
             if mapping is None:
                 return -1
@@ -578,12 +577,12 @@ class CacheDbQueries(object):
             return None
         return external_id
 
-    def put_external_id(self, cache, ext_id, itemtype, log):
+    def put_external_id(self, cache, ext_id, itemtype, src, log):
         try:
             # locking = cache.query(IdMapping).from_statement(text("LOCK TABLE % s IN ACCESS EXCLUSIVE MODE"))
             # locking.execute()
             # internal_id = cache.execute(select([func.put_external_id(ext_id, itemtype)])).first()[0]
-            mapping = IdMapping(external_id=ext_id, itemtype=itemtype)
+            mapping = IdMapping(external_id=ext_id, itemtype=itemtype, source=src)
             cache.add(mapping)
             cache.commit()
 
