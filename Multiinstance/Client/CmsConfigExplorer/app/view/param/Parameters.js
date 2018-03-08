@@ -36,49 +36,40 @@ Ext.define("CmsConfigExplorer.view.param.Parameters",{
     bufferedRenderer: false,
     enableQuickTips: true,
     loadMask: true,
-    
+
     columns: [
         {
-         xtype: 'treecolumn', 
-         header: 'Name',
-         dataIndex: 'name',
-         flex: 1
-        ,editor: {
-            xtype: 'textfield',
-            editable : false
+            xtype: 'treecolumn',
+            header: 'Name',
+            dataIndex: 'name',
+            flex: 1,
+            editor: {
+                xtype: 'textfield',
+                editable: false
             }
         },
-
-//        { xtype: 'gridcolumn', 
-//         header: 'Value', 
-//         dataIndex: 'rendervalue', 
-//         flex: 1
-//        },
-        
-        { xtype: 'gridcolumn', 
-         header: 'Value',
-         dataIndex: 'rendervalue',
-         flex: 1,
-         editor: {
+        {
+            xtype: 'gridcolumn',
+            header: 'Value',
+            dataIndex: 'rendervalue',
+            flex: 1,
+            editor: {
                 xtype: 'textarea',
-                editable : true
+                editable: true
             }
         },
-        
-//        { xtype: 'widgetcolumn', 
-//         header: 'Value', 
-//         dataIndex: 'rendervalue', 
-//         flex: 1,
-//         widget: {
-//                xtype: 'cellvaluexpand',
-//                textTpl: 'rendervalue'
-//            }
-//        },
-        
-        
-        { xtype: 'gridcolumn', header: 'Tracked', dataIndex: 'tracked',renderer:function(v, meta, rec) { var  data = rec.getData(); if (data.tracked == 1){return "tracked"} else {return "untracked"} }},
-        { xtype: 'gridcolumn', header: 'Type', dataIndex: 'paramtype' },
-        { xtype: 'gridcolumn', header: 'Default', dataIndex: 'isDefault'}
+        {
+            xtype: 'gridcolumn', header: 'Tracked', dataIndex: 'tracked', renderer: function (v, meta, rec) {
+                var data = rec.getData();
+                if (data.tracked == 1) {
+                    return "tracked"
+                } else {
+                    return "untracked"
+                }
+            }
+        },
+        {xtype: 'gridcolumn', header: 'Type', dataIndex: 'paramtype'},
+        {xtype: 'gridcolumn', header: 'Default', dataIndex: 'isDefault'}
 //         'default', renderer:function(v, meta, rec) {var  data = rec.getData(); if (data.default == 1){ return "True"}else{return "False"} }}
     ]
 });

@@ -46,7 +46,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
         var value = context.value;
         var editor_area = new Ext.grid.plugin.CellEditing({
             xtype: 'textarea',
-            editable: false,
+            editable: true,
             grow: true,
             growMin: 0
         });
@@ -58,9 +58,17 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
 
         var editor_bool = new Ext.grid.plugin.CellEditing({
             xtype: 'combobox',
-            store: ['False', 'True']
-            ,
-            editable: false
+            store: ['False', 'True'],
+            allowBlank: false,
+            forceSelection: true,
+            editable: true,
+            onFocus: function () {
+                var bool = this;
+                if (!bool.isExpanded) {
+                    bool.expand()
+                }
+                bool.getPicker().focus();
+            }
         });
 
         var editor_tags = new Ext.grid.plugin.CellEditing({
@@ -71,8 +79,8 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             hideTrigger: true,
             typeAhead: true,
             // store: this.getViewModel().getStore('inputTags'),
-            store: inputTags2,
-            displayField : 'name'
+            store: ['hltTest1', 'hltTest2', 'hltTest3']
+            // displayField : 'name'
         });
         if (col.getEditor().editable) {
             if (context.record.get('paramtype') === 'bool') {
@@ -80,10 +88,8 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             } else if (context.record.get('paramtype') === 'InputTag') {
                 col.setEditor(editor_tags);
             } else if (value.length > 70) {
-
                 col.setEditor(editor_area);
             } else {
-
                 col.setEditor(editor_field);
             }
 
