@@ -257,17 +257,10 @@ class Exposed(object):
         if (elements == None or items == None):
             return None
 
-#        print "RESULTS LEN: ", len(items), len(elements)
-
-        items_dict = dict((x.id, x) for x in items)
-        elements_dict = dict((x.id, x) for x in elements)
-        
         written_sequences = set()
         built_sequences = set()
 
-        seq = {}
         lvlZeroSeq_Dict = {}
-        idpaes = {}
 
         #                                                                                                                   #                                                    
         # ----------------------------------------------------------------------------------------------------------------- #
@@ -277,7 +270,6 @@ class Exposed(object):
         elements_dict = dict((element.id, element) for element in elements)
 
         counter = 0
-        idgen_new = 1
 
         while counter < len(items):
             elem = elements_dict[items[counter].id_pae]
@@ -1294,28 +1286,34 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getServiceItems(self, sid=-2, db = None, log = None, src = 0, request = None):
+    def getServiceItems(self, sid_internal=-2, db = None, log = None, src = 0, request = None):
 
-        if (sid == -2 or db == None):
-            log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid=sid))
+        if (sid_internal == -2 or db == None):
+            log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid_internal=sid_internal))
 
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = sid
-        sid = cache.srvMappingDictGetExternal(sid, src, "srv", cache_session, log)
-
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.serviceParamsBuilder(sid, self.queries, db, log)
-        if resp.children == None:
+        service_params = cache.get_module(sid_internal, cache_session, log)
+        if service_params is None:
+            sid_external = cache.srvMappingDictGetExternal(sid_internal, src, "srv", cache_session, log)
+            service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
+            for param in service_params:
+                param.module_id = sid_internal
+
+            cache.put_module(sid_internal, service_params, cache_session, log)
+            print('added to cache')
+
+        if service_params is None:
             return None
 
+        resp.children = service_params
         resp.success = True
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
 
         return output.data
 
@@ -1553,9 +1551,9 @@ class Exposed(object):
             if (templates_dict.has_key(m.id_template) and conf2esm_dict.has_key(m.id)):
                 temp = templates_dict.get(m.id_template)
                 c2e = conf2esm_dict.get(m.id)
-
-                esm = ESModuleDetails(m.id, m.id_template, m.name, temp.name, c2e)
-                esm.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "es_mod", src, log)
+                esm = ESModuleDetails(internal_id, m.id_template, m.name, temp.name, c2e)
+                esm.gid = internal_id
 
             else:
                 log.error('ERROR: ES Modules Error Key') 
@@ -1575,25 +1573,34 @@ class Exposed(object):
         return output.data
 
 
-    def getESModItems(self, esmid, db, log):
+    def getESModItems(self, internal_esmod_id, db, src=0, log = None, request=None):
 
-        if (esmid == -2 or db == None):
-            log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(esmid=esmid))
+        if (internal_esmod_id == -2 or db == None):
+            log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(internal_esmod_id=internal_esmod_id))
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.esModuleParamsBuilder(esmid, self.queries, db, log)
+        cache = self.cache
+        cache_session = request.db_cache
 
-        if resp.children == None:
+        es_mod_params = cache.get_module(internal_esmod_id, cache_session, log)
+        if es_mod_params is None:
+            external_esmod_id = cache.get_external_id(cache_session, internal_esmod_id, "es_mod", src, log)
+            es_mod_params = self.params_builder.esModuleParamsBuilder(external_esmod_id, self.queries, db, log)
+            for param in es_mod_params:
+                param.module_id = internal_esmod_id
+
+            cache.put_module(internal_esmod_id, es_mod_params, cache_session, log)
+            print('added to cache')
+
+        if es_mod_params is None:
             return None
 
+        resp.children = es_mod_params
         resp.success = True
-        #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -1769,31 +1776,35 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getGpsetItems(self, sid=-2, db = None, log = None, request = None, src = 0):
+    def getGpsetItems(self, internal_gpset_id=-2, db = None, log = None, request = None, src = 0):
 
-        if (sid == -2 or db == None):
-            log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(sid=sid))
+        if (internal_gpset_id == -2 or db == None):
+            log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(internal_gpset_id=internal_gpset_id))
         
         cache = self.cache
         cache_session = request.db_cache
-        
-        sid = cache.gpsMappingDictGetExternal(sid, src, "gps", cache_session, log)
-
-        id_p = sid 
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.gpsetParamsBuilder(sid, self.queries, db, log)
-        if resp.children == None:
+        gpset_params = cache.get_module(internal_gpset_id, cache_session, log)
+
+        if gpset_params is None:
+            external_gpset_id = cache.gpsMappingDictGetExternal(internal_gpset_id, src, "gps", cache_session, log)
+            gpset_params = self.params_builder.gpsetParamsBuilder(external_gpset_id, self.queries, db, log)
+            for param in gpset_params:
+                param.module_id = internal_gpset_id
+
+            cache.put_module(internal_gpset_id, gpset_params, cache_session, log)
+            print('added to cache')
+
+        if gpset_params is None:
             return None
 
+        resp.children = gpset_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -1839,9 +1850,9 @@ class Exposed(object):
         resp.children = []
 
         for m in gpsets:
-            gps = GlobalPset(m.id, m.name, m.tracked)
-
-            gps.gid = cache.gpsMappingDictPut(src, m.id, "gps", cache_session, log)
+            gps_internal_id = cache.gpsMappingDictPut(src, m.id, "gps", cache_session, log)
+            gps = GlobalPset(gps_internal_id, m.name, m.tracked)
+            gps.gid = gps_internal_id
             if (gps != None):
                 resp.children.append(gps)
             else:
@@ -1854,10 +1865,6 @@ class Exposed(object):
         #assert isinstance(output.data, OrderedDict)
 
         return output.data
-
-
-
-
 
     def getEDSource(self, cnf = -2, ver = -2, db = None, log = None, request = None, src = 0):
 
@@ -1913,8 +1920,9 @@ class Exposed(object):
             if (m.id_template in templates_dict and m.id in conf2eds_dict):
                 temp = templates_dict[m.id_template]
                 c2e = conf2eds_dict[m.id]
-                eds = EDSource(m.id, m.id_template, "Source", temp.name, c2e)
-                eds.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "ed_source", src, log)
+                eds = EDSource(internal_id, m.id_template, "Source", temp.name, c2e)
+                eds.gid = internal_id
                 edsources.append(eds)
             else:
                 log.error('ERROR: EDSource key error')
@@ -1929,21 +1937,36 @@ class Exposed(object):
 
         return output.data
 
-    def getEDSourceItems(self, edsid, db, log):
+    def getEDSourceItems(self, internal_ed_source_id, db, src=0, log = None, request=None):
 
-        if (edsid == -2 or db == None):
-            log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=edsid))
+        if (internal_ed_source_id == -2 or db == None):
+            log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=internal_ed_source_id))
 
+        cache = self.cache
+        cache_session = request.db_cache
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.edSourceParamsBuilder(edsid, self.queries, db, log)
+        ed_source_params = cache.get_module(internal_ed_source_id, cache_session, log)
+
+        if ed_source_params is None:
+            external_ed_source_id = cache.get_external_id(cache_session, internal_ed_source_id, "ed_source", src, log)
+
+            ed_source_params = self.params_builder.edSourceParamsBuilder(external_ed_source_id, self.queries, db, log)
+            for param in ed_source_params:
+                param.module_id = internal_ed_source_id
+
+            cache.put_module(internal_ed_source_id, ed_source_params, cache_session, log)
+            print('added to cache')
+
+        if ed_source_params is None:
+            return None
+
+        resp.children = ed_source_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
 
         return output.data
 
@@ -2001,8 +2024,9 @@ class Exposed(object):
             if (templates_dict.has_key(m.id_template) and conf2ess_dict.has_key(m.id)):
                 temp = templates_dict.get(m.id_template)
                 c2e = conf2ess_dict.get(m.id)
-                ess = ESSource(m.id, m.id_template, m.name, temp.name, c2e)
-                ess.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "es_source", src, log)
+                ess = ESSource(internal_id, m.id_template, m.name, temp.name, c2e)
+                ess.gid = internal_id
 
             else:
                 log.error('ERROR: ES source Key') #print "ERROR KEY"
@@ -2021,24 +2045,35 @@ class Exposed(object):
 
         return output.data
 
-    def getESSourceItems(self, essid, db, log):
+    def getESSourceItems(self, internal_essource_id, db, src=0, log = None, request=None):
 
-        if (essid == -2 or db == None):
-            log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(essid=essid))
+        if (internal_essource_id == -2 or db == None):
+            log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(internal_essource_id=internal_essource_id))
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.esSourceParamsBuilder(essid, self.queries, db, log)
-        if resp.children == None:
+        cache = self.cache
+        cache_session = request.db_cache
+
+        essource_params = cache.get_module(internal_essource_id, cache_session, log)
+
+        if essource_params is None:
+            external_essource_id = cache.get_external_id(cache_session, internal_essource_id, "es_source", src, log)
+            essource_params = self.params_builder.esSourceParamsBuilder(external_essource_id, self.queries, db, log)
+            for param in essource_params:
+                param.module_id = internal_essource_id
+
+            cache.put_module(internal_essource_id, essource_params, cache_session, log)
+            print('added to cache')
+
+        if essource_params is None:
             return None
 
+        resp.children = essource_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
     def getDatasetItems(self, ver=-2, cnf=-2, dstid=-2, db = None, log = None, request = None, src = 0):

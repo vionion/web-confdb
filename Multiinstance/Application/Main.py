@@ -768,7 +768,7 @@ class Root(object):
         cnf = int(cnf)
         ver = int(ver)
         # cnf = cnfMap.get(cnf)
-        data = self.funcs.getAllESModules(cnf,ver,db, self.log, cherrypy.request, src)
+        data = self.funcs.getAllESModules(cnf, ver, db, self.log, cherrypy.request, src)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allesmodules - data returned null object')
@@ -807,7 +807,7 @@ class Root(object):
 
         mid = int(mid)
 
-        data = self.funcs.getESModItems(mid,db, self.log)
+        data = self.funcs.getESModItems(mid,db, src, self.log, cherrypy.request)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allesmoditems - data returned null object')
@@ -1187,6 +1187,7 @@ class Root(object):
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
+        src = 0
 
         if online == 'file':
             data = self.par_funcs.getEdSourceItemsFromFile(verid, int(mid), self.config_dict)
@@ -1197,13 +1198,14 @@ class Root(object):
 
         if online == 'True' or online == 'true':
             db = db_online
+            src = 1
 
         else:
             db = db_offline
 
         mid = int(mid)
 
-        data = self.funcs.getEDSourceItems(mid,db, self.log)
+        data = self.funcs.getEDSourceItems(mid, db, src, self.log, cherrypy.request)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: data returned null object')
@@ -1264,6 +1266,7 @@ class Root(object):
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
+        src = 0
 
         if online == 'file':
             data = self.par_funcs.getEsSourceItemsFromFile(verid, int(mid), self.config_dict)
@@ -1275,13 +1278,12 @@ class Root(object):
         else:
             if online == 'True' or online == 'true':
                 db = db_online
-
+                src = 1
             else:
                 db = db_offline
-
             mid = int(mid)
 
-            data = self.funcs.getESSourceItems(mid,db, self.log)
+            data = self.funcs.getESSourceItems(mid, db, src, self.log, cherrypy.request)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allessourceitems - data returned null object')

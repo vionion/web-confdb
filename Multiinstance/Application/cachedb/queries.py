@@ -231,7 +231,8 @@ class CacheDbQueries(object):
         return_value = -2
 
         try:
-            statement = select([func.uniqueMapping_put(dbid, "gpsMapping", unique, itemtype)])
+            internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
+            statement = select([func.uniqueMapping_put(internal_id, "gpsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -262,11 +263,10 @@ class CacheDbQueries(object):
         internal_id = return_value[0]
         return internal_id
 
-    # for now they are the same, we don't map external to internal and to client ids, client id is unique
     def gpsMappingDictGetExternal(self, gid, src, itemtype, db, log):
         internal_id = self.gpsMappingDictGetInternal(gid, itemtype, db, log)
-        # external_id = self.get_external_id(db, internal_id, itemtype, src, log)
-        return internal_id
+        external_id = self.get_external_id(db, internal_id, itemtype, src, log)
+        return external_id
 
     #this causes bugs for some reason (before my changes):
     # ERROR: Query get_internal_id() Error: (psycopg2.InternalError) current transaction is aborted, commands ignored until end of transaction block
