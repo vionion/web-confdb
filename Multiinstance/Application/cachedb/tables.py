@@ -8,10 +8,10 @@ from sqlalchemy.ext.declarative import declarative_base
 
 BaseCache = declarative_base()
 
-class ModuleCached(BaseCache):
-    __tablename__ = 'modules_cache'
+class ParamsCached(BaseCache):
+    __tablename__ = 'params_cache'
     id = Column('id', Integer, primary_key=True)
-    module_id = Column('module_id', Integer)
+    module_id = Column('internal_id', Integer)
     data = Column('data', JSON)
 
 class IdMapping(BaseCache):

@@ -20,7 +20,7 @@ from item_wrappers.Parameter import Parameter
 from exposed.params_builder import ParamsBuilder
 
 from confdb_v2.tables import ModuleitemFull
-from tables import ModuleCached, IdMapping
+from tables import ParamsCached, IdMapping
 
 
 class CacheDbQueries(object):
@@ -467,8 +467,8 @@ class CacheDbQueries(object):
             return -2
 
         try:
-            cached_module = cache.query(ModuleCached).filter(
-                ModuleCached.module_id == internal_module_id).first()
+            cached_module = cache.query(ParamsCached).filter(
+                ParamsCached.internal_id == internal_module_id).first()
             if cached_module is None:
                 return None
             else:
@@ -487,13 +487,13 @@ class CacheDbQueries(object):
             return None
 
     @staticmethod
-    def put_module(module_id, module_params, cache, log):
+    def put_params(internal_entiry_id, module_params, cache, log):
         # it is possible to reduce amount of data stored in cache, since we don't really use all of the parameter values
         # (check param_builder.buildParameterStructure)
         json_params = json.dumps(module_params, default=lambda o: o.__dict__)
         try:
-            module = ModuleCached(data=json_params, module_id=module_id)
-            cache.add(module)
+            params = ParamsCached(data=json_params, internal_id=internal_entiry_id)
+            cache.add(params)
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_module() Error: ' + e.args[0]
@@ -501,17 +501,17 @@ class CacheDbQueries(object):
             return -2
 
     @staticmethod
-    def update_module(module_id, param_name, param_value, cache, log):
+    def update_params(internal_entity_id, param_name, param_value, cache, log):
         try:
-            module = cache.query(ModuleCached).filter(
-                ModuleCached.module_id == module_id).first()
-            module_data = json.loads(module.data)
-            for param in module_data:
+            params = cache.query(ParamsCached).filter(
+                ParamsCached.internal_id == internal_entity_id).first()
+            json_params = json.loads(params.data)
+            for param in json_params:
                 if param['name'] == param_name:
                     param['value'] = param_value
-            module.data = json.dumps(module_data)
+            params.data = json.dumps(json_params)
             print("updated: " + param_name + " - " + param_value)
-            flag_modified(module, 'data')
+            flag_modified(params, 'data')
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query update_module() Error: ' + e.args[0]

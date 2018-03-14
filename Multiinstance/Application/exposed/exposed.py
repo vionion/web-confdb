@@ -538,7 +538,7 @@ class Exposed(object):
 
         cache = self.cache
         cache_session = request.db_cache
-        cache.update_module(mod_id, param_name, value, cache_session, log)
+        cache.update_params(mod_id, param_name, value, cache_session, log)
 
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
@@ -579,7 +579,7 @@ class Exposed(object):
             for param in module_params:
                 param.module_id = internal_module_id
 
-            cache.put_module(internal_module_id, module_params, cache_session, log)
+            cache.put_params(internal_module_id, module_params, cache_session, log)
             print('added to cache')
 
         if module_params is None:
@@ -1304,7 +1304,7 @@ class Exposed(object):
             for param in service_params:
                 param.module_id = sid_internal
 
-            cache.put_module(sid_internal, service_params, cache_session, log)
+            cache.put_params(sid_internal, service_params, cache_session, log)
             print('added to cache')
 
         if service_params is None:
@@ -1591,7 +1591,7 @@ class Exposed(object):
             for param in es_mod_params:
                 param.module_id = internal_esmod_id
 
-            cache.put_module(internal_esmod_id, es_mod_params, cache_session, log)
+            cache.put_params(internal_esmod_id, es_mod_params, cache_session, log)
             print('added to cache')
 
         if es_mod_params is None:
@@ -1795,7 +1795,7 @@ class Exposed(object):
             for param in gpset_params:
                 param.module_id = internal_gpset_id
 
-            cache.put_module(internal_gpset_id, gpset_params, cache_session, log)
+            cache.put_params(internal_gpset_id, gpset_params, cache_session, log)
             print('added to cache')
 
         if gpset_params is None:
@@ -1957,7 +1957,7 @@ class Exposed(object):
             for param in ed_source_params:
                 param.module_id = internal_ed_source_id
 
-            cache.put_module(internal_ed_source_id, ed_source_params, cache_session, log)
+            cache.put_params(internal_ed_source_id, ed_source_params, cache_session, log)
             print('added to cache')
 
         if ed_source_params is None:
@@ -2064,7 +2064,7 @@ class Exposed(object):
             for param in essource_params:
                 param.module_id = internal_essource_id
 
-            cache.put_module(internal_essource_id, essource_params, cache_session, log)
+            cache.put_params(internal_essource_id, essource_params, cache_session, log)
             print('added to cache')
 
         if essource_params is None:
