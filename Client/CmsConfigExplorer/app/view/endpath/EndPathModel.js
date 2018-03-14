@@ -40,7 +40,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathModel', {
 
             }
         },
-        endparameters:{
+        parameters:{
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.EndPathModuleitem',

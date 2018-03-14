@@ -50,14 +50,14 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('esModParamsTree');
+        var grid = this.lookupReference('paramGrid');
         
         //var cid = this.getViewModel().get('currentModule').id;
         var vid = this.getViewModel().get("idVer");
         var online = this.getViewModel().get("online");
         //console.log('VID: ');
         //console.log(vid);
-        this.getViewModel().getStore('esmodparams').load({params: {mid: mid, online:online, verid: vid}});
+        this.getViewModel().getStore('parameters').load({params: {mid: mid, online:online, verid: vid}});
         
         grid.setLoading("ES Modules parameters");
         
@@ -89,8 +89,8 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleController', {
            operation.config.node.expand() 
         }
         
-        if(this.lookupReference('esModParamsTree').isMasked()){
-            this.lookupReference('esModParamsTree').setLoading(false);
+        if(this.lookupReference('paramGrid').isMasked()){
+            this.lookupReference('paramGrid').setLoading(false);
         }
     }
 });
