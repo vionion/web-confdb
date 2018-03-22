@@ -35,9 +35,11 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceModel', {
 //                beforeload: 'onSeqitemsBeforeLoad'
             }
         },
-        seqparameters:{
+        parameters:{
             
                 type:'tree',
+                // absolutely unnecessary, the same object as regular Moduleitem
+                // model:'CmsConfigExplorer.model.Moduleitem',
                 model:'CmsConfigExplorer.model.SeqModuleitem',
                 autoLoad:false,
             

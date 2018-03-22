@@ -2,6 +2,7 @@ Ext.define('CmsConfigExplorer.model.Moduleitem', {
     extend: 'CmsConfigExplorer.model.Base',
     
     fields: [
+        { name: 'moduleId', type: 'int' },
         { name: 'name', type: 'string' },
         { name: 'mit', type: 'string' },
         { name: 'value', type: 'string' },

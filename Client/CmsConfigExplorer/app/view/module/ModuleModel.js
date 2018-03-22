@@ -25,7 +25,11 @@ Ext.define('CmsConfigExplorer.view.module.ModuleModel', {
                 scope: 'controller'
             }
         },
-        modparams:{ 
+        // inputTags:{
+        //     model:'CmsConfigExplorer.model.InputTag',
+        //     autoLoad: false
+        // },
+        parameters:{
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.Moduleitem',

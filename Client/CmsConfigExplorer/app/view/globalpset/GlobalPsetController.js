@@ -51,13 +51,13 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
         
 //        var serviceGrid = this.lookupReference('gpsettree');
 //        serviceGrid.fireEvent('custSrvParams',sid);
-        this.getViewModel().getStore('gpsetparams').load({params: {gid: sid, online:online, verid:idv}});
+        this.getViewModel().getStore('parameters').load({params: {gid: sid, online:online, verid:idv}});
         
         var cp = this.lookupReference("centralGpsetPanel");
         
 //        this.lookupReference("gpsetParamsTree").expand();
         
-        var grid = this.lookupReference("gpsetParamsTree");
+        var grid = this.lookupReference("paramGrid");
         grid.fireEvent( "cusTooltipActivate", grid );
         
         grid.setLoading("Loading Gpset Modules parameters");
@@ -179,8 +179,8 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
            operation.config.node.expand() 
         }
         
-        if(this.lookupReference("gpsetParamsTree").isMasked()){
-            this.lookupReference("gpsetParamsTree").setLoading(false);
+        if(this.lookupReference("paramGrid").isMasked()){
+            this.lookupReference("paramGrid").setLoading(false);
         }
 
     }
