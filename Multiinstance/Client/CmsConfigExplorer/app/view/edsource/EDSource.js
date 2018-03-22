@@ -5,8 +5,7 @@ Ext.define("CmsConfigExplorer.view.edsource.EDSource",{
     requires:['CmsConfigExplorer.view.edsource.EDSourceController',
              'CmsConfigExplorer.view.edsource.EDSourceGrid',
              'CmsConfigExplorer.view.edsource.EDSourceModel',
-             'CmsConfigExplorer.view.edsource.EDSourceParameters',
-             'CmsConfigExplorer.view.edsource.EDSourceParametersController'],
+             'CmsConfigExplorer.view.param.Parameters'],
     
     controller: "edsource-edsource",
     viewModel: {
@@ -59,7 +58,7 @@ Ext.define("CmsConfigExplorer.view.edsource.EDSource",{
         {
         region: 'center',
         layout: 'fit',
-        xtype: 'edsourceparamstree',
+        xtype: 'parameters',
         title: 'Parameters',
         split: true,
         height: '100%',

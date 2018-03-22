@@ -459,44 +459,44 @@ class CacheDbQueries(object):
 
 
     @staticmethod
-    def get_module(internal_module_id, cache, log):
+    def get_params(internal_entity_id, cache, log):
         # this module id must be internal id, which is from one of the 'id' columns in tables in cache. Not from Oracle!
 
-        if internal_module_id < 0 or cache is None:
+        if internal_entity_id < 0 or cache is None:
             log.error('ERROR: get_module - input parameters error')
             return -2
 
         try:
-            cached_module = cache.query(ParamsCached).filter(
-                ParamsCached.internal_id == internal_module_id).first()
-            if cached_module is None:
+            cached_params = cache.query(ParamsCached).filter(
+                ParamsCached.id == internal_entity_id).first()
+            if cached_params is None:
                 return None
             else:
-                dict_params = byteify(json.loads(cached_module.data))
+                dict_params = byteify(json.loads(cached_params.data))
                 # since after json.load we have list of dicts as params, and existing method ParamsBuilder.buildParameterStructure
                 # accepts instances of ModuleitemFull object, there is no reason to create another params builder for dicts,
                 # it is easier to create objects out of dicts
                 obj_params = convert_module_dict2obj(dict_params, log)
-                wrapped_params = ParamsBuilder.buildParameterStructure(log, obj_params, cached_module.module_id, set_default=False)
+                wrapped_params = ParamsBuilder.buildParameterStructure(log, obj_params, cached_params.id, set_default=False)
                 print('from cache')
                 return wrapped_params
 
         except Exception as e:
-            msg = 'ERROR: Query get_module() Error: ' + e.args[0]
+            msg = 'ERROR: Query get_params() Error: ' + e.args[0]
             log.error(msg)
             return None
 
     @staticmethod
-    def put_params(internal_entiry_id, module_params, cache, log):
+    def put_params(internal_entity_id, module_params, cache, log):
         # it is possible to reduce amount of data stored in cache, since we don't really use all of the parameter values
         # (check param_builder.buildParameterStructure)
         json_params = json.dumps(module_params, default=lambda o: o.__dict__)
         try:
-            params = ParamsCached(data=json_params, internal_id=internal_entiry_id)
+            params = ParamsCached(data=json_params, id=internal_entity_id)
             cache.add(params)
             cache.commit()
         except Exception as e:
-            msg = 'ERROR: Query put_module() Error: ' + e.args[0]
+            msg = 'ERROR: Query put_params() Error: ' + e.args[0]
             log.error(msg)
             return -2
 
@@ -504,7 +504,7 @@ class CacheDbQueries(object):
     def update_params(internal_entity_id, param_name, param_value, cache, log):
         try:
             params = cache.query(ParamsCached).filter(
-                ParamsCached.internal_id == internal_entity_id).first()
+                ParamsCached.id == internal_entity_id).first()
             json_params = json.loads(params.data)
             for param in json_params:
                 if param['name'] == param_name:
@@ -514,7 +514,7 @@ class CacheDbQueries(object):
             flag_modified(params, 'data')
             cache.commit()
         except Exception as e:
-            msg = 'ERROR: Query update_module() Error: ' + e.args[0]
+            msg = 'ERROR: Query update_params() Error: ' + e.args[0]
             log.error(msg)
             return -2
 

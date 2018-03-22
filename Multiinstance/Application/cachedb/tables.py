@@ -11,7 +11,6 @@ BaseCache = declarative_base()
 class ParamsCached(BaseCache):
     __tablename__ = 'params_cache'
     id = Column('id', Integer, primary_key=True)
-    module_id = Column('internal_id', Integer)
     data = Column('data', JSON)
 
 class IdMapping(BaseCache):

@@ -568,7 +568,7 @@ class Exposed(object):
                 # PATH OR ENDPATH TAB
                 internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
 
-        module_params = cache.get_module(internal_module_id, cache_session, log)
+        module_params = cache.get_params(internal_module_id, cache_session, log)
 
         if module_params is None:
             print('from db')
@@ -1297,7 +1297,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        service_params = cache.get_module(sid_internal, cache_session, log)
+        service_params = cache.get_params(sid_internal, cache_session, log)
         if service_params is None:
             sid_external = cache.srvMappingDictGetExternal(sid_internal, src, "srv", cache_session, log)
             service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
@@ -1584,7 +1584,7 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        es_mod_params = cache.get_module(internal_esmod_id, cache_session, log)
+        es_mod_params = cache.get_params(internal_esmod_id, cache_session, log)
         if es_mod_params is None:
             external_esmod_id = cache.get_external_id(cache_session, internal_esmod_id, "es_mod", src, log)
             es_mod_params = self.params_builder.esModuleParamsBuilder(external_esmod_id, self.queries, db, log)
@@ -1648,7 +1648,7 @@ class Exposed(object):
         return counter, children, written_sequences, built_sequences, idgen_new
     
     def getAllSequences(self, cnf=-2, ver=-2, db = None, log = None, request = None, src = 0):
-        
+
         #params check
         if (cnf == -1 or db == None or ver == -1):
 
@@ -1660,13 +1660,13 @@ class Exposed(object):
 
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
-        
+
         ver_id = -1
         version = None
-        
+
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
-        
+
         id_p = 0
         self.simple_counter = 1
 
@@ -1680,8 +1680,8 @@ class Exposed(object):
         except Exception as e:
             msg = 'ERROR: getAllSequences: error querying database for Paths and EndPaths:\n' + e.args[0]
             log.error(msg)
-        
-        built_sequences = set() 
+
+        built_sequences = set()
         written_sequences = set()
         elements = None
         items = None
@@ -1711,19 +1711,19 @@ class Exposed(object):
                     counter = counter + 1
                     if item.name in written_sequences:
                         counter = self.skipSequence(counter, items, item.lvl+1)
-                    else:       
+                    else:
                         counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new,src, request,log)
 
                         for child in new_children:
                             item.children.append(child)
-    
+
                         written_sequences.add(item.name)
                         item.expanded = False
                         built_sequences.add(item)
 
                 else:
                     counter = counter + 1
-        
+
         resp.success = True
         resp.children = built_sequences
         
@@ -1787,7 +1787,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        gpset_params = cache.get_module(internal_gpset_id, cache_session, log)
+        gpset_params = cache.get_params(internal_gpset_id, cache_session, log)
 
         if gpset_params is None:
             external_gpset_id = cache.gpsMappingDictGetExternal(internal_gpset_id, src, "gps", cache_session, log)
@@ -1948,7 +1948,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        ed_source_params = cache.get_module(internal_ed_source_id, cache_session, log)
+        ed_source_params = cache.get_params(internal_ed_source_id, cache_session, log)
 
         if ed_source_params is None:
             external_ed_source_id = cache.get_external_id(cache_session, internal_ed_source_id, "ed_source", src, log)
@@ -2056,7 +2056,7 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        essource_params = cache.get_module(internal_essource_id, cache_session, log)
+        essource_params = cache.get_params(internal_essource_id, cache_session, log)
 
         if essource_params is None:
             external_essource_id = cache.get_external_id(cache_session, internal_essource_id, "es_source", src, log)
