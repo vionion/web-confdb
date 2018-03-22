@@ -2,7 +2,7 @@
 Ext.define('CmsConfigExplorer.view.esmodule.ESModule',{
     extend: "Ext.panel.Panel",
     
-    requires:['CmsConfigExplorer.view.param.Parameters',
+    requires:['CmsConfigExplorer.view.esmodule.ESModuleParameters',
              'CmsConfigExplorer.view.esmodule.ESModuleModel',
              'CmsConfigExplorer.view.esmodule.ESModuleController',
              'CmsConfigExplorer.view.esmodule.ESModuleGrid'],
@@ -50,7 +50,7 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModule',{
         {
         region: 'center',
         layout: 'fit',
-        xtype: 'parameters',
+        xtype: 'esmoduleparamstree',
         title: 'Parameters',
         split: true,
         height: '100%',

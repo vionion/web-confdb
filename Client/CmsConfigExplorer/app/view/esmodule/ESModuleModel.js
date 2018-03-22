@@ -32,7 +32,7 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleModel', {
                 scope: 'controller'
             }
         },
-        parameters:{
+        esmodparams:{ 
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.ESModuleitem',

@@ -7,10 +7,10 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('paramGrid');
+        var grid = this.lookupReference('srvParamsTree');
         var online = this.getViewModel().get("online");
         
-        this.getViewModel().getStore('parameters').load({params: {sid: sid, online:online}});
+        this.getViewModel().getStore('srvparams').load({params: {sid: sid, online:online}});
         
     },
 
@@ -53,13 +53,13 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
         
         var serviceGrid = this.lookupReference('servicesGrid');
 //        serviceGrid.fireEvent('custSrvParams',sid);
-        this.getViewModel().getStore('parameters').load({params: {sid: sid, online:online, verid:idv}});
+        this.getViewModel().getStore('srvparams').load({params: {sid: sid, online:online, verid:idv}});
         
         var cp = this.lookupReference("centralPanel");
         
-        this.lookupReference("paramGrid").expand();
+        this.lookupReference("srvParamsTree").expand();
         
-        parG = this.lookupReference("paramGrid");
+        parG = this.lookupReference("srvParamsTree");
         
         parG.setLoading("Loading Service parameters");
         parG.fireEvent( "cusTooltipActivate", parG );
@@ -140,7 +140,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
                         this.pathname = pathname;
                 }
                 
-                var store = this.getViewModel().getStore('parameters');
+                var store = this.getViewModel().getStore('srvparams');
                 var dataLength = store.getCount();
 
                 var tab = this.lookupReference("prescaleTab");
@@ -578,9 +578,9 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
            operation.config.node.expand() 
         }
         
-//        this.lookupReference("paramGrid").setLoading(false);
-        if(this.lookupReference('paramGrid').isMasked()){
-            this.lookupReference('paramGrid').setLoading(false);
+//        this.lookupReference("srvParamsTree").setLoading(false);
+        if(this.lookupReference('srvParamsTree').isMasked()){
+            this.lookupReference('srvParamsTree').setLoading(false);
         }
 
     }

@@ -6,7 +6,7 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
              "CmsConfigExplorer.view.endpath.EndPathDetails",
              'CmsConfigExplorer.view.endpath.EndPathModel',
              "CmsConfigExplorer.view.endpath.EndPathModuleDetails",
-             'CmsConfigExplorer.view.param.Parameters',
+             "CmsConfigExplorer.view.endpath.EndPathParameters",
              "CmsConfigExplorer.view.endpath.EndPathTree",
              "CmsConfigExplorer.view.endpath.EndPathSmartPrescale"],
     
@@ -100,7 +100,7 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
                             }
                         },
                         {
-                            xtype: 'parameters',
+                            xtype: 'endparameters',
                             split: true,
                             flex: 3,
             //                layout: 'fit',

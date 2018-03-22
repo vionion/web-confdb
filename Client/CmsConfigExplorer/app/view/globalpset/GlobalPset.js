@@ -5,7 +5,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPset', {
 
         reference: 'globalpsettab',
         
-        requires:['CmsConfigExplorer.view.param.Parameters',
+        requires:['CmsConfigExplorer.view.globalpset.GlobalPsetParamsTree',
                  'CmsConfigExplorer.view.globalpset.GlobalPsetTree',
                  'CmsConfigExplorer.view.globalpset.GlobalPsetController',
                  'CmsConfigExplorer.view.globalpset.GlobalPsetModel'],
@@ -52,10 +52,10 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPset', {
 
                 items: [
                     {
-                        xtype: 'parameters',
+                        xtype: 'gpsetparamstree',
                         split: true,
                         title: 'Global Pset Parameters',
-                        reference: 'paramGrid',
+                        reference: 'gpsetParamsTree',
                         flex: 2,
                         loadMask: true,
                         listeners: {

@@ -51,14 +51,14 @@ Ext.define('CmsConfigExplorer.view.edsource.EDSourceController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('paramGrid');
+        var grid = this.lookupReference('edSourceParamsTree');
         
         //var cid = this.getViewModel().get('currentModule').id;
         var vid = this.getViewModel().get("idVer");
         var online = this.getViewModel().get("online");
         //console.log('VID: ');
         //console.log(vid);
-        this.getViewModel().getStore('parameters').load({params: {mid: mid, online:online, verid:vid}});
+        this.getViewModel().getStore('edsourceparams').load({params: {mid: mid, online:online, verid:vid}});
         
         grid.fireEvent( "cusTooltipActivate", grid );
 

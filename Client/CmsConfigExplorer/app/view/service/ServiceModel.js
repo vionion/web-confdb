@@ -39,7 +39,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceModel', {
                 load: "onServicesLoad" 
             }
         },
-        parameters:{
+        srvparams:{ 
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.Serviceitem',

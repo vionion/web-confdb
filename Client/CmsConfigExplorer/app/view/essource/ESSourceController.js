@@ -51,14 +51,14 @@ Ext.define('CmsConfigExplorer.view.essource.ESSourceController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('paramGrid');
+        var grid = this.lookupReference('esSourceParamsTree');
         var online = this.getViewModel().get("online");
         
         //var cid = this.getViewModel().get('currentModule').id;
         var vid = this.getViewModel().get("idVer");
         //console.log('VID: ');
         //console.log(vid);
-        this.getViewModel().getStore('parameters').load({params: {mid: mid, online:online, verid:vid}});
+        this.getViewModel().getStore('essourceparams').load({params: {mid: mid, online:online, verid:vid}});
         
         grid.fireEvent( "cusTooltipActivate", grid );
         
@@ -78,8 +78,8 @@ Ext.define('CmsConfigExplorer.view.essource.ESSourceController', {
            operation.config.node.expand() 
         }
         
-        if(this.lookupReference('paramGrid').isMasked()){
-            this.lookupReference('paramGrid').setLoading(false);
+        if(this.lookupReference('esSourceParamsTree').isMasked()){
+            this.lookupReference('esSourceParamsTree').setLoading(false);
         }
     }
                      

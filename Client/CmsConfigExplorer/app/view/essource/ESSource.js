@@ -2,7 +2,7 @@
 Ext.define("CmsConfigExplorer.view.essource.ESSource",{
     extend: "Ext.panel.Panel",
     
-    requires:['CmsConfigExplorer.view.param.Parameters',
+    requires:['CmsConfigExplorer.view.essource.ESSourceParameters',
              'CmsConfigExplorer.view.essource.ESSourceModel',
              'CmsConfigExplorer.view.essource.ESSourceController',
              'CmsConfigExplorer.view.essource.ESSourceGrid'],
@@ -61,7 +61,7 @@ Ext.define("CmsConfigExplorer.view.essource.ESSource",{
         {
         region: 'center',
         layout: 'fit',
-        xtype: 'parameters',
+        xtype: 'essourceparamstree',
         title: 'Parameters',
         split: true,
         height: '100%',
