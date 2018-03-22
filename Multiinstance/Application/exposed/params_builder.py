@@ -20,7 +20,7 @@ class ParamsBuilder():
 
 
     @staticmethod
-    def buildParameterStructure(logger, elements, set_default = False):
+    def buildParameterStructure(logger, elements, module_id=-1, set_default = False):
         # build all the parameters, PSets and VPSets
         params  = []
         level   = 0
@@ -45,8 +45,7 @@ class ParamsBuilder():
                 # stack[-1].sort(key = lambda p: p.order)
                 stack.pop()
                 prev = parents.pop()
-
-            item = Parameter(p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked, p.hex)
+            item = Parameter(module_id, p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked, p.hex)
             item.default = set_default
             # the parameter is a PSet or VPSet
             if item.moetype == 3 or item.moetype == 2:

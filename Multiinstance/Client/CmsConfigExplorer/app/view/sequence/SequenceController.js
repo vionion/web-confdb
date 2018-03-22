@@ -98,10 +98,10 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
 
             //console.log('in child, fwd event');
             //console.log(mid);
-            this.getViewModel().getStore('seqparameters').load({params: {mid: mid, pid: pid, online:online, verid:idv, cnf:idc}});
+            this.getViewModel().getStore('parameters').load({params: {mid: mid, pid: pid, online:online, verid:idv, cnf:idc}});
 //            view.fireEvent('custModParams',mid, pid, online);
             
-            this.lookupReference('seqParamGrid').setLoading("Loading Module Parameters");
+            this.lookupReference('paramGrid').setLoading("Loading Module Parameters");
             
             var form = this.lookupReference('seqModDetails');
             form.fireEvent( "cusSeqModDetLoad", mid, pid, online,idv, idc);
@@ -123,8 +123,8 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
            operation.config.node.expand() 
         }
         
-        if(this.lookupReference('seqParamGrid').isMasked()){
-                this.lookupReference('seqParamGrid').setLoading( false );
+        if(this.lookupReference('paramGrid').isMasked()){
+                this.lookupReference('paramGrid').setLoading( false );
         }
     }
 });

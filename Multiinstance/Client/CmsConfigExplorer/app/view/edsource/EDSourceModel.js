@@ -31,7 +31,7 @@ Ext.define('CmsConfigExplorer.view.edsource.EDSourceModel', {
                 scope: 'controller'
             }
         },
-        edsourceparams:{ 
+        parameters:{
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.EDSourceitem',

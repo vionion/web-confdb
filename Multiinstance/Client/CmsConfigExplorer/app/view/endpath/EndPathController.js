@@ -39,12 +39,12 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('endParamGrid');
+        var grid = this.lookupReference('paramGrid');
         var online = this.getViewModel().get("online");
         var idv = this.getViewModel().get("idVer");
         
         //var cid = this.getViewModel().get('currentModule').id;
-        this.getViewModel().getStore('endparameters').load({params: {mid: mid, pid: pid, epit: "mod", online:online, verid:idv}});
+        this.getViewModel().getStore('parameters').load({params: {mid: mid, pid: pid, epit: "mod", online:online, verid:idv}});
         
         grid.setLoading("Modules parameters loading");
         
@@ -61,12 +61,12 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('endParamGrid');
+        var grid = this.lookupReference('paramGrid');
         var online = this.getViewModel().get("online");
         var idv = this.getViewModel().get("idVer");
         
         //var cid = this.getViewModel().get('currentModule').id;
-        this.getViewModel().getStore('endparameters').load({params: {mid: mid, pid: pid, epit: "oum", online:online, verid:idv}});
+        this.getViewModel().getStore('parameters').load({params: {mid: mid, pid: pid, epit: "oum", online:online, verid:idv}});
         
         grid.setLoading("Output Modules parameters loading");
         
@@ -161,7 +161,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         var item_type = record.get("pit");
         
         var form = this.lookupReference('endModDetails');
-        var params = this.lookupReference('endParamGrid');
+        var params = this.lookupReference('paramGrid');
         var pathDet = this.lookupReference('endPathDetailsPanel');
         var online = this.getViewModel().get("online");
         
@@ -360,8 +360,8 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         var trf = model.get("trf");
         var triCond = false;
 
-        if(this.lookupReference('endParamGrid').isMasked()){
-            this.lookupReference('endParamGrid').setLoading( false );
+        if(this.lookupReference('paramGrid').isMasked()){
+            this.lookupReference('paramGrid').setLoading( false );
         }
         
         var spgrid  = this.lookupReference("endSpGrid");

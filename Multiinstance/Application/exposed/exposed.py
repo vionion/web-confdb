@@ -3,6 +3,7 @@
 # to the exposed path in the Root class.
 #
 # Class: Exposed
+import json
 
 from confdb_v2.queries import ConfDbQueries
 from cachedb.queries import CacheDbQueries
@@ -91,13 +92,10 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = 0
-        itemtype = "pat"
-
         # id_p = patsMap.get(gid)
-        id_p = cache.patMappingDictGet(gid, src, itemtype, cache_session, log)
-	id_p = int(id_p)
-	log_msg = "id_p from GET: " + str(id_p)
+        ext_pat_id = cache.patMappingDictGetExternal(gid, src, "pat", cache_session, log)
+	ext_pat_id = int(ext_pat_id)
+	log_msg = "id_p from GET: " + str(ext_pat_id)
 	log.error(log_msg)
 	
         resp = Response()
@@ -109,8 +107,8 @@ class Exposed(object):
         items = None
 
         try:
-            elements = queries.getCompletePathSequences(id_p, ver, db, log)
-            items = queries.getCompletePathSequencesItems(id_p, ver, db, log)
+            elements = queries.getCompletePathSequences(ext_pat_id, ver, db, log)
+            items = queries.getCompletePathSequencesItems(ext_pat_id, ver, db, log)
         except Exception as e:
 	    msg = 'ERROR: Query getCompletePathSequences/Query getCompletePathSequencesItems Error: ' + e.args[0]
             log.error(msg)
@@ -187,8 +185,8 @@ class Exposed(object):
 
 
         #Retreive the lvl 0 of the path
-        lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
-        lvlzelems = queries.getLevelZeroPaelements(id_p, ver, db, log)
+        lista = queries.getLevelZeroPathItems(ext_pat_id, ver, db, log)
+        lvlzelems = queries.getLevelZeroPaelements(ext_pat_id, ver, db, log)
 
         lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
         pats = []
@@ -236,10 +234,10 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = 0
+        external_id = 0
         itemtype = "pat"
         # id_p = patsMap.get(gid)
-        id_p = cache.patMappingDictGet(gid, src, itemtype, cache_session, log)
+        external_id = cache.patMappingDictGetExternal(gid, src, itemtype, cache_session, log)
 
         resp = Response()
         schema = ResponsePathItemSchema()
@@ -250,8 +248,8 @@ class Exposed(object):
         items = None
 
         try:
-            elements = queries.getCompletePathSequences(id_p, ver, db, log)
-            items = queries.getCompletePathSequencesItems(id_p, ver, db, log)
+            elements = queries.getCompletePathSequences(external_id, ver, db, log)
+            items = queries.getCompletePathSequencesItems(external_id, ver, db, log)
         except:
             log.error('ERROR: Query Error')
             return None
@@ -259,17 +257,10 @@ class Exposed(object):
         if (elements == None or items == None):
             return None
 
-#        print "RESULTS LEN: ", len(items), len(elements)
-
-        items_dict = dict((x.id, x) for x in items)
-        elements_dict = dict((x.id, x) for x in elements)
-        
         written_sequences = set()
         built_sequences = set()
 
-        seq = {}
         lvlZeroSeq_Dict = {}
-        idpaes = {}
 
         #                                                                                                                   #                                                    
         # ----------------------------------------------------------------------------------------------------------------- #
@@ -279,7 +270,6 @@ class Exposed(object):
         elements_dict = dict((element.id, element) for element in elements)
 
         counter = 0
-        idgen_new = 1
 
         while counter < len(items):
             elem = elements_dict[items[counter].id_pae]
@@ -322,8 +312,8 @@ class Exposed(object):
         seq = dict((x.gid, x) for x in built_sequences)
 
         #Retreive the lvl 0 of the path
-        lista = queries.getLevelZeroPathItems(id_p, ver, db, log)
-        lvlzelems = queries.getLevelZeroPaelements(id_p, ver, db, log)
+        lista = queries.getLevelZeroPathItems(external_id, ver, db, log)
+        lvlzelems = queries.getLevelZeroPaelements(external_id, ver, db, log)
 
         lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
         pats = []
@@ -348,7 +338,7 @@ class Exposed(object):
         outmodule = None
 
         try:
-            outmodule = queries.getOumStreamid(id_p, db, log)
+            outmodule = queries.getOumStreamid(external_id, db, log)
 
         except:
             log.error('ERROR: Query getOumStreamid Error')
@@ -405,7 +395,7 @@ class Exposed(object):
 
         # cnf = cnfMap.get(cnf)
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
 #        print "CNF after get ", cnf
 
@@ -469,7 +459,7 @@ class Exposed(object):
 
         # cnf = cnfMap.get(cnf)
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
 #        print "CNF after get ", cnf
 
@@ -524,14 +514,14 @@ class Exposed(object):
         cache_session = request.db_cache
 
 #        print "OUMID: ", oumid
-        id_p = oumid #srvsMap.get(sid)
+        external_id = oumid #srvsMap.get(sid)
 #        print "ID_P: ", id_p, oumid
-        id_p = cache.patMappingDictGet(id_p, src, "oum", cache_session, log)
+        external_id = cache.patMappingDictGetExternal(external_id, src, "oum", cache_session, log)
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.outputModuleParamsBuilder(id_p, self.queries, db, log)
+        resp.children = self.params_builder.outputModuleParamsBuilder(external_id, self.queries, db, log)
 
         if (resp.children == None):
             return None
@@ -544,7 +534,11 @@ class Exposed(object):
 
         return output.data
 
+    def update_module_cache(self, mod_id, src, param_name, value, request, log):
 
+        cache = self.cache
+        cache_session = request.db_cache
+        cache.update_params(mod_id, param_name, value, cache_session, log)
 
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
@@ -555,37 +549,46 @@ class Exposed(object):
         cache_session = request.db_cache
 
         queries = self.queries
-        params = []
+        module_params = []
 
-        id_p = mid
+        internal_module_id = mid
 
         resp = Response()
         schema = ResponseParamSchema()
 
         if fromSequence:
-            id_p = cache.seqMappingDictGet(mid, src, "mod", cache_session, log)
+            internal_module_id = cache.seqMappingDictGetInternal(mid, "mod", cache_session, log)
 
         else:
             if (allmod == 'true'):
                 # MODULE TAB
-                id_p = cache.allmodMappingDictGet(mid, src, "mod", cache_session, log)
-            
+                internal_module_id = cache.allmodMappingDictGetInternal(mid, "mod", cache_session, log)
+
             else:
                 # PATH OR ENDPATH TAB
-                id_p = cache.patMappingDictGet(mid, src, "mod", cache_session, log)
+                internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
 
-	id_p = int(id_p)
-        params = self.params_builder.moduleParamsBuilder(id_p, queries, db, log)
+        module_params = cache.get_params(internal_module_id, cache_session, log)
 
-        if (params == None):
+        if module_params is None:
+            print('from db')
+            external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", src, log)
+
+            module_params = self.params_builder.moduleParamsBuilder(external_module_id, queries, db, log)
+            # we do it in order to put proper module_id even for items from template
+            for param in module_params:
+                param.module_id = internal_module_id
+
+            cache.put_params(internal_module_id, module_params, cache_session, log)
+            print('added to cache')
+
+        if module_params is None:
             return None
-
         resp.success = True
-        resp.children = params
+        resp.children = module_params
 
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -612,7 +615,7 @@ class Exposed(object):
         configs = None
 
         # dir_id = folMap.get(id_parent)
-        dir_id = cache.folMappingDictGet(id_parent, src, "fol", cache_session, log)
+        dir_id = cache.folMappingDictGetExternal(id_parent, src, "fol", cache_session, log)
 
         try:
             #get Child directories
@@ -816,7 +819,7 @@ class Exposed(object):
         if (cnf == -2 or db == None):
             log.error('ERROR: getVersionsByConfig - input parameters error' + self.log_arguments(conf_id=conf_id))
 
-        conf_id = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+        conf_id = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseVersionSchema()
@@ -863,7 +866,7 @@ class Exposed(object):
         schema = ResponseVersionSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         #DB Queries
         version = None
@@ -896,17 +899,15 @@ class Exposed(object):
         cache_session = request.db_cache
 
         if (pid == -2 or db == None):
-            log.error('ERROR: getPathDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, pat_id=pat_id))
+            log.error('ERROR: getPathDetails - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, pat_id=ext_pat_id))
 
         resp = Response()
         schema = ResponsePathDetailsSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
         
-        pat_id = cache.patMappingDictGet(pid, src, "pat", cache_session, log)
-
-        pat_id = int(pat_id)
+        ext_pat_id = cache.patMappingDictGetExternal(pid, src, "pat", cache_session, log)
 
         #ToDo IdV_er / CNF
         ver_id = -1
@@ -929,10 +930,10 @@ class Exposed(object):
         prescale = None
         description = None
         try:
-            path = queries.getPathName(pat_id, ver_id, db, log)
+            path = queries.getPathName(ext_pat_id, ver_id, db, log)
             prescaleTemplate = queries.getConfPrescaleTemplate(id_rel, db, log)
             prescale = queries.getConfPrescale(ver_id, prescaleTemplate.id, db, log)
-            description = queries.getPathDescription(pat_id, ver_id, db, log)
+            description = queries.getPathDescription(ext_pat_id, ver_id, db, log)
         except:
             log.error('ERROR: Query getConfPrescaleTemplate/getPathName/getConfPrescale/getPathDescription Error')
             return None
@@ -1078,13 +1079,13 @@ class Exposed(object):
         if (mod == -2 or pat == -2 or db == None):
             log.error('ERROR: getModuleDetails - input parameters error' + self.log_arguments(mod_id=mod, pat_id=pat))
 
-        mod_id = -1
+        external_id = -1
 
         if fromSequence:
-            mod_id = cache.seqMappingDictGet(mod, src, "mod", cache_session, log)
+            external_id = cache.seqMappingDictGetExternal(mod, src, "mod", cache_session, log)
         
         else:
-            mod_id = cache.patMappingDictGet(mod, src, "mod", cache_session, log)
+            external_id = cache.patMappingDictGetExternal(mod, src, "mod", cache_session, log)
 
 
         resp = Response()
@@ -1096,11 +1097,11 @@ class Exposed(object):
         module = None
 
         try:
-            template_id = queries.getModToTempByPae(mod_id, db, log)
+            template_id = queries.getModToTempByPae(external_id, db, log)
 #            print "TID:" , template_id.id_templ
             template = queries.getModTemplate(template_id.id_templ, db, log)
 
-            module = queries.getPaelement(mod_id, db, log)
+            module = queries.getPaelement(external_id, db, log)
 
         except:
             log.error('ERROR: Query getModToTempByPae/getModTemplate/getPaelement Error')
@@ -1109,7 +1110,7 @@ class Exposed(object):
 #        if (template_id == None or template == None or module == None):
 #            return None
 
-        md = ModuleDetails(mod_id, module.name, template.id_mtype, "", template.name)
+        md = ModuleDetails(external_id, module.name, template.id_mtype, "", template.name)
 
         resp.success = True
         resp.children = []
@@ -1141,7 +1142,7 @@ class Exposed(object):
 
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1227,7 +1228,7 @@ class Exposed(object):
         ver_id = -1
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log) 
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)
@@ -1285,28 +1286,34 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getServiceItems(self, sid=-2, db = None, log = None, src = 0, request = None):
+    def getServiceItems(self, sid_internal=-2, db = None, log = None, src = 0, request = None):
 
-        if (sid == -2 or db == None):
-            log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid=sid))
+        if (sid_internal == -2 or db == None):
+            log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid_internal=sid_internal))
 
         cache = self.cache
         cache_session = request.db_cache
 
-        id_p = sid
-        sid = cache.srvMappingDictGet(sid, src, "srv", cache_session, log)
-
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.serviceParamsBuilder(sid, self.queries, db, log)
-        if resp.children == None:
+        service_params = cache.get_params(sid_internal, cache_session, log)
+        if service_params is None:
+            sid_external = cache.srvMappingDictGetExternal(sid_internal, src, "srv", cache_session, log)
+            service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
+            for param in service_params:
+                param.module_id = sid_internal
+
+            cache.put_params(sid_internal, service_params, cache_session, log)
+            print('added to cache')
+
+        if service_params is None:
             return None
 
+        resp.children = service_params
         resp.success = True
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
 
         return output.data
 
@@ -1327,7 +1334,7 @@ class Exposed(object):
         cache_session = request.db_cache
         
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)
@@ -1446,7 +1453,7 @@ class Exposed(object):
         evcostatements = None
         evcotostats = None
 
-        evc = cache.strMappingDictGet(evc, src, "evc", cache_session, log)
+        evc = cache.strMappingDictGetExternal(evc, src, "evc", cache_session, log)
 
         try:
             evcostatements = self.queries.getEvCoStatements(evc, db, log)
@@ -1501,7 +1508,7 @@ class Exposed(object):
         schema = ResponseESModuleDetailsSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1544,9 +1551,9 @@ class Exposed(object):
             if (templates_dict.has_key(m.id_template) and conf2esm_dict.has_key(m.id)):
                 temp = templates_dict.get(m.id_template)
                 c2e = conf2esm_dict.get(m.id)
-
-                esm = ESModuleDetails(m.id, m.id_template, m.name, temp.name, c2e)
-                esm.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "es_mod", src, log)
+                esm = ESModuleDetails(internal_id, m.id_template, m.name, temp.name, c2e)
+                esm.gid = internal_id
 
             else:
                 log.error('ERROR: ES Modules Error Key') 
@@ -1566,25 +1573,34 @@ class Exposed(object):
         return output.data
 
 
-    def getESModItems(self, esmid, db, log):
+    def getESModItems(self, internal_esmod_id, db, src=0, log = None, request=None):
 
-        if (esmid == -2 or db == None):
-            log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(esmid=esmid))
+        if (internal_esmod_id == -2 or db == None):
+            log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(internal_esmod_id=internal_esmod_id))
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.esModuleParamsBuilder(esmid, self.queries, db, log)
+        cache = self.cache
+        cache_session = request.db_cache
 
-        if resp.children == None:
+        es_mod_params = cache.get_params(internal_esmod_id, cache_session, log)
+        if es_mod_params is None:
+            external_esmod_id = cache.get_external_id(cache_session, internal_esmod_id, "es_mod", src, log)
+            es_mod_params = self.params_builder.esModuleParamsBuilder(external_esmod_id, self.queries, db, log)
+            for param in es_mod_params:
+                param.module_id = internal_esmod_id
+
+            cache.put_params(internal_esmod_id, es_mod_params, cache_session, log)
+            print('added to cache')
+
+        if es_mod_params is None:
             return None
 
+        resp.children = es_mod_params
         resp.success = True
-        #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -1632,7 +1648,7 @@ class Exposed(object):
         return counter, children, written_sequences, built_sequences, idgen_new
     
     def getAllSequences(self, cnf=-2, ver=-2, db = None, log = None, request = None, src = 0):
-        
+
         #params check
         if (cnf == -1 or db == None or ver == -1):
 
@@ -1643,14 +1659,14 @@ class Exposed(object):
         cache_session = request.db_cache
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
-        
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
+
         ver_id = -1
         version = None
-        
+
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
-        
+
         id_p = 0
         self.simple_counter = 1
 
@@ -1664,8 +1680,8 @@ class Exposed(object):
         except Exception as e:
             msg = 'ERROR: getAllSequences: error querying database for Paths and EndPaths:\n' + e.args[0]
             log.error(msg)
-        
-        built_sequences = set() 
+
+        built_sequences = set()
         written_sequences = set()
         elements = None
         items = None
@@ -1695,19 +1711,19 @@ class Exposed(object):
                     counter = counter + 1
                     if item.name in written_sequences:
                         counter = self.skipSequence(counter, items, item.lvl+1)
-                    else:       
+                    else:
                         counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new,src, request,log)
 
                         for child in new_children:
                             item.children.append(child)
-    
+
                         written_sequences.add(item.name)
                         item.expanded = False
                         built_sequences.add(item)
 
                 else:
                     counter = counter + 1
-        
+
         resp.success = True
         resp.children = built_sequences
         
@@ -1726,8 +1742,8 @@ class Exposed(object):
         if (mod_id == -2 or pat_id == -2 or db == None):
             log.error('ERROR: getOUTModuleDetails - input parameters error' + self.log_arguments(mod_id=mod_id, pat_id=pat_id))
 
-        mod_id = cache.patMappingDictGet(mod_id, src, "oum", cache_session, log)
-        pat_id = cache.patMappingDictGet(pat_id, src, "pat", cache_session, log)
+        # is it really mod id or pat id?
+        external_mod_id = cache.patMappingDictGetExternal(mod_id, src, "oum", cache_session, log)
 
         resp = Response()
         schema = ResponseOutputModuleDetailsSchema()
@@ -1735,7 +1751,7 @@ class Exposed(object):
         stream = None
 
         try:
-            stream = queries.getStreamid(mod_id, db, log)
+            stream = queries.getStreamid(external_mod_id, db, log)
         except:
             log.error('ERROR: Query getStreamid Error')
             return None
@@ -1744,7 +1760,7 @@ class Exposed(object):
 #            return None
 
         oumName = "hltOutput"+stream.name
-        oumd = OutputModuleDetails(mod_id, oumName, "", "", stream.name, mod_id)
+        oumd = OutputModuleDetails(external_mod_id, oumName, "", "", stream.name, external_mod_id)
 
         resp.success = True
         resp.children = []
@@ -1760,31 +1776,35 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getGpsetItems(self, sid=-2, db = None, log = None, request = None, src = 0):
+    def getGpsetItems(self, internal_gpset_id=-2, db = None, log = None, request = None, src = 0):
 
-        if (sid == -2 or db == None):
-            log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(sid=sid))
+        if (internal_gpset_id == -2 or db == None):
+            log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(internal_gpset_id=internal_gpset_id))
         
         cache = self.cache
         cache_session = request.db_cache
-        
-        sid = cache.gpsMappingDictGet(sid, src, "gps", cache_session, log)
-
-        id_p = sid 
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.gpsetParamsBuilder(sid, self.queries, db, log)
-        if resp.children == None:
+        gpset_params = cache.get_params(internal_gpset_id, cache_session, log)
+
+        if gpset_params is None:
+            external_gpset_id = cache.gpsMappingDictGetExternal(internal_gpset_id, src, "gps", cache_session, log)
+            gpset_params = self.params_builder.gpsetParamsBuilder(external_gpset_id, self.queries, db, log)
+            for param in gpset_params:
+                param.module_id = internal_gpset_id
+
+            cache.put_params(internal_gpset_id, gpset_params, cache_session, log)
+            print('added to cache')
+
+        if gpset_params is None:
             return None
 
+        resp.children = gpset_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
@@ -1806,7 +1826,7 @@ class Exposed(object):
         schema = ResponseGlobalPsetSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         ver_id = -1
         version = None
@@ -1830,9 +1850,9 @@ class Exposed(object):
         resp.children = []
 
         for m in gpsets:
-            gps = GlobalPset(m.id, m.name, m.tracked)
-
-            gps.gid = cache.gpsMappingDictPut(src, m.id, "gps", cache_session, log)
+            gps_internal_id = cache.gpsMappingDictPut(src, m.id, "gps", cache_session, log)
+            gps = GlobalPset(gps_internal_id, m.name, m.tracked)
+            gps.gid = gps_internal_id
             if (gps != None):
                 resp.children.append(gps)
             else:
@@ -1846,10 +1866,6 @@ class Exposed(object):
 
         return output.data
 
-
-
-
-
     def getEDSource(self, cnf = -2, ver = -2, db = None, log = None, request = None, src = 0):
 
         queries = self.queries
@@ -1861,7 +1877,7 @@ class Exposed(object):
             log.error('ERROR: getEDSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseEDSourceSchema()
@@ -1904,8 +1920,9 @@ class Exposed(object):
             if (m.id_template in templates_dict and m.id in conf2eds_dict):
                 temp = templates_dict[m.id_template]
                 c2e = conf2eds_dict[m.id]
-                eds = EDSource(m.id, m.id_template, "Source", temp.name, c2e)
-                eds.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "ed_source", src, log)
+                eds = EDSource(internal_id, m.id_template, "Source", temp.name, c2e)
+                eds.gid = internal_id
                 edsources.append(eds)
             else:
                 log.error('ERROR: EDSource key error')
@@ -1920,21 +1937,36 @@ class Exposed(object):
 
         return output.data
 
-    def getEDSourceItems(self, edsid, db, log):
+    def getEDSourceItems(self, internal_ed_source_id, db, src=0, log = None, request=None):
 
-        if (edsid == -2 or db == None):
-            log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=edsid))
+        if (internal_ed_source_id == -2 or db == None):
+            log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=internal_ed_source_id))
 
+        cache = self.cache
+        cache_session = request.db_cache
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.edSourceParamsBuilder(edsid, self.queries, db, log)
+        ed_source_params = cache.get_params(internal_ed_source_id, cache_session, log)
+
+        if ed_source_params is None:
+            external_ed_source_id = cache.get_external_id(cache_session, internal_ed_source_id, "ed_source", src, log)
+
+            ed_source_params = self.params_builder.edSourceParamsBuilder(external_ed_source_id, self.queries, db, log)
+            for param in ed_source_params:
+                param.module_id = internal_ed_source_id
+
+            cache.put_params(internal_ed_source_id, ed_source_params, cache_session, log)
+            print('added to cache')
+
+        if ed_source_params is None:
+            return None
+
+        resp.children = ed_source_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
 
         return output.data
 
@@ -1949,7 +1981,7 @@ class Exposed(object):
             log.error('ERROR: getESSource - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = Response()
         schema = ResponseESSourceSchema()
@@ -1992,8 +2024,9 @@ class Exposed(object):
             if (templates_dict.has_key(m.id_template) and conf2ess_dict.has_key(m.id)):
                 temp = templates_dict.get(m.id_template)
                 c2e = conf2ess_dict.get(m.id)
-                ess = ESSource(m.id, m.id_template, m.name, temp.name, c2e)
-                ess.gid = m.id
+                internal_id = cache.get_internal_id(cache_session, m.id, "es_source", src, log)
+                ess = ESSource(internal_id, m.id_template, m.name, temp.name, c2e)
+                ess.gid = internal_id
 
             else:
                 log.error('ERROR: ES source Key') #print "ERROR KEY"
@@ -2012,24 +2045,35 @@ class Exposed(object):
 
         return output.data
 
-    def getESSourceItems(self, essid, db, log):
+    def getESSourceItems(self, internal_essource_id, db, src=0, log = None, request=None):
 
-        if (essid == -2 or db == None):
-            log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(essid=essid))
+        if (internal_essource_id == -2 or db == None):
+            log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(internal_essource_id=internal_essource_id))
 
         resp = Response()
         schema = ResponseParamSchema()
 
-        resp.children = self.params_builder.esSourceParamsBuilder(essid, self.queries, db, log)
-        if resp.children == None:
+        cache = self.cache
+        cache_session = request.db_cache
+
+        essource_params = cache.get_params(internal_essource_id, cache_session, log)
+
+        if essource_params is None:
+            external_essource_id = cache.get_external_id(cache_session, internal_essource_id, "es_source", src, log)
+            essource_params = self.params_builder.esSourceParamsBuilder(external_essource_id, self.queries, db, log)
+            for param in essource_params:
+                param.module_id = internal_essource_id
+
+            cache.put_params(internal_essource_id, essource_params, cache_session, log)
+            print('added to cache')
+
+        if essource_params is None:
             return None
 
+        resp.children = essource_params
         resp.success = True
-         #params
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
     def getDatasetItems(self, ver=-2, cnf=-2, dstid=-2, db = None, log = None, request = None, src = 0):
@@ -2043,9 +2087,9 @@ class Exposed(object):
         schema = ResponseDstPathsTreeSchema()
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
-        dstid = cache.strMappingDictGet(dstid, src, "dat", cache_session, log) 
+        dstid = cache.strMappingDictGetExternal(dstid, src, "dat", cache_session, log)
 
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
@@ -2106,7 +2150,7 @@ class Exposed(object):
         cache_session = request.db_cache
         
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         resp = ResponseTree()
         schema = ResponseSummaryColumnSchema()
@@ -2134,7 +2178,7 @@ class Exposed(object):
         resp.success = False
 
         if (cnf != -2 and cnf != -1):
-            cnf = cache.folMappingDictGet(cnf, src, "cnf", cache_session, log)
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
         version = None
         version = self.getRequestedVersion(ver, cnf, db, log)

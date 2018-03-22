@@ -59,7 +59,7 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
                     split: true
                 },
                 {
-                    xtype: 'seqparameters',
+                    xtype: 'parameters',
                     split: true,
                     flex: 2,
     //                layout: 'fit',

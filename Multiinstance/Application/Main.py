@@ -13,6 +13,7 @@ import logging.handlers
 import cherrypy
 import os
 import tempfile
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 from cherrypy.lib.static import serve_file
@@ -94,7 +95,10 @@ class Root(object):
     #        self.types[row.id] = row.name
     _cp_config = {'tools.staticdir.on' : True,
                   'tools.staticdir.root': current_dir,
-                  'tools.staticdir.dir' : 'CmsConfigExplorer', #'/Users/vdaponte/Dropbox/Demo110315', #ModParams #
+                  # prod
+                  # 'tools.staticdir.dir' : 'CmsConfigExplorer',
+                  # dev
+                  'tools.staticdir.dir' : '../Client/CmsConfigExplorer',
                   'tools.staticdir.index' : 'index.html',
     }
 
@@ -292,6 +296,30 @@ class Root(object):
             cherrypy.HTTPError(500, "Error in retreiving the Module Parameters")
 
         return data
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def update_param_val(self):
+        input_json = byteify(cherrypy.request.json)
+        value = input_json['value']
+        mod_id = input_json['modId']
+        param_name = input_json['parName']
+
+        # what is this, why it is always 0 in db and what is online db?
+        # UPD: TODO: it still might be different from 0, so remove hardcode
+        src = 0
+
+        self.funcs.update_module_cache(mod_id, src, param_name, value, cherrypy.request, self.log)
+        # TODO: remove it, it is stupid. Return something more enhanced
+        return input_json
+
+
+    # TODO: replace it with tiny object which has only name
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def get_module_names(self, query="", ver = -2, cnf = -2,online = "False"):
+        return self.allmodules(ver=ver, cnf=cnf, online=online)
 
     #Get the directories of the DB
 
@@ -740,7 +768,7 @@ class Root(object):
         cnf = int(cnf)
         ver = int(ver)
         # cnf = cnfMap.get(cnf)
-        data = self.funcs.getAllESModules(cnf,ver,db, self.log, cherrypy.request, src)
+        data = self.funcs.getAllESModules(cnf, ver, db, self.log, cherrypy.request, src)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allesmodules - data returned null object')
@@ -779,7 +807,7 @@ class Root(object):
 
         mid = int(mid)
 
-        data = self.funcs.getESModItems(mid,db, self.log)
+        data = self.funcs.getESModItems(mid,db, src, self.log, cherrypy.request)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allesmoditems - data returned null object')
@@ -835,19 +863,19 @@ class Root(object):
 
         fromSequence = True
         src = 0
-        
+
         if online == 'True' or online == 'true':
             print 'db = db_online'
             db = db_online
             src = 1
-            
+
         else:
             db = db_offline
             src = 0
-        
+
         pid = int(pid)
         mid = int(mid)
-        
+
         data = None
       
         # data = self.funcs.getModuleItems(mid, db, self.log)
@@ -1159,6 +1187,7 @@ class Root(object):
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
+        src = 0
 
         if online == 'file':
             data = self.par_funcs.getEdSourceItemsFromFile(verid, int(mid), self.config_dict)
@@ -1169,13 +1198,14 @@ class Root(object):
 
         if online == 'True' or online == 'true':
             db = db_online
+            src = 1
 
         else:
             db = db_offline
 
         mid = int(mid)
 
-        data = self.funcs.getEDSourceItems(mid,db, self.log)
+        data = self.funcs.getEDSourceItems(mid, db, src, self.log, cherrypy.request)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: data returned null object')
@@ -1236,6 +1266,7 @@ class Root(object):
         db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
+        src = 0
 
         if online == 'file':
             data = self.par_funcs.getEsSourceItemsFromFile(verid, int(mid), self.config_dict)
@@ -1247,13 +1278,12 @@ class Root(object):
         else:
             if online == 'True' or online == 'true':
                 db = db_online
-
+                src = 1
             else:
                 db = db_offline
-
             mid = int(mid)
 
-            data = self.funcs.getESSourceItems(mid,db, self.log)
+            data = self.funcs.getESSourceItems(mid, db, src, self.log, cherrypy.request)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allessourceitems - data returned null object')
