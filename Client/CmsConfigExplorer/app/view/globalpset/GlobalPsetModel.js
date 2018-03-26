@@ -32,7 +32,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetModel', {
                 scope: 'controller'
             }
         },
-        gpsetparams:{ 
+        parameters:{
             
                 type:'tree',
                 model:'CmsConfigExplorer.model.GlobalPsetItem',

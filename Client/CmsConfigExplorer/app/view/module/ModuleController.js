@@ -53,14 +53,14 @@ Ext.define('CmsConfigExplorer.view.module.ModuleController', {
         
         //Ext.Msg.alert('onForward');
         //console.log('in parent, got event');
-        var grid = this.lookupReference('modParamsTree');
+        var grid = this.lookupReference('paramGrid');
         
         //var cid = this.getViewModel().get('currentModule').id;
         var vid = this.getViewModel().get("idVer");
         var online = this.getViewModel().get("online");
         //console.log('VID: ');
         //console.log(vid);
-        this.getViewModel().getStore('modparams').load({params: {mid: mid, allmod:'true', online:online, verid: vid}});
+        this.getViewModel().getStore('parameters').load({params: {mid: mid, allmod:'true', online:online, verid: vid}});
         
         grid.setLoading("Loading Module parameters");
         
@@ -111,9 +111,9 @@ Ext.define('CmsConfigExplorer.view.module.ModuleController', {
         if (id == -1){
            operation.config.node.expand() 
         }
-        if(this.lookupReference('modParamsTree').isMasked()){
+        if(this.lookupReference('paramGrid').isMasked()){
 //            this.lookupReference('modulesGrid').unmask();
-            this.lookupReference('modParamsTree').setLoading( false ); 
+            this.lookupReference('paramGrid').setLoading( false ); 
         }
     }
     

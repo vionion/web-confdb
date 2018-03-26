@@ -11,7 +11,7 @@ Ext.define("CmsConfigExplorer.view.service.Service",{
              'CmsConfigExplorer.view.service.ServiceGrid',
              'CmsConfigExplorer.view.service.ServiceMessageLoggerTab',
              'CmsConfigExplorer.view.service.ServiceModel',
-             'CmsConfigExplorer.view.service.ServiceParameters',
+             'CmsConfigExplorer.view.param.Parameters',
               'CmsConfigExplorer.view.service.PrescaleGrid'
              ],
     
@@ -68,10 +68,10 @@ Ext.define("CmsConfigExplorer.view.service.Service",{
         tabPosition: 'right',
         items: [
             {
-                xtype: 'serviceparamstree',
+                xtype: 'parameters',
                 split: true,
                 title: 'Service Params',
-                reference: 'srvParamsTree',
+                reference: 'paramGrid',
                 flex: 2,
                 loadMask: true,
                 listeners:{

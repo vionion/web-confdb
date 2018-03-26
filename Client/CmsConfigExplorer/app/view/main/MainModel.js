@@ -8,7 +8,7 @@ Ext.define('CmsConfigExplorer.view.main.MainModel', {
 
     data: {
         name: 'CmsConfigExplorer',
-        appversion: '1.3.8'
+        appversion: '1.4.0'
     }
 
     //TODO - add data, formulas and/or methods to support your view

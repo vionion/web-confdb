@@ -8,7 +8,8 @@ Ext.define("CmsConfigExplorer.view.module.Module",{
     },
     
     requires:['CmsConfigExplorer.view.module.ModuleGrid',
-             'CmsConfigExplorer.view.module.ModuleParameters',
+             'CmsConfigExplorer.view.param.Parameters',
+             'CmsConfigExplorer.model.InputTag',
              'CmsConfigExplorer.view.module.ModuleController',
              'CmsConfigExplorer.view.module.ModuleModel'],
     
@@ -65,7 +66,7 @@ Ext.define("CmsConfigExplorer.view.module.Module",{
         {
         region: 'center',
         layout: 'fit',
-        xtype: 'moduleparamstree',
+        xtype: 'parameters',
         title: 'Parameters',
         split: true,
         height: '100%',
