@@ -1,3 +1,31 @@
+Ext.define('InputTag', {
+    extend: 'Ext.data.Model',
+
+    fields: [
+        {name: 'name', type: 'string'}
+    ]
+
+});
+
+var inputTags = Ext.create('Ext.data.Store', {
+    model: 'InputTag',
+    autoLoad: false,
+    proxy: {
+        type: 'ajax',
+        url: 'get_module_names',
+        limitParam: '',
+        pageParam: '',
+        sortParam: '',
+        startParam: '',
+        noCache: false,
+        headers: {'Content-Type': "application/json"},
+        reader: {
+            type: 'json',
+            rootProperty: 'children'
+        }
+    }
+ });
+
 Ext.define('CmsConfigExplorer.view.param.ParametersController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.parameters',
@@ -29,13 +57,13 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
 
         if(cid !=-1 && cid !=-2){
             //console.log("loading modules cnf");
-            inputTags2.load({params: {cnf: idc, online:online}});
+            inputTags.load({params: {cnf: idc, online:online}});
 //            this.lookupReference('modulesGrid').mask("Loading Modules");
 
         }
         else if (vid !=-1){
             //console.log("loading modules ver");
-            inputTags2.load({params: {ver: idv, online:online}});
+            inputTags.load({params: {ver: idv, online:online}});
 //            this.lookupReference('modulesGrid').mask("Loading Modules");
         }
     }
@@ -75,12 +103,13 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             xtype: 'combo',
             queryMode: 'local',
             autoLoad: false,
-            forceSelection: true,
+            // to allow freetype
+            forceSelection: false,
             hideTrigger: true,
             typeAhead: true,
-            // store: this.getViewModel().getStore('inputTags'),
-            store: ['hltTest1', 'hltTest2', 'hltTest3']
-            // displayField : 'name'
+            store: inputTags,
+            // store: ['hltTest1', 'hltTest2', 'hltTest3']
+            displayField : 'name'
         });
         if (col.getEditor().editable) {
             if (context.record.get('paramtype') === 'bool') {
@@ -122,7 +151,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             });
         }
 
-    },
+    }
 
 
 
@@ -187,6 +216,13 @@ function validate(value, type, callback) {
         if (!((value === 'True') || (value === 'False'))) {
             valid = false;
         }
+    }
+    // InputTag: we don't really validate, but mark non-existing values with red
+    else if (type === 'InputTag') {
+        valid = true;
+        if (inputTags.find('name', value) === -1) {
+            alert('InputTag is not exists yet...');
+        }
     } else {
         // all unusual types will revert changes, since something is wrong:
         console.log("Unchecked type: " + type + " value: " + value);
@@ -195,24 +231,3 @@ function validate(value, type, callback) {
 
     return valid;
 }
-
-
-var inputTags2 = new Ext.data.Store({
-    proxy: {
-        type: 'ajax',
-        url: 'get_module_names',
-        limitParam: '',
-        pageParam: '',
-        sortParam: '',
-        startParam: '',
-        noCache: false,
-        headers: {'Content-Type': "application/json"},
-        reader: {
-            type: 'json',
-            rootProperty: 'children'
-        }
-      },
-    model: [
-        { name: 'name', type: 'string' }
-    ]
-});
