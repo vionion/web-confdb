@@ -314,12 +314,33 @@ class Root(object):
         # TODO: remove it, it is stupid. Return something more enhanced
         return input_json
 
-
-    # TODO: replace it with tiny object which has only name
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_module_names(self, query="", ver = -2, cnf = -2,online = "False"):
-        return self.allmodules(ver=ver, cnf=cnf, online=online)
+        db = None
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        src = 0
+        if online == 'file':
+            data = self.par_funcs.get_input_tags_names_from_file(ver, self.config_dict)
+            if (data == None):
+                self.log.error('ERROR: get_module_names - data returned null object')
+                cherrypy.HTTPError(500, "Error in retreiving the input tags names")
+            return data
+        else:
+            if online == 'True' or online == 'true':
+                db = db_online
+                src = 1
+            else:
+                db = db_offline
+        cnf = int(cnf)
+        ver = int(ver)
+        data = self.funcs.get_input_tags_names(cnf, ver, db, self.log, cherrypy.request, src)
+        if (data == None):
+            self.log.error('ERROR: get_module_names - data returned null object')
+            cherrypy.HTTPError(500, "Error in retreiving the input tags names")
+
+        return data
 
     #Get the directories of the DB
 

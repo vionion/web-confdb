@@ -1207,6 +1207,30 @@ class Exposed(object):
 
         return output.data
 
+    def get_input_tags_names(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
+        queries = self.queries
+        cache = self.cache
+        cache_session = request.db_cache
+        if ((cnf == -2 and ver == -2) or db == None):
+            log.error('ERROR: getInputTagsNames - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
+        resp = Response()
+        schema = ResponseModuleNamesSchema()
+        if (cnf != -2 and cnf != -1):
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
+        version = self.getRequestedVersion(ver, cnf, db, log)
+        if (version == None):
+            return None
+        ver_id = version.id
+        module_names = None
+        try:
+            module_names = queries.getConfPaelements(ver_id, db, log)
+        except:
+            log.error('ERROR: Query getConfPaelements Error')
+            return None
+        resp.children = module_names
+        resp.success = True
+        output = schema.dump(resp)
+        return output.data
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version

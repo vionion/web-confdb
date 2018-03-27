@@ -156,6 +156,13 @@ class PathsItemSchema(Schema):
         fields = ("id", "name", "id_parent", "pit", "leaf")
         ordered = True
 
+
+class ModuleNameSchema(Schema):
+    name = fields.String()
+
+    class Meta:
+        fields = ('name',)
+
 class ModuleDetailsSchema(Schema):
     gid = fields.Integer()
     name = fields.String()

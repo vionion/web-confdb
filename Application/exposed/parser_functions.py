@@ -342,6 +342,19 @@ class Parser_Functions(object):
 
         return output.data
 
+    def get_input_tags_names_from_file(self, config_id, config_dict):
+        config_obj = config_dict.get(int(config_id))
+        tags = []
+        for key, value in config_obj.modules_dict.items():
+            tags.extend(value.name)
+        resp = Response()
+        resp.children = []
+        resp.children.extend(tags)
+        schema = ResponseModuleNamesSchema()
+        resp.success = True
+        output = schema.dump(resp)
+        return output.data
+
     def getModDetailsFromFile(self, config_id, module_id, config_dict):
         config_obj = config_dict.get(int(config_id))
 
