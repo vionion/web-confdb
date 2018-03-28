@@ -108,6 +108,9 @@
             "path": "${framework.dir}/build/ext-all-rtl-debug.js"
         },
         {
+            "path": "${framework.dir}/build/BigInteger.js"
+        },
+        {
             "path": "app.js",
             "bundle": true
         }

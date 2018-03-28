@@ -157,12 +157,12 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
 
 });
 
+var MAX_INTEGER = bigInt("9223372036854775807");
+var MIN_INTEGER = bigInt("-9223372036854775808");
+
 function validate(value, type, callback) {
     var valid = true;
     // string
-    // console.log(bigInt(value));
-    // var largeNumber = bigInt("9223372036854775807");
-    // console.log(bigInt(value).leq(largeNumber));
     if (type === 'string') {
         var regex_start = new RegExp("^\"");
 
@@ -193,17 +193,15 @@ function validate(value, type, callback) {
             if ((type === 'uint32' || type === 'uint64') && value < 0) {
                 valid = false;
             } else if ((type === 'uint32') || (type === 'int32')) {
-                // between - 214748364 and 2147483647
+                // between -214748364 and 2147483647
                 if ((value >> 0) != value) {
                     valid = false;
                 }
             } else if (type === 'uint64' || type === 'int64') {
-                // must be between -9223372036854775808 and 9223372036854775807
-                // but check is between -9007199254740991 and 9007199254740991
-                // (js range limitation)
-                if (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER) {
+                // between -9223372036854775808 and 9223372036854775807
+                var bigVal = bigInt(value);
+                if (bigVal.greater(MAX_INTEGER) || bigVal.lesser(MIN_INTEGER)) {
                     valid = false;
-
                 }
             } else if (type === 'double') {
                 // check must be added later
