@@ -158,6 +158,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
 });
 
 var MAX_INTEGER = bigInt("9223372036854775807");
+var MAX_UNSIGNED_INTEGER = bigInt("18446744073709551615");
 var MIN_INTEGER = bigInt("-9223372036854775808");
 
 function validate(value, type, callback) {
@@ -190,14 +191,26 @@ function validate(value, type, callback) {
         if (isNaN(value)) {
             valid = false;
         } else {
-            if ((type === 'uint32' || type === 'uint64') && value < 0) {
-                valid = false;
-            } else if ((type === 'uint32') || (type === 'int32')) {
-                // between -214748364 and 2147483647
+            if (type === 'uint32' || type === 'uint64') {
+                if (value < 0) {
+                    valid = false;
+                } else if (type === 'uint32') {
+                    // between 0 and 4294967295
+                    if ((value >>> 0) != value) {
+                        valid = false;
+                    }
+                } else if (type === 'uint64') {
+                    var bigVal = bigInt(value);
+                    if (bigVal.greater(MAX_UNSIGNED_INTEGER)) {
+                        valid = false;
+                    }
+                }
+            } else if (type === 'int32') {
+                // between -2147483648 and 2147483647
                 if ((value >> 0) != value) {
                     valid = false;
                 }
-            } else if (type === 'uint64' || type === 'int64') {
+            } else if (type === 'int64') {
                 // between -9223372036854775808 and 9223372036854775807
                 var bigVal = bigInt(value);
                 if (bigVal.greater(MAX_INTEGER) || bigVal.lesser(MIN_INTEGER)) {
