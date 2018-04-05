@@ -18,7 +18,7 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
     viewModel: {
         type: "path-path"
     },
-    
+
     listeners:{
         cusDetailsClick: 'onDetailsRender',
         scope: 'controller'
@@ -64,18 +64,62 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
     //        collapsible: true,
 //            loadMask: true,
             viewConfig: {
-                loadingHeight: 100
+                loadingHeight: 100,
+                plugins: {
+                    ptype: 'treeviewdragdrop',
+                    dragText: 'Drag and drop to reorganize'
+                },
+                listeners: {
+                    beforedrop: function( node, data, overModel, dropPosition, dropHandler){
+                        // can be used to restrict drop at top level, for example
+                        // dropHandler.cancelDrop();
+                    },
+                    drop: function (node, data, overModel, dropPosition) {
+                        console.log(overModel);
+                        console.log(dropPosition);
+                        // I came to CERN to create a new order!
+                        var newOrder;
+                        var newParent;
+                        if (dropPosition === 'append') {
+                            newParent = overModel.data.Name;
+                            newOrder = overModel.data.children[overModel.data.children.length - 1].order;
+                        } else if (dropPosition === 'before') {
+                            newParent = overModel.parentNode.data.Name;
+                            newOrder = overModel.data.order - 1;
+                        } else if (dropPosition === 'after') {
+                            newParent = overModel.parentNode.data.Name;
+                            newOrder = overModel.data.order;
+                        }
+                        console.log('new parent: ' + newParent);
+                        console.log('new order: ' + newOrder);
+                        console.log('Drop!');
+                    }
+                }
             },
             listeners:{
                 cusPathColumnNameHeaderClickForward: 'onPathColumnNameHeaderClickForward',
                 rowclick: 'onNodeClick',
                 custModParams: 'onModParamsForward',
                 cusAlphaOrderClickForward: 'onSortAlphaPaths',
-                cusOrigOrderClickForward: 'onSortOriginalPaths'
+                cusOrigOrderClickForward: 'onSortOriginalPaths',
 //                custPatDet: 'onPatDetForward',
 //                render: 'onRender',
 //                beforeshow: 'onRender'
                 //scope: 'controller'
+                viewready: function (tree) {
+                    var view = tree.getView(),
+                        dd = view.findPlugin('treeviewdragdrop');
+
+                    dd.dragZone.onBeforeDrag = function (data, e) {
+                        var rec = view.getRecord(e.getTarget(view.itemSelector));
+                        console.log('old order: ' + rec.data.order);
+                        // console.log(rec.parentNode.data.gid);
+                        console.log('old parent: ' + rec.parentNode.data.Name);
+                        // console.log(rec);
+                        console.log('Drag!');
+                        return true;
+                    };
+                }
         }
 
     },

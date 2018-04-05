@@ -108,7 +108,6 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             hideTrigger: true,
             typeAhead: true,
             store: inputTags,
-            // store: ['hltTest1', 'hltTest2', 'hltTest3']
             displayField : 'name'
         });
         if (col.getEditor().editable) {
