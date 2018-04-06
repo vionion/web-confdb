@@ -17,12 +17,11 @@ from utils import byteify
 
 from item_wrappers.Parameter import Parameter
 from item_wrappers.Pathitem import Pathitem
+from item_wrappers.item_wrappers import *
 
 from exposed.params_builder import ParamsBuilder
 
-from confdb_v2.tables import ModuleitemFull
-
-from tables import ParamsCached, IdMapping, PathItemsCached
+from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached
 
 
 class CacheDbQueries(object):
@@ -523,12 +522,12 @@ class CacheDbQueries(object):
             return -2
 
         try:
-            cached_path = cache.query(PathItemsCached).filter(
+            cached_path_items = cache.query(PathItemsCached).filter(
                 PathItemsCached.path_id == path_id).first()
-            if cached_path is None:
+            if cached_path_items is None:
                 return None
             else:
-                dict_path_items = byteify(json.loads(cached_path.data))
+                dict_path_items = byteify(json.loads(cached_path_items.data))
                 wrapped_paths_items = self.wrap_path_items(dict_path_items, src, cache, log)
                 print('from cache')
                 return wrapped_paths_items
@@ -538,31 +537,25 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
 
-    def convert_pathitem_dict2obj(self, dict_params):
-        obj_items = []
-        for param in dict_params:
-            obj_items.append(namedtuple("Pathitems", param.keys())(*param.values()))
-        return obj_items
-
     def wrap_path_items(self, dict_path_items, src, cache, log):
-        obj_path_items = self.convert_pathitem_dict2obj(dict_path_items)
         wrapped_paths = []
-        for pathitem in obj_path_items:
-            item = Pathitem(pathitem.id, pathitem.name, pathitem.id_pathid, pathitem.paetype, pathitem.id_parent,
-                            pathitem.lvl, pathitem.order, pathitem.operator)
+        for dict_pathitem in dict_path_items:
+            item = Pathitem(dict_pathitem['id'], dict_pathitem['name'], dict_pathitem['id_pathid'], dict_pathitem['paetype'], dict_pathitem['id_parent'],
+                            dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
             if item.paetype == 1:
-                item.gid = self.patMappingDictPut(src, pathitem.id, "mod", cache, log, 0)
+                item.gid = self.patMappingDictPut(src, item.id, "mod", cache, log, 0)
             elif item.paetype == 2:
-                item.gid = self.patMappingDictPut(src, pathitem.id, "seq", cache, log, 0)
-            item.expanded = pathitem.expanded
-            item.children = self.wrap_path_items(pathitem.children, src, cache, log)
+                item.gid = self.patMappingDictPut(src, item.id, "seq", cache, log, 0)
+            item.expanded = dict_pathitem['expanded']
+            item.children = self.wrap_path_items(dict_pathitem['children'], src, cache, log)
             wrapped_paths.append(item)
         return wrapped_paths
 
-    def put_path_items(self, path_id, path_params, cache, log):
-        json_params = json.dumps(path_params, default=lambda o: o.__dict__)
+    @staticmethod
+    def put_path_items(path_id, path_items, cache, log):
+        json_path_items = json.dumps(path_items, default=lambda o: o.__dict__)
         try:
-            params = PathItemsCached(data=json_params, path_id=path_id)
+            params = PathItemsCached(data=json_path_items, path_id=path_id)
             cache.add(params)
             cache.commit()
         except Exception as e:
@@ -570,7 +563,44 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_all_mod_mappings(self, external_id, cache, log):
+    @staticmethod
+    def get_paths(version_id, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_paths - input parameters error')
+            return -2
+
+        try:
+            cached_paths = cache.query(PathsCached).filter(
+                PathsCached.version_id == version_id).first()
+            if cached_paths is None:
+                return None
+            else:
+                dict_paths = byteify(json.loads(cached_paths.data))
+                wrapped_paths = []
+                for path in dict_paths:
+                    wrapped_paths.append(Path(path['gid'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
+                print('from cache')
+                return wrapped_paths
+
+        except Exception as e:
+            msg = 'ERROR: Query get_paths() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+
+    @staticmethod
+    def put_paths(ver_id, paths, cache, log):
+        try:
+            json_paths = json.dumps(paths, default=lambda o: o.__dict__)
+            params = PathsCached(data=json_paths, version_id=ver_id)
+            cache.add(params)
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_paths() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    @staticmethod
+    def get_all_mod_mappings(external_id, cache, log):
 
         if external_id < 0 or cache is None:
             log.error('ERROR: get_all_mod_mappings - input parameters error')

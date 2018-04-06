@@ -181,4 +181,17 @@ class FileVersion(object):
 class EndPathPrescale(object):
     def __init__(self, streamid):
         self.streamid = streamid
-        self.prescales = {}  
+        self.prescales = {}
+
+
+class Path(object):
+
+    def __init__(self, gid=0, id_path=0, description="", name="", vid=0, order=0, isEndPath=0):
+        self.gid = gid
+        self.name = name
+        self.id_path = id_path
+        self.description = description
+        self.vid = vid
+        self.order = order
+        self.isEndPath = isEndPath
+        self.pit = "pat"

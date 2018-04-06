@@ -16,6 +16,7 @@ from schemas.responseSchemas import *
 from responses.responses import *
 from marshmallow import Schema, fields, pprint
 from marshmallow.ordereddict import OrderedDict
+
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
@@ -405,40 +406,38 @@ class Exposed(object):
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
-#        print "CNF after get ", cnf
-
         ver_id = -1
 
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
 
-        #DB Queries
-        pats = None
+        paths = cache.get_paths(ver_id, cache_session, log)
+        if paths is None:
+            print('from db')
+            try:
+                paths = queries.getPaths(ver_id, db, log)
+                i = 0
+                path_wraped = []
+                for p in paths:
+                    p.vid = ver_id
+                    p.order = i
+                    # p.gid = patsMap.put(p)
+                    p.gid = cache.patMappingDictPut(src, p.id, "pat", cache_session, log)
+                    i = i + 1
+                    path_wraped.append(Path(p.gid, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
+                cache.put_paths(ver_id, path_wraped, cache_session, log)
+                print('added to cache')
 
-        try:
-            pats = queries.getPaths(ver_id, db, log)
+            except:
+                log.error('ERROR: Query getPaths Error')
+                return None
 
-        except:
-            log.error('ERROR: Query getPaths Error')
+        if paths is None:
             return None
 
-#        if (pats == None):
-#            return None
-
-        i = 0
-        for p in pats:
-            p.vid = ver_id
-            p.order = i
-            # p.gid = patsMap.put(p)
-            p.gid = cache.patMappingDictPut(src, p.id, "pat", cache_session, log)
-            i = i+1
-
-        resp.children = pats
-
+        resp.children = paths
         resp.success = True
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
-
         return output.data
 
 
