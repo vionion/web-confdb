@@ -71,8 +71,9 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                 },
                 listeners: {
                     beforedrop: function( node, data, overModel, dropPosition, dropHandler){
-                        // can be used to restrict drop at top level, for example
-                        // dropHandler.cancelDrop();
+                        if ((dropPosition !== 'append') && (overModel.parentNode.data.root)) {
+                            dropHandler.cancelDrop();
+                        }
                     },
                     drop: function (node, data, overModel, dropPosition) {
                         console.log(overModel);
@@ -82,6 +83,7 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                         var newParent;
                         if (dropPosition === 'append') {
                             newParent = overModel.data.Name;
+                            // this is not working with paths, because they don't have children field. Must be fixed.
                             newOrder = overModel.data.children[overModel.data.children.length - 1].order;
                         } else if (dropPosition === 'before') {
                             newParent = overModel.parentNode.data.Name;
