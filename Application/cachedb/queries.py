@@ -16,11 +16,13 @@ import json
 from utils import byteify
 
 from item_wrappers.Parameter import Parameter
+from item_wrappers.Pathitem import Pathitem
 
 from exposed.params_builder import ParamsBuilder
 
 from confdb_v2.tables import ModuleitemFull
-from tables import ParamsCached, IdMapping
+
+from tables import ParamsCached, IdMapping, PathItemsCached
 
 
 class CacheDbQueries(object):
@@ -39,9 +41,6 @@ class CacheDbQueries(object):
                 statement = select([func.uniqueMapping_put(internal_id, "patsMapping", unique, itemtype)])
                 return_value = db.execute(statement)
                 return_value = return_value.first()
-            else:
-                print('Dou!')
-                return -2
 
         except Exception as e:
             msg = 'ERROR: Query patMappingDictPut() Error: ' + e.args[0]
@@ -460,7 +459,7 @@ class CacheDbQueries(object):
 
     @staticmethod
     def get_params(internal_entity_id, cache, log):
-        # this module id must be internal id, which is from one of the 'id' columns in tables in cache. Not from Oracle!
+        # this param id must be internal id, which is from one of the 'id' columns in tables in cache. Not from Oracle!
 
         if internal_entity_id < 0 or cache is None:
             log.error('ERROR: get_module - input parameters error')
@@ -487,10 +486,10 @@ class CacheDbQueries(object):
             return None
 
     @staticmethod
-    def put_params(internal_entity_id, module_params, cache, log):
+    def put_params(internal_entity_id, params, cache, log):
         # it is possible to reduce amount of data stored in cache, since we don't really use all of the parameter values
         # (check param_builder.buildParameterStructure)
-        json_params = json.dumps(module_params, default=lambda o: o.__dict__)
+        json_params = json.dumps(params, default=lambda o: o.__dict__)
         try:
             params = ParamsCached(data=json_params, id=internal_entity_id)
             cache.add(params)
@@ -515,6 +514,59 @@ class CacheDbQueries(object):
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query update_params() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    def get_path_items(self, path_id, cache, src, log):
+        if path_id < 0 or cache is None:
+            log.error('ERROR: get_path_items - input parameters error')
+            return -2
+
+        try:
+            cached_path = cache.query(PathItemsCached).filter(
+                PathItemsCached.path_id == path_id).first()
+            if cached_path is None:
+                return None
+            else:
+                dict_path_items = byteify(json.loads(cached_path.data))
+                wrapped_paths_items = self.wrap_path_items(dict_path_items, src, cache, log)
+                print('from cache')
+                return wrapped_paths_items
+
+        except Exception as e:
+            msg = 'ERROR: Query get_path_items() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+
+    def convert_pathitem_dict2obj(self, dict_params):
+        obj_items = []
+        for param in dict_params:
+            obj_items.append(namedtuple("Pathitems", param.keys())(*param.values()))
+        return obj_items
+
+    def wrap_path_items(self, dict_path_items, src, cache, log):
+        obj_path_items = self.convert_pathitem_dict2obj(dict_path_items)
+        wrapped_paths = []
+        for pathitem in obj_path_items:
+            item = Pathitem(pathitem.id, pathitem.name, pathitem.id_pathid, pathitem.paetype, pathitem.id_parent,
+                            pathitem.lvl, pathitem.order, pathitem.operator)
+            if item.paetype == 1:
+                item.gid = self.patMappingDictPut(src, pathitem.id, "mod", cache, log, 0)
+            elif item.paetype == 2:
+                item.gid = self.patMappingDictPut(src, pathitem.id, "seq", cache, log, 0)
+            item.expanded = pathitem.expanded
+            item.children = self.wrap_path_items(pathitem.children, src, cache, log)
+            wrapped_paths.append(item)
+        return wrapped_paths
+
+    def put_path_items(self, path_id, path_params, cache, log):
+        json_params = json.dumps(path_params, default=lambda o: o.__dict__)
+        try:
+            params = PathItemsCached(data=json_params, path_id=path_id)
+            cache.add(params)
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_path_items() Error: ' + e.args[0]
             log.error(msg)
             return -2
 

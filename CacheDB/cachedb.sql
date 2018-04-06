@@ -108,9 +108,11 @@ $$ LANGUAGE plpgsql;
 
 
 --
--- For all the modules, caching whole object as json.
+-- For all the params, caching whole object as json.
 --
 CREATE TABLE params_cache (id SERIAL PRIMARY KEY, data JSON);
+
+CREATE TABLE path_items_cache (path_id SERIAL PRIMARY KEY, data JSON);
 
 --
 -- For mapping external (oracle) and internal entities' ids

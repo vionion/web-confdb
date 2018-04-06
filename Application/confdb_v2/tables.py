@@ -70,7 +70,6 @@ class Pathids(Base):
 
     id = Column('id', Integer, primary_key=True)
     id_path = Column(ForeignKey('u_paths.id'))
-    #isendpath = Column(Integer
     description = Column(CLOB)
     name = column_property(
         select([Paths.name]).where(Paths.id == id_path)

@@ -92,122 +92,130 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        # id_p = patsMap.get(gid)
-        ext_pat_id = cache.patMappingDictGetExternal(gid, src, "pat", cache_session, log)
-	ext_pat_id = int(ext_pat_id)
-	log_msg = "id_p from GET: " + str(ext_pat_id)
-	log.error(log_msg)
-	
         resp = Response()
         schema = ResponsePathItemSchema()
-        #Retreive all the sequences and their items of the path
+        internal_pat_id = cache.patMappingDictGetInternal(gid, "pat", cache_session, log)
 
-        #DB Queries
-        elements = None
-        items = None
+        pats = cache.get_path_items(internal_pat_id, cache_session, src, log)
 
-        try:
-            elements = queries.getCompletePathSequences(ext_pat_id, ver, db, log)
-            items = queries.getCompletePathSequencesItems(ext_pat_id, ver, db, log)
-        except Exception as e:
-	    msg = 'ERROR: Query getCompletePathSequences/Query getCompletePathSequencesItems Error: ' + e.args[0]
-            log.error(msg)
-            return None
+        if pats is None:
+            print('from db')
+            pats = []
 
-        if (elements == None or items == None):
-            return None
+            # id_p = patsMap.get(gid)
+            ext_pat_id = cache.get_external_id(cache_session, internal_pat_id, "pat", src, log)
 
-        #Elements construction
-#        print "RESULTS LEN: ", len(items), len(elements)
+            #DB Queries
+            elements = None
+            items = None
 
-        items_dict = dict((x.id, x) for x in items)
-        elements_dict = dict((x.id, x) for x in elements)
-        
-        written_sequences = set()
-        built_sequences = set()
+            try:
+                elements = queries.getCompletePathSequences(ext_pat_id, ver, db, log)
+                items = queries.getCompletePathSequencesItems(ext_pat_id, ver, db, log)
+            except Exception as e:
+                msg = 'ERROR: Query getCompletePathSequences/Query getCompletePathSequencesItems Error: ' + e.args[0]
+                log.error(msg)
+                return None
 
-        seq = {}
-        lvlZeroSeq_Dict = {}
-        idpaes = {}
+            if (elements == None or items == None):
+                return None
 
-        #Build all the sequences
-        #                                                                                                                   #                                                    
-        # ----------------------------------------------------------------------------------------------------------------- #
-        #       New Routine for sequences
-        #  
+            #Elements construction
+    #        print "RESULTS LEN: ", len(items), len(elements)
 
-        elements_dict = dict((element.id, element) for element in elements)
+            items_dict = dict((x.id, x) for x in items)
+            elements_dict = dict((x.id, x) for x in elements)
 
-        counter = 0
-        idgen_new = 1
+            written_sequences = set()
+            built_sequences = set()
 
-        while counter < len(items):
-            elem = elements_dict[items[counter].id_pae]
-            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-            # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
-            # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
+            seq = {}
+            lvlZeroSeq_Dict = {}
+            idpaes = {}
 
-            if elem.paetype == 1:
-                # item.gid = modsMap.put(elem, items[counter].id_pathid, items[counter].order, items[counter].lvl)
-                item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "mod", cache_session, log, 0)
-            elif elem.paetype == 2:        
+            #Build all the sequences
+            #                                                                                                                   #
+            # ----------------------------------------------------------------------------------------------------------------- #
+            #       New Routine for sequences
+            #
+
+            elements_dict = dict((element.id, element) for element in elements)
+
+            counter = 0
+            idgen_new = 1
+
+            while counter < len(items):
+                elem = elements_dict[items[counter].id_pae]
+                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
                 # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
-                item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log, 0)
 
-            self.simple_counter = self.simple_counter + 1
-            counter = counter + 1
-            
-            if item.paetype == 2:
-                
-                if item.lvl == 0:
-                    lvlZeroSeq_Dict[item.gid] = item.id
-                
-                if item.name in written_sequences:
-                    counter = self.skipPathSequence(counter, items, item.lvl+1)
-                else:
-                    counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session, log)
-                    for child in new_children:
+                if elem.paetype == 1:
+                    # item.gid = modsMap.put(elem, items[counter].id_pathid, items[counter].order, items[counter].lvl)
+                    item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "mod", cache_session, log, 0)
+                elif elem.paetype == 2:
+                    # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
+                    item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log, 0)
 
-                        item.children.append(child)
+                self.simple_counter = self.simple_counter + 1
+                counter = counter + 1
 
-                    written_sequences.add(item.name)
-                    item.expanded = False
-                    built_sequences.add(item)
+                if item.paetype == 2:
 
+                    if item.lvl == 0:
+                        lvlZeroSeq_Dict[item.gid] = item.id
 
+                    if item.name in written_sequences:
+                        counter = self.skipPathSequence(counter, items, item.lvl+1)
+                    else:
+                        counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session, log)
+                        for child in new_children:
 
+                            item.children.append(child)
 
-        #                                                                                                                   #                                                    
-        # ----------------------------------------------------------------------------------------------------------------- #
-        #     
-
-        seq = dict((x.gid, x) for x in built_sequences)
+                        written_sequences.add(item.name)
+                        item.expanded = False
+                        built_sequences.add(item)
 
 
-        #Retreive the lvl 0 of the path
-        lista = queries.getLevelZeroPathItems(ext_pat_id, ver, db, log)
-        lvlzelems = queries.getLevelZeroPaelements(ext_pat_id, ver, db, log)
 
-        lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
-        pats = []
 
-        for l in lista:
-            elem = lvlzelems_dict[l.id_pae]
-            item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-            # item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
-            item.gid = cache.patMappingDictPut(src, l.id_pae, "mod", cache_session, log, 0)
-            pats.insert(item.order, item)
+            #                                                                                                                   #
+            # ----------------------------------------------------------------------------------------------------------------- #
+            #
 
-#        #merge the sequences created
-#        for ss in seq.viewvalues():
-#            pats.insert(ss.order, ss)
+            seq = dict((x.gid, x) for x in built_sequences)
 
-        lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-        for lzseq in lvlZeroSeq_Dict_keys: #lvlZeroSeq_Dict.viewkeys(): #viewvalues():
-            lzsequence = seq[lzseq]
-            pats.insert(lzsequence.order, lzsequence)
 
-        pats.sort(key=lambda x: x.order, reverse=False)
+            #Retreive the lvl 0 of the path
+            lista = queries.getLevelZeroPathItems(ext_pat_id, ver, db, log)
+            lvlzelems = queries.getLevelZeroPaelements(ext_pat_id, ver, db, log)
+
+            lvlzelems_dict = dict((x.id, x) for x in lvlzelems)
+
+            for l in lista:
+                elem = lvlzelems_dict[l.id_pae]
+                item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
+                # item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
+                item.gid = cache.patMappingDictPut(src, l.id_pae, "mod", cache_session, log, 0)
+                pats.insert(item.order, item)
+
+    #        #merge the sequences created
+    #        for ss in seq.viewvalues():
+    #            pats.insert(ss.order, ss)
+
+            lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
+            for lzseq in lvlZeroSeq_Dict_keys: #lvlZeroSeq_Dict.viewkeys(): #viewvalues():
+                lzsequence = seq[lzseq]
+                pats.insert(lzsequence.order, lzsequence)
+
+            pats.sort(key=lambda x: x.order, reverse=False)
+
+            cache.put_path_items(internal_pat_id, pats, cache_session, log)
+            print('added to cache')
+
+        if pats is None:
+            return None
         resp.success = True
         resp.children = pats
 

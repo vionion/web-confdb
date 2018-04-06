@@ -13,6 +13,11 @@ class ParamsCached(BaseCache):
     id = Column('id', Integer, primary_key=True)
     data = Column('data', JSON)
 
+class PathItemsCached(BaseCache):
+    __tablename__ = 'path_items_cache'
+    path_id = Column('path_id', Integer, primary_key=True)
+    data = Column('data', JSON)
+
 class IdMapping(BaseCache):
     __tablename__ = 'ext2int_id_mapping'
     internal_id = Column('internal_id', Integer, primary_key=True)
