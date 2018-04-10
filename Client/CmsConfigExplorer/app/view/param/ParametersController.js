@@ -1,31 +1,3 @@
-Ext.define('InputTag', {
-    extend: 'Ext.data.Model',
-
-    fields: [
-        {name: 'name', type: 'string'}
-    ]
-
-});
-
-var inputTags = Ext.create('Ext.data.Store', {
-    model: 'InputTag',
-    autoLoad: false,
-    proxy: {
-        type: 'ajax',
-        url: 'get_module_names',
-        limitParam: '',
-        pageParam: '',
-        sortParam: '',
-        startParam: '',
-        noCache: false,
-        headers: {'Content-Type': "application/json"},
-        reader: {
-            type: 'json',
-            rootProperty: 'children'
-        }
-    }
- });
-
 Ext.define('CmsConfigExplorer.view.param.ParametersController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.parameters',
@@ -50,22 +22,6 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             }
 
         });
-        console.log('inside tooltip activate');
-        var idc = this.getViewModel().get("idCnf");
-        var idv = this.getViewModel().get("idVer");
-        var online = this.getViewModel().get("online");
-
-        if(cid !=-1 && cid !=-2){
-            //console.log("loading modules cnf");
-            inputTags.load({params: {cnf: idc, online:online}});
-//            this.lookupReference('modulesGrid').mask("Loading Modules");
-
-        }
-        else if (vid !=-1){
-            //console.log("loading modules ver");
-            inputTags.load({params: {ver: idv, online:online}});
-//            this.lookupReference('modulesGrid').mask("Loading Modules");
-        }
     }
 
     , onBeforeCellEdit: function (editor, context, eOpts) {
@@ -108,7 +64,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
             hideTrigger: true,
             typeAhead: true,
             store: inputTags,
-            displayField : 'name'
+            displayField: 'name'
         });
         if (col.getEditor().editable) {
             if (context.record.get('paramtype') === 'bool') {
@@ -128,30 +84,35 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
     onEditDone: function (editor, context, eOpts) {
 
         var modId = context.record.get('moduleId');
+        // hmm, maybe it is time to change it to internal_id?
         var parName = context.record.get('name');
         var type = context.record.get('paramtype');
-        var valid = validate(context.value, type, function (valid_val) {
-            context.value = valid_val;
-            context.record.set('rendervalue', valid_val);
-        });
-        console.log(valid);
-        if (valid) {
-            var myObject = {'value': context.value, 'parName': parName, 'modId': modId};
-            Ext.Ajax.request({
-                url: 'update_param_val',
-                // why the hell it doesn't work with UPDATE?
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                jsonData: JSON.stringify(myObject),
-                failure: function (response) {
-                    Ext.Msg.alert("Error");
-                    console.log(response);
-                }
-            });
+        var prevVal = context.value;
+        if (context.record.modified !== null) {
+            prevVal = context.record.modified.rendervalue;
         }
+        validate(context.value, prevVal, type, function (valid, validValue) {
+                context.value = validValue;
+                context.record.modified = {rendervalue: validValue};
+                context.record.set('rendervalue', validValue);
+                if (valid) {
+                    var myObject = {'value': context.value, 'parName': parName, 'modId': modId};
+                    Ext.Ajax.request({
+                        url: 'update_param_val',
+                        // why the hell it doesn't work with UPDATE?
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        jsonData: JSON.stringify(myObject),
+                        failure: function (response) {
+                            Ext.Msg.alert("Error");
+                            console.log(response);
+                        }
+                    });
+                }
+            }
+        );
 
     }
-
 
 
 });
@@ -160,7 +121,7 @@ var MAX_INTEGER = bigInt("9223372036854775807");
 var MAX_UNSIGNED_INTEGER = bigInt("18446744073709551615");
 var MIN_INTEGER = bigInt("-9223372036854775808");
 
-function validate(value, type, callback) {
+function validate(value, prevVal, type, callback) {
     var valid = true;
     // string
     if (type === 'string') {
@@ -182,8 +143,7 @@ function validate(value, type, callback) {
 
         value = '"' + value;
         value = value + '"';
-        callback(value);
-        valid = true;
+        callback(valid, value);
     }
     //number
     else if (type === 'int32' || type === 'uint32' || type === 'int64' || type === 'uint64' || type === 'double') {
@@ -220,24 +180,40 @@ function validate(value, type, callback) {
                 valid = true;
             }
         }
+        if (valid) {
+            callback(valid, value);
+        } else {
+            callback(valid, prevVal);
+        }
     }
     // boolean, just one more time, why not
     else if (type === 'bool') {
         if (!((value === 'True') || (value === 'False'))) {
             valid = false;
+            callback(valid, prevVal);
+        } else {
+            callback(valid, value);
         }
     }
     // InputTag: we don't really validate, but mark non-existing values with red
     else if (type === 'InputTag') {
         valid = true;
-        if (inputTags.find('name', value) === -1) {
-            alert('InputTag is not exists yet...');
+        if (inputTags.findExact('name', value) === -1) {
+            Ext.MessageBox.confirm('Confirm', 'This module doesn\'t exists yet. Do you really want to change this InputTag value?', function (btn) {
+                if (btn === 'no') {
+                    callback(valid, prevVal);
+                } else {
+                    callback(valid, value);
+                }
+            });
+        } else {
+            callback(valid, value);
         }
     } else {
         // all unusual types will revert changes, since something is wrong:
         console.log("Unchecked type: " + type + " value: " + value);
         valid = false;
+        callback(valid, prevVal);
     }
 
-    return valid;
 }

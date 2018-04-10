@@ -56,6 +56,13 @@ Ext.define("CmsConfigExplorer.view.param.Parameters",{
             editor: {
                 xtype: 'textarea',
                 editable: true
+            },
+            renderer: function (v, meta, rec) {
+                var data = rec.getData();
+                if ((data.paramtype === 'InputTag') && (inputTags.findExact('name', v) === -1)) {
+                    meta.style = "color:red;";
+                }
+                return v;
             }
         },
         {

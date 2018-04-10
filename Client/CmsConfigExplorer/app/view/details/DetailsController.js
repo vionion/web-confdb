@@ -1,28 +1,60 @@
+Ext.define('InputTag', {
+    extend: 'Ext.data.Model',
+
+    fields: [
+        {name: 'name', type: 'string'}
+    ]
+
+});
+
+var inputTags = Ext.create('Ext.data.Store', {
+    model: 'InputTag',
+    autoLoad: false,
+    proxy: {
+        type: 'ajax',
+        url: 'get_module_names',
+        limitParam: '',
+        pageParam: '',
+        sortParam: '',
+        startParam: '',
+        noCache: false,
+        headers: {'Content-Type': "application/json"},
+        reader: {
+            type: 'json',
+            rootProperty: 'children'
+        }
+    }
+});
+
 Ext.define('CmsConfigExplorer.view.details.DetailsController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.details-details',
-    
-    onBeforeRender: function(){
-        
+
+    onBeforeRender: function () {
+
         cid = this.getViewModel().get("idCnf");
-        
+
         var pat = this.lookupReference('pathtab');
-        pat.getViewModel().set( "idCnf", cid );
-        
+        pat.getViewModel().set("idCnf", cid);
+
         var vid = this.getViewModel().get("idVer");
         var online = this.getViewModel().get("online");
-        
-        pat.getViewModel().set( "idVer", vid );
-        pat.getViewModel().set( "online", online );
-        
+
+        pat.getViewModel().set("idVer", vid);
+        pat.getViewModel().set("online", online);
+
         var mod = this.lookupReference('moduleTab');
-        mod.getViewModel().set( "idCnf", cid );
-        mod.getViewModel().set( "idVer", vid );
-        mod.getViewModel().set( "online", online );
-//        
-//        console.log("DETAILS!!!!");
-//        console.log(vid);
-  
+        mod.getViewModel().set("idCnf", cid);
+        mod.getViewModel().set("idVer", vid);
+        mod.getViewModel().set("online", online);
+
+        if (cid != -1 && cid != -2) {
+            inputTags.load({params: {cnf: cid, online: online}});
+        }
+        else if (vid != -1) {
+            inputTags.load({params: {ver: vid, online: online}});
+        }
+
     },
     
     onLoadPaths: function(store){

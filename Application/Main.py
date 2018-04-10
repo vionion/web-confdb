@@ -310,7 +310,7 @@ class Root(object):
         # UPD: TODO: it still might be different from 0, so remove hardcode
         src = 0
 
-        self.funcs.update_module_cache(mod_id, src, param_name, value, cherrypy.request, self.log)
+        self.funcs.update_cached_param(mod_id, src, param_name, value, cherrypy.request, self.log)
         # TODO: remove it, it is stupid. Return something more enhanced
         return input_json
 

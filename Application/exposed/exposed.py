@@ -541,7 +541,7 @@ class Exposed(object):
 
         return output.data
 
-    def update_module_cache(self, mod_id, src, param_name, value, request, log):
+    def update_cached_param(self, mod_id, src, param_name, value, request, log):
 
         cache = self.cache
         cache_session = request.db_cache
