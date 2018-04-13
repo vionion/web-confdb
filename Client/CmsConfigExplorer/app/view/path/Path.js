@@ -69,32 +69,49 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                     ptype: 'treeviewdragdrop',
                     dragText: 'Drag and drop to reorganize'
                 },
+                copyDroppedRecord: function (record) {
+                    // Record from the grid. Take a copy ourselves
+                    // because the built-in copying messes it up.
+                    var copy = record.copy();
+                    copy.id = Ext.id();
+                    record.eachChild(function (child) {
+                        copy.appendChild(this.copyDroppedRecord(child));
+                    }, this);
+                    return copy;
+
+                },
                 listeners: {
-                    beforedrop: function( node, data, overModel, dropPosition, dropHandler){
+                    beforedrop: function (node, data, overModel, dropPosition, dropHandler) {
                         if ((dropPosition !== 'append') && (overModel.parentNode.data.root)) {
                             dropHandler.cancelDrop();
                         }
+                        if (data.event.altKey) {
+                            data.records = [this.copyDroppedRecord(data.records[0])];
+                            dropHandler.processDrop();
+                        }
                     },
                     drop: function (node, data, overModel, dropPosition) {
-                        console.log(overModel);
-                        console.log(dropPosition);
-                        // I came to CERN to create a new order!
-                        var newOrder;
-                        var newParent;
-                        if (dropPosition === 'append') {
-                            newParent = overModel.data.Name;
-                            // this is not working with paths, because they don't have children field. Must be fixed.
-                            newOrder = overModel.data.children[overModel.data.children.length - 1].order;
-                        } else if (dropPosition === 'before') {
-                            newParent = overModel.parentNode.data.Name;
-                            newOrder = overModel.data.order - 1;
-                        } else if (dropPosition === 'after') {
-                            newParent = overModel.parentNode.data.Name;
-                            newOrder = overModel.data.order;
-                        }
-                        console.log('new parent: ' + newParent);
-                        console.log('new order: ' + newOrder);
-                        console.log('Drop!');
+                        // console.log(data);
+                        // console.log(overModel);
+                        // console.log(dropPosition);
+                        // // I came to CERN to create a new order!
+                        // var newOrder;
+                        // var newParent;
+                        // if (dropPosition === 'append') {
+                        //     newParent = overModel.data.Name;
+                        //     // this is not working with paths, because they don't have children field. Must be fixed.
+                        //     newOrder = overModel.data.children[overModel.data.children.length - 1].order;
+                        // } else if (dropPosition === 'before') {
+                        //     newParent = overModel.parentNode.data.Name;
+                        //     newOrder = overModel.data.order - 1;
+                        // } else if (dropPosition === 'after') {
+                        //     newParent = overModel.parentNode.data.Name;
+                        //     newOrder = overModel.data.order;
+                        // }
+                        // console.log('new parent: ' + newParent);
+                        // console.log('old parent: ' + data.records[0].modified.parentId);
+                        // console.log('new order: ' + newOrder);
+                        // console.log('Drop!');
                     }
                 }
             },
@@ -113,12 +130,15 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                         dd = view.findPlugin('treeviewdragdrop');
 
                     dd.dragZone.onBeforeDrag = function (data, e) {
-                        var rec = view.getRecord(e.getTarget(view.itemSelector));
-                        console.log('old order: ' + rec.data.order);
-                        // console.log(rec.parentNode.data.gid);
-                        console.log('old parent: ' + rec.parentNode.data.Name);
-                        // console.log(rec);
-                        console.log('Drag!');
+                        // var rec = view.getRecord(e.getTarget(view.itemSelector));
+                        // console.log(data);
+                        // console.log(e);
+                        // data.copy = data.event.altKey;
+                        // console.log('old order: ' + rec.data.order);
+                        // // console.log(rec.parentNode.data.gid);
+                        // console.log('old parent: ' + rec.parentNode.data.Name);
+                        // // console.log(rec);
+                        // console.log('Drag!');
                         return true;
                     };
                 }
