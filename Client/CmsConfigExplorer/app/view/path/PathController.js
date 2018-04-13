@@ -204,7 +204,6 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
         
         //var cid = this.getViewModel().get('currentModule').id;
         this.getViewModel().getStore('parameters').load({params: {mid: mid, pid: pid, online:online, verid:idv}});
-        
         this.lookupReference('paramGrid').setLoading("Loading Module Parameters");
         
         var form = this.lookupReference('modDetails');
@@ -234,16 +233,14 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
         var central = this.lookupReference('centralPanel');
         var centralLayout = central.getLayout(); 
         var item_type = record.get("pit");
-        
-        var form = this.lookupReference('modDetails');
-        var params = this.lookupReference('paramGrid');
+
         var pathDet = this.lookupReference('pathDetailsPanel');
         
         if(item_type == "mod"){
             
             centralLayout.setActiveItem(0);
 
-            var mid = record.get("gid");
+            var mid = record.get("internal_id");
             var pid = record.get("id_pathid");
 
             //console.log('in child, fwd event');
@@ -255,7 +252,7 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
             
             var idc = this.getViewModel().get("idCnf");
             var idv = this.getViewModel().get("idVer");
-            var pid = record.get("gid");
+            var pid = record.get("internal_id");
 
             pathDet.fireEvent( "cusPatDetLoaded", pid,  idc, idv, online);
             //console.log("cusPatDetLoaded FIRED");
@@ -275,46 +272,39 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
         }
         
         this.getView().fireEvent('loadPaths',store);
-        
-        var root_vid  =  store.getRoot().get('vid');
 
+        var root_vid = store.getRoot().get('vid');
         //Check if Version id in Root is still default: set Version id in Root
         if(root_vid == -1){
             //Check if The path list is empty
             if(records.length > 0){
-
                     var verId = records[0].get('vid');
-                    store.getRoot().set('vid',verId);;
+                    store.getRoot().set('vid',verId);
                 }
         }
 
 //                    store.fireEvent('custSetVerId', verId);
         store.getRoot().expand();
     },
-    
-    onPathitemsBeforeLoad: function(store, operation, eOpts) {
 
+    onPathitemsBeforeLoad: function(store, operation, eOpts) {
         var pi_type = operation.config.node.get('pit');
         var online = this.getViewModel().get("online");
         operation.getProxy().setExtraParam('online',online);
-        
         operation.getProxy().setExtraParam('itype',pi_type);
-        //console.log(store.getRoot().get('vid'));
-        operation.getProxy().setExtraParam('ver',store.getRoot().get('vid')); //operation.config.node.get('pit')
-        
-//        this.lookupReference('pathTree').mask();
+        operation.getProxy().setExtraParam('ver',store.getRoot().get('vid'));
+        operation.getProxy().setExtraParam('node',operation.node.data.internal_id);
         this.lookupReference('pathTree').setLoading( "Loading Paths" );
     }
     
     ,onPathModuleParametersLoad: function(store, records, successful, operation, node, eOpts) {
-            var id = operation.config.node.get('gid')
+            var id = operation.config.node.get('id')
             if (id == -1){
                operation.config.node.expand() 
             }
         
             if(this.lookupReference('paramGrid').isMasked()){
-                this.lookupReference('paramGrid').setLoading( false );
-            //            this.lookupReference('pathTree').unmask();
+                this.lookupReference('paramGrid').setLoading(false);
             }
     }
     

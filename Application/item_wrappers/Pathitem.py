@@ -6,10 +6,8 @@
 
 class Pathitem(object):
 
-    def __init__(self, id = 0, name = "", id_pathid = 0, paetype = -1, id_parent = -1, lvl = -1, order = -1, operator = 0):
-        self.id = id
-        self.gid = -2
-#        self.gid = gid
+    def __init__(self, internal_id = 0, name = "", id_pathid = 0, paetype = -1, id_parent = -1, lvl = -1, order = -1, operator = 0):
+        self.internal_id = internal_id
         self.name = name
         self.id_pathid = id_pathid
         self.paetype = paetype

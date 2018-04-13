@@ -38,21 +38,12 @@ class Exposed(object):
 
     def getPathSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, src, cache_session, log):
         children = []
-        queries = self.queries
         cache = self.cache
 
         while(counter < len(items) and items[counter].lvl == level):
             elem = elements_dict[items[counter].id_pae]
-            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-
-            # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
-            # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
-            if elem.paetype == 1:
-                # item.gid = modsMap.put(elem, items[counter].id_pathid, items[counter].order, items[counter].lvl)
-                item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "mod", cache_session, log, 0)
-            elif elem.paetype == 2:        
-                # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
-                item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log, 0)
+            internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+            item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
             self.simple_counter = self.simple_counter + 1
             counter = counter + 1
@@ -84,10 +75,10 @@ class Exposed(object):
     #         ver: version id
     #         db: database session object
     #
-    def getPathItems(self, gid=-2, ver=-2, db = None, log = None, src = 0, request = None):
+    def getPathItems(self, internal_path_id=-2, ver=-2, db = None, log = None, src = 0, request = None):
 
-        if (gid == -1 or db == None or ver == -1):
-            log.error('ERROR: getPathItems - input parameters error' + self.log_arguments(gid=gid, ver=ver))
+        if (internal_path_id == -1 or db == None or ver == -1):
+            log.error('ERROR: getPathItems - input parameters error' + self.log_arguments(gid=internal_path_id, ver=ver))
 
         queries = self.queries
         cache = self.cache
@@ -95,16 +86,14 @@ class Exposed(object):
 
         resp = Response()
         schema = ResponsePathItemSchema()
-        internal_pat_id = cache.patMappingDictGetInternal(gid, "pat", cache_session, log)
 
-        pats = cache.get_path_items(internal_pat_id, cache_session, src, log)
+        pats = cache.get_path_items(internal_path_id, cache_session, src, log)
 
         if pats is None:
             print('from db')
             pats = []
 
-            # id_p = patsMap.get(gid)
-            ext_pat_id = cache.get_external_id(cache_session, internal_pat_id, "pat", src, log)
+            ext_pat_id = cache.get_external_id(cache_session, internal_path_id, "pat", src, log)
 
             #DB Queries
             elements = None
@@ -121,42 +110,19 @@ class Exposed(object):
             if (elements == None or items == None):
                 return None
 
-            #Elements construction
-    #        print "RESULTS LEN: ", len(items), len(elements)
-
-            items_dict = dict((x.id, x) for x in items)
-            elements_dict = dict((x.id, x) for x in elements)
-
             written_sequences = set()
             built_sequences = set()
 
-            seq = {}
             lvlZeroSeq_Dict = {}
-            idpaes = {}
-
-            #Build all the sequences
-            #                                                                                                                   #
-            # ----------------------------------------------------------------------------------------------------------------- #
-            #       New Routine for sequences
-            #
 
             elements_dict = dict((element.id, element) for element in elements)
 
             counter = 0
-            idgen_new = 1
 
             while counter < len(items):
                 elem = elements_dict[items[counter].id_pae]
-                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-                # item.gid = seqsMap.put(idgen,elem,items[counter].id_pathid,items[counter].order,items[counter].lvl,items[counter].id)
-                # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
-
-                if elem.paetype == 1:
-                    # item.gid = modsMap.put(elem, items[counter].id_pathid, items[counter].order, items[counter].lvl)
-                    item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "mod", cache_session, log, 0)
-                elif elem.paetype == 2:
-                    # item.gid = seqsMap.put(elem,items[counter].id_pathid,items[counter].order,items[counter].lvl)
-                    item.gid = cache.patMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log, 0)
+                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+                item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
                 self.simple_counter = self.simple_counter + 1
                 counter = counter + 1
@@ -164,7 +130,7 @@ class Exposed(object):
                 if item.paetype == 2:
 
                     if item.lvl == 0:
-                        lvlZeroSeq_Dict[item.gid] = item.id
+                        lvlZeroSeq_Dict[item.internal_id] = item.internal_id
 
                     if item.name in written_sequences:
                         counter = self.skipPathSequence(counter, items, item.lvl+1)
@@ -178,14 +144,7 @@ class Exposed(object):
                         item.expanded = False
                         built_sequences.add(item)
 
-
-
-
-            #                                                                                                                   #
-            # ----------------------------------------------------------------------------------------------------------------- #
-            #
-
-            seq = dict((x.gid, x) for x in built_sequences)
+            seq = dict((x.internal_id, x) for x in built_sequences)
 
 
             #Retreive the lvl 0 of the path
@@ -196,9 +155,8 @@ class Exposed(object):
 
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
-                item = Pathitem(l.id_pae , elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
-                # item.gid = modsMap.put(elem, l.id_pathid, l.order, l.lvl)
-                item.gid = cache.patMappingDictPut(src, l.id_pae, "mod", cache_session, log, 0)
+                internal_id = cache.get_internal_id(cache_session, l.id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+                item = Pathitem(internal_id, elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
                 pats.insert(item.order, item)
 
     #        #merge the sequences created
@@ -206,13 +164,13 @@ class Exposed(object):
     #            pats.insert(ss.order, ss)
 
             lvlZeroSeq_Dict_keys = lvlZeroSeq_Dict.keys()
-            for lzseq in lvlZeroSeq_Dict_keys: #lvlZeroSeq_Dict.viewkeys(): #viewvalues():
+            for lzseq in lvlZeroSeq_Dict_keys:
                 lzsequence = seq[lzseq]
                 pats.insert(lzsequence.order, lzsequence)
 
             pats.sort(key=lambda x: x.order, reverse=False)
 
-            cache.put_path_items(internal_pat_id, pats, cache_session, log)
+            cache.put_path_items(internal_path_id, pats, cache_session, log)
             print('added to cache')
 
         if pats is None:
@@ -221,18 +179,8 @@ class Exposed(object):
         resp.children = pats
 
         output = schema.dump(resp)
-        #assert isinstance(output.data, OrderedDict)
 
         return output.data
-
-    #Returns the path items (Sequences and Modules)
-    #@params: patsMap: map of paths database ids
-    #         seqsMap: map of sequences database ids
-    #         modsMap: map of moduels database ids
-    #         gid: path node generated id
-    #         ver: version id
-    #         db: database session object
-    #
 
     def getEndPathItems(self, gid=-2, ver=-2, db = None, log = None, request = None, src = 0):
 
@@ -422,9 +370,9 @@ class Exposed(object):
                     p.vid = ver_id
                     p.order = i
                     # p.gid = patsMap.put(p)
-                    p.gid = cache.patMappingDictPut(src, p.id, "pat", cache_session, log)
+                    p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
                     i = i + 1
-                    path_wraped.append(Path(p.gid, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
+                    path_wraped.append(Path(p.internal_id, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
                 cache.put_paths(ver_id, path_wraped, cache_session, log)
                 print('added to cache')
 
@@ -558,23 +506,23 @@ class Exposed(object):
         queries = self.queries
         module_params = []
 
-        internal_module_id = mid
 
         resp = Response()
         schema = ResponseParamSchema()
+        #
+        # if fromSequence:
+        #     internal_module_id = cache.seqMappingDictGetInternal(mid, "mod", cache_session, log)
+        #
+        # else:
+        #     if (allmod == 'true'):
+        #         # MODULE TAB
+        #         internal_module_id = cache.allmodMappingDictGetInternal(mid, "mod", cache_session, log)
+        #
+        #     else:
+        #         # PATH OR ENDPATH TAB
+        #         internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
 
-        if fromSequence:
-            internal_module_id = cache.seqMappingDictGetInternal(mid, "mod", cache_session, log)
-
-        else:
-            if (allmod == 'true'):
-                # MODULE TAB
-                internal_module_id = cache.allmodMappingDictGetInternal(mid, "mod", cache_session, log)
-
-            else:
-                # PATH OR ENDPATH TAB
-                internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
-
+        internal_module_id = mid
         module_params = cache.get_params(internal_module_id, cache_session, log)
 
         if module_params is None:
@@ -914,7 +862,7 @@ class Exposed(object):
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
         
-        ext_pat_id = cache.patMappingDictGetExternal(pid, src, "pat", cache_session, log)
+        ext_pat_id = cache.get_external_id(cache_session, pid, "pat", src, log)
 
         #ToDo IdV_er / CNF
         ver_id = -1
@@ -1086,14 +1034,7 @@ class Exposed(object):
         if (mod == -2 or pat == -2 or db == None):
             log.error('ERROR: getModuleDetails - input parameters error' + self.log_arguments(mod_id=mod, pat_id=pat))
 
-        external_id = -1
-
-        if fromSequence:
-            external_id = cache.seqMappingDictGetExternal(mod, src, "mod", cache_session, log)
-        
-        else:
-            external_id = cache.patMappingDictGetExternal(mod, src, "mod", cache_session, log)
-
+        external_id = cache.get_external_id(cache_session, mod, "mod", src, log)
 
         resp = Response()
         schema = ResponseModuleDetailsSchema()

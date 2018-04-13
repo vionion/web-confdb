@@ -540,12 +540,8 @@ class CacheDbQueries(object):
     def wrap_path_items(self, dict_path_items, src, cache, log):
         wrapped_paths = []
         for dict_pathitem in dict_path_items:
-            item = Pathitem(dict_pathitem['id'], dict_pathitem['name'], dict_pathitem['id_pathid'], dict_pathitem['paetype'], dict_pathitem['id_parent'],
+            item = Pathitem(dict_pathitem['internal_id'], dict_pathitem['name'], dict_pathitem['id_pathid'], dict_pathitem['paetype'], dict_pathitem['id_parent'],
                             dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
-            if item.paetype == 1:
-                item.gid = self.patMappingDictPut(src, item.id, "mod", cache, log, 0)
-            elif item.paetype == 2:
-                item.gid = self.patMappingDictPut(src, item.id, "seq", cache, log, 0)
             item.expanded = dict_pathitem['expanded']
             item.children = self.wrap_path_items(dict_pathitem['children'], src, cache, log)
             wrapped_paths.append(item)
@@ -578,7 +574,7 @@ class CacheDbQueries(object):
                 dict_paths = byteify(json.loads(cached_paths.data))
                 wrapped_paths = []
                 for path in dict_paths:
-                    wrapped_paths.append(Path(path['gid'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
+                    wrapped_paths.append(Path(path['internal_id'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
                 print('from cache')
                 return wrapped_paths
 

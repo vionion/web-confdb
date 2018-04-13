@@ -14,8 +14,7 @@ class PathsSchema(Schema):
         ordered = True
 
 class PathsTreeSchema(Schema):
-#    id = fields.Integer()
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     id_path = fields.Integer()
     vid = fields.Integer()
     name = fields.String()
@@ -35,7 +34,7 @@ class PathsTreeSchema(Schema):
             return 'resources/EndPath.ico'
 
     class Meta:
-        fields = ("gid", "vid", "icon", "id_path", "Name", "order", "pit")
+        fields = ("internal_id", "vid", "icon", "id_path", "Name", "order", "pit")
         ordered = True
 
 class PathDetailsSchema(Schema):
@@ -53,7 +52,7 @@ class PathDetailsSchema(Schema):
 
 class PathItemSchema(Schema):
 #    id = fields.Integer()
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     id_pathid = fields.String()
     paetype = fields.Integer()
@@ -119,7 +118,7 @@ class PathItemSchema(Schema):
             return False
 
     class Meta:
-        fields = ("gid", "Name", "id_pathid", "pit","order","id_parent","leaf", "orig_id", "icon","expanded","children", "operator")
+        fields = ("internal_id", "Name", "id_pathid", "pit","order","id_parent","leaf", "orig_id", "icon","expanded","children", "operator")
         ordered = True
 
 class PathsItemSchema(Schema):
@@ -268,6 +267,7 @@ class ParameterSchema(Schema):
         else:
             return ''
 
+    #gid is not needed at all, or may be replaced by internal id
     def get_gid(self,obj):
         return obj.id
 

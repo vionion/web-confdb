@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.model.Moduleitem', {
-    extend: 'CmsConfigExplorer.model.Base',
+    extend: 'Ext.data.Model',
     
     fields: [
         { name: 'moduleId', type: 'int' },

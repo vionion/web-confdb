@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.model.Pathitem', {
-    extend: 'CmsConfigExplorer.model.Base',
+    extend: 'Ext.data.Model',
     
     fields: [
         { name: 'Name', type: 'string' },

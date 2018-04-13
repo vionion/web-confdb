@@ -186,8 +186,8 @@ class EndPathPrescale(object):
 
 class Path(object):
 
-    def __init__(self, gid=0, id_path=0, description="", name="", vid=0, order=0, isEndPath=0):
-        self.gid = gid
+    def __init__(self, internal_id=0, id_path=0, description="", name="", vid=0, order=0, isEndPath=0):
+        self.internal_id = internal_id
         self.name = name
         self.id_path = id_path
         self.description = description

@@ -29,7 +29,7 @@ Ext.define('CmsConfigExplorer.view.path.PathModel', {
             root: {
                 expanded: false,
                 text: "Paths",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -50,7 +50,7 @@ Ext.define('CmsConfigExplorer.view.path.PathModel', {
                 root: {
                     expanded: false,
                     text: "Params",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             
