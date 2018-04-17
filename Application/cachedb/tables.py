@@ -1,7 +1,7 @@
 # File tables.py Description:
 # This files contains tables descriptions for sqlalchemy
 #
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, BigInteger, UniqueConstraint, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import JSON, ARRAY
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
@@ -20,8 +20,14 @@ class PathsCached(BaseCache):
 
 class PathItemsCached(BaseCache):
     __tablename__ = 'path_items_cache'
-    path_id = Column('path_id', Integer, primary_key=True)
+    path_item_id = Column('path_item_id', Integer, primary_key=True)
     data = Column('data', JSON)
+
+
+class PathItemsHierarchy(BaseCache):
+    __tablename__ = 'path_items_hierarchy'
+    parent_id = Column('parent_id', BigInteger, primary_key=True)
+    child_id = Column('child_id', BigInteger, primary_key=True)
 
 class IdMapping(BaseCache):
     __tablename__ = 'ext2int_id_mapping'

@@ -114,15 +114,17 @@ CREATE TABLE params_cache (id SERIAL PRIMARY KEY, data JSON);
 
 CREATE TABLE paths_cache (version_id SERIAL PRIMARY KEY, data JSON);
 
-CREATE TABLE path_items_cache (path_id SERIAL PRIMARY KEY, data JSON);
+CREATE TABLE path_items_cache (path_item_id SERIAL PRIMARY KEY, data JSON);
+
+CREATE TABLE path_items_hierarchy (parent_id BIGINT, child_id BIGINT, PRIMARY KEY (parent_id, child_id));
 
 --
 -- For mapping external (oracle) and internal entities' ids
 --
-CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id INTEGER, itemtype text, source INTEGER);
+CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id BIGINT, itemtype text, source INTEGER);
 
 
-CREATE or REPLACE FUNCTION getClientMappings(integer, text, text) RETURNS text[] AS $$
+CREATE or REPLACE FUNCTION getClientMappings(BIGINT, text, text) RETURNS text[] AS $$
 DECLARE
     external_id ALIAS FOR $1;
     tabl ALIAS FOR $2;

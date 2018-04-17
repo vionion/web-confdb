@@ -87,7 +87,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponsePathItemSchema()
 
-        pats = cache.get_path_items(internal_path_id, cache_session, src, log)
+        pats = cache.get_path_items(internal_path_id, cache_session, log)
 
         if pats is None:
             print('from db')

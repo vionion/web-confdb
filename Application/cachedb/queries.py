@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+import copy
 from sqlalchemy import *
 from sqlalchemy.orm import *
 from sqlalchemy.orm.attributes import flag_modified
@@ -12,7 +13,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 import json
 
 # from confdb_tables.cachedb_tables import *
-#from sqlalchemy_plugin.saplugin import Version, Pathidconf, Pathids, Paths, Pathitems, Pathelement, Modelement, Moduleitem, ModTelement, ModToTemp, ModTemplate, Directory, Configuration, Moduletypes,
+# from sqlalchemy_plugin.saplugin import Version, Pathidconf, Pathids, Paths, Pathitems, Pathelement, Modelement, Moduleitem, ModTelement, ModToTemp, ModTemplate, Directory, Configuration, Moduletypes,
 from utils import byteify
 
 from item_wrappers.Parameter import Parameter
@@ -21,13 +22,12 @@ from item_wrappers.item_wrappers import *
 
 from exposed.params_builder import ParamsBuilder
 
-from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached
+from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached, PathItemsHierarchy
 
 
 class CacheDbQueries(object):
 
-
-    def patMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def patMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: patMappingDictPut - input parameters error')
@@ -76,7 +76,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def endpatMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def endpatMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: patMappingDictPut - input parameters error')
@@ -85,7 +85,7 @@ class CacheDbQueries(object):
 
         try:
             internal_id = self.get_internal_id(db, dbid, itemtype, src, log)
-            statement = select([func.uniqueMapping_put(internal_id, "endpatsMapping",unique, itemtype)])
+            statement = select([func.uniqueMapping_put(internal_id, "endpatsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
 
@@ -124,7 +124,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def allmodMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def allmodMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: allmodMappingDictPut - input parameters error')
@@ -176,7 +176,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def srvMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def srvMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: srvMappingDictPut - input parameters error')
@@ -221,7 +221,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return internal_id
 
-    def gpsMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def gpsMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: gpsMappingDictPut - input parameters error')
@@ -266,9 +266,9 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    #this causes bugs for some reason (before my changes):
+    # this causes bugs for some reason (before my changes):
     # ERROR: Query get_internal_id() Error: (psycopg2.InternalError) current transaction is aborted, commands ignored until end of transaction block
-    def sumMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def sumMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: sumMappingDictPut - input parameters error')
@@ -314,7 +314,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def seqMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def seqMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or db == None):
             log.error('ERROR: seqMappingDictPut - input parameters error')
@@ -347,7 +347,7 @@ class CacheDbQueries(object):
             statement = select([func.uniqueMapping_get(gid, "seqsMapping", itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
-        
+
         except Exception as e:
             msg = 'ERROR: Query seqMappingDictGet() Error: ' + e.args[0]
             log.error(msg)
@@ -362,7 +362,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def strMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def strMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: strMappingDictPut - input parameters error')
@@ -408,7 +408,7 @@ class CacheDbQueries(object):
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return external_id
 
-    def folMappingDictPut(self, src, dbid, itemtype, db, log, unique = 1):
+    def folMappingDictPut(self, src, dbid, itemtype, db, log, unique=1):
 
         if (src == -1 or dbid == -1 or db == None):
             log.error('ERROR: folMappingDictPut - input parameters error')
@@ -419,7 +419,7 @@ class CacheDbQueries(object):
             statement = select([func.uniqueMapping_put(dbid, "folsMapping", unique, itemtype)])
             return_value = db.execute(statement)
             return_value = return_value.first()
-        
+
         except Exception as e:
             msg = 'ERROR: Query folMappingDictPut() Error: ' + e.args[0]
             log.error(msg)
@@ -454,7 +454,6 @@ class CacheDbQueries(object):
         internal_id = self.folMappingDictGetInternal(gid, itemtype, db, log)
         external_id = self.get_external_id(db, internal_id, itemtype, src, log)
         return internal_id
-
 
     @staticmethod
     def get_params(internal_entity_id, cache, log):
@@ -516,42 +515,55 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_path_items(self, path_id, cache, src, log):
-        if path_id < 0 or cache is None:
+    def get_path_items(self, parent_id, cache, log):
+        if parent_id < 0 or cache is None:
             log.error('ERROR: get_path_items - input parameters error')
             return -2
-
         try:
-            cached_path_items = cache.query(PathItemsCached).filter(
-                PathItemsCached.path_id == path_id).first()
-            if cached_path_items is None:
+            cached_path_children = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.parent_id == parent_id).all()
+            if len(cached_path_children) is 0:
                 return None
             else:
-                dict_path_items = byteify(json.loads(cached_path_items.data))
-                wrapped_paths_items = self.wrap_path_items(dict_path_items, src, cache, log)
+                items = []
+                for children in cached_path_children:
+                    item = self.get_wrapped_item(cache, children)
+                    item.children = self.get_path_items(item.internal_id, cache, log)
+                    items.append(item)
                 print('from cache')
-                return wrapped_paths_items
+                return items
 
         except Exception as e:
             msg = 'ERROR: Query get_path_items() Error: ' + e.args[0]
             log.error(msg)
             return None
 
-    def wrap_path_items(self, dict_path_items, src, cache, log):
-        wrapped_paths = []
-        for dict_pathitem in dict_path_items:
-            item = Pathitem(dict_pathitem['internal_id'], dict_pathitem['name'], dict_pathitem['id_pathid'], dict_pathitem['paetype'], dict_pathitem['id_parent'],
-                            dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
-            item.expanded = dict_pathitem['expanded']
-            item.children = self.wrap_path_items(dict_pathitem['children'], src, cache, log)
-            wrapped_paths.append(item)
-        return wrapped_paths
+    def get_wrapped_item(self, cache, children):
+        path_item = cache.query(PathItemsCached).filter(
+            PathItemsCached.path_item_id == children.child_id).first()
+        dict_pathitem = byteify(json.loads(path_item.data))
+        item = Pathitem(dict_pathitem['internal_id'], dict_pathitem['name'], dict_pathitem['id_pathid'],
+                        dict_pathitem['paetype'], dict_pathitem['id_parent'],
+                        dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
+        item.expanded = dict_pathitem['expanded']
+        return item
+
+    def put_path_items(self, parrent_id, path_items, cache, log):
+        for pathitem in path_items:
+            if not cache.query(exists().where(PathItemsCached.path_item_id == pathitem.internal_id)).scalar():
+                self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
+                self.put_path_item(pathitem, cache, log)
+            params = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id)
+            cache.add(params)
+            cache.commit()
 
     @staticmethod
-    def put_path_items(path_id, path_items, cache, log):
-        json_path_items = json.dumps(path_items, default=lambda o: o.__dict__)
+    def put_path_item(pathitem, cache, log):
+        pathitem_copy = copy.deepcopy(pathitem)
+        pathitem_copy.children = []
+        json_path_item = json.dumps(pathitem_copy, default=lambda o: o.__dict__)
         try:
-            params = PathItemsCached(data=json_path_items, path_id=path_id)
+            params = PathItemsCached(data=json_path_item, path_item_id=pathitem_copy.internal_id)
             cache.add(params)
             cache.commit()
         except Exception as e:
@@ -681,4 +693,3 @@ def convert_module_dict2obj(dict_params, log):
         if len(param['children']) > 0:
             obj_params.extend(convert_module_dict2obj(param['children'], log))
     return obj_params
-
