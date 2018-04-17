@@ -1169,14 +1169,19 @@ class Exposed(object):
         if (version == None):
             return None
         ver_id = version.id
-        module_names = None
-        try:
-            module_names = queries.getConfPaelements(ver_id, db, log)
-        except:
-            log.error('ERROR: Query getConfPaelements Error')
+        module_names = cache.get_modules_names(ver_id, cache_session, log)
+        if module_names is None:
+            print('from db')
+            try:
+                module_names = queries.getConfPaelements(ver_id, db, log)
+                cache.put_modules_names(ver_id, [o.name for o in module_names], cache_session, log)
+            except:
+                log.error('ERROR: Query getConfPaelements Error')
+                return None
+        if module_names is None:
             return None
-        resp.children = module_names
         resp.success = True
+        resp.children = module_names
         output = schema.dump(resp)
         return output.data
 

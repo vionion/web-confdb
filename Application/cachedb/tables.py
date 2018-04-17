@@ -23,11 +23,15 @@ class PathItemsCached(BaseCache):
     path_item_id = Column('path_item_id', Integer, primary_key=True)
     data = Column('data', JSON)
 
-
 class PathItemsHierarchy(BaseCache):
     __tablename__ = 'path_items_hierarchy'
     parent_id = Column('parent_id', BigInteger, primary_key=True)
     child_id = Column('child_id', BigInteger, primary_key=True)
+
+class ModulesNames(BaseCache):
+    __tablename__ = 'modules_names_cache'
+    version_id = Column('version_id', Integer, primary_key=True)
+    names = Column('names', ARRAY(String))
 
 class IdMapping(BaseCache):
     __tablename__ = 'ext2int_id_mapping'

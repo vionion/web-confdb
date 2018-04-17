@@ -22,7 +22,8 @@ from item_wrappers.item_wrappers import *
 
 from exposed.params_builder import ParamsBuilder
 
-from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached, PathItemsHierarchy
+from confdb_v2.tables import Pathelement
+from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached, PathItemsHierarchy, ModulesNames
 
 
 class CacheDbQueries(object):
@@ -606,6 +607,47 @@ class CacheDbQueries(object):
             msg = 'ERROR: Query put_paths() Error: ' + e.args[0]
             log.error(msg)
             return -2
+
+
+    @staticmethod
+    def get_modules_names(version_id, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_module_names - input parameters error')
+            return -2
+
+        try:
+            cached_names_list = cache.query(ModulesNames).filter(
+                PathsCached.version_id == version_id).first()
+            if cached_names_list is None:
+                return None
+            else:
+                wrapped_names = []
+                for name in cached_names_list.names:
+                    wrapped_names.append(Pathelement(name=name))
+                print('from cache')
+                return wrapped_names
+
+        except Exception as e:
+            msg = 'ERROR: Query get_module_names() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+
+    @staticmethod
+    def put_modules_names(ver_id, names_list, cache, log):
+        try:
+            names = ModulesNames(names=names_list, version_id=ver_id)
+            cache.add(names)
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_modules_names() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    # TODO: implement when needed
+    @staticmethod
+    def update_modules_names(version_id, params_list, cache, log):
+        print('not implemented yet')
+
 
     @staticmethod
     def get_all_mod_mappings(external_id, cache, log):
