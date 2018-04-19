@@ -300,6 +300,22 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
+    def drag_n_drop(self):
+        input_json = byteify(cherrypy.request.json)
+        node_id = input_json['nodeId']
+        old_parent = input_json['oldParent']
+        new_parent = input_json['newParent']
+        order = input_json['order']
+        copied = input_json['copied']
+        if old_parent == new_parent:
+            self.funcs.drag_n_drop_reorder(node_id, old_parent, order, cherrypy.request, self.log)
+        else:
+            self.funcs.drag_n_drop(node_id, old_parent, new_parent, order, copied, cherrypy.request, self.log)
+        return input_json
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
     def update_param_val(self):
         input_json = byteify(cherrypy.request.json)
         value = input_json['value']

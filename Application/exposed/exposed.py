@@ -495,6 +495,19 @@ class Exposed(object):
         cache_session = request.db_cache
         cache.update_params(mod_id, param_name, value, cache_session, log)
 
+    def drag_n_drop_reorder(self, node_id, old_parent, new_order, request, log):
+        cache = self.cache
+        cache_session = request.db_cache
+        cache.drag_n_drop_reorder(node_id, old_parent, new_order, cache_session, log)
+
+    def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log):
+        cache = self.cache
+        cache_session = request.db_cache
+        if copied:
+            cache.drag_n_drop_add_parent(node_id, new_parent, new_order, cache_session, log)
+        else:
+            cache.drag_n_drop_move(node_id, new_parent, old_parent, new_order, cache_session, log)
+
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
         if (mid == -2 or db == None):

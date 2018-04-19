@@ -532,6 +532,7 @@ class CacheDbQueries(object):
                     item.children = self.get_path_items(item.internal_id, cache, log)
                     items.append(item)
                 print('from cache')
+                items.sort(key=lambda x: x.order, reverse=False)
                 return items
 
         except Exception as e:
@@ -547,6 +548,7 @@ class CacheDbQueries(object):
                         dict_pathitem['paetype'], dict_pathitem['id_parent'],
                         dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
         item.expanded = dict_pathitem['expanded']
+        item.order = children.order
         return item
 
     def put_path_items(self, parrent_id, path_items, cache, log):
@@ -554,7 +556,7 @@ class CacheDbQueries(object):
             if not cache.query(exists().where(PathItemsCached.path_item_id == pathitem.internal_id)).scalar():
                 self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
                 self.put_path_item(pathitem, cache, log)
-            params = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id)
+            params = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id, order=pathitem.order)
             cache.add(params)
             cache.commit()
 
@@ -648,6 +650,60 @@ class CacheDbQueries(object):
     def update_modules_names(version_id, params_list, cache, log):
         print('not implemented yet')
 
+    def drag_n_drop_reorder(self, node_id, parent_id, new_order, cache, log):
+        try:
+            moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.child_id == node_id).first()
+            if moved_node.order > new_order:
+                self.update_orders(cache, new_order, moved_node.order - 1, parent_id, 1)
+                moved_node.order = new_order
+            else:
+                self.update_orders(cache, moved_node.order + 1, new_order - 1, parent_id, -1)
+                moved_node.order = new_order - 1
+
+        except Exception as e:
+            msg = 'ERROR: Query drag_n_drop_reorder() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    @staticmethod
+    def update_orders(cache, order_from, order_to, parent_id, diff):
+        nodes_to_update = cache.query(PathItemsHierarchy) \
+            .filter(PathItemsHierarchy.parent_id == parent_id) \
+            .filter(PathItemsHierarchy.order.between(order_from, order_to)).all()
+        for node in nodes_to_update:
+            node.order = node.order + diff
+
+    def drag_n_drop_add_parent(self, node_id, parent_id, new_order, cache, log):
+        try:
+            copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order)
+            max_order = cache.query(func.max(PathItemsHierarchy.order)).filter(
+                PathItemsHierarchy.parent_id == parent_id)
+            self.update_orders(cache, new_order, max_order, parent_id, 1)
+            cache.add(copied_node)
+
+        except Exception as e:
+            msg = 'ERROR: Query drag_n_drop_add_parent() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    def drag_n_drop_move(self, node_id, parent_id, old_parent_id, new_order, cache, log):
+        self.drag_n_drop_add_parent(node_id, parent_id, new_order, cache, log)
+        self.drag_n_drop_delete_parent(node_id, old_parent_id, cache, log)
+
+    def drag_n_drop_delete_parent(self, node_id, parent_id, cache, log):
+        try:
+            moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.child_id == node_id).first()
+            max_order = cache.query(func.max(PathItemsHierarchy.order)).filter(
+                PathItemsHierarchy.parent_id == parent_id)
+            self.update_orders(cache, moved_node.order, max_order, parent_id, -1)
+            cache.delete(moved_node)
+
+        except Exception as e:
+            msg = 'ERROR: Query drag_n_drop_delete_parent() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
 
     @staticmethod
     def get_all_mod_mappings(external_id, cache, log):
