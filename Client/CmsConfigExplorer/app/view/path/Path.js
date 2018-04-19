@@ -80,38 +80,59 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                     return copy;
 
                 },
+                sendDnDrequest: function (nodeId, oldParent, newParent, order, copied) {
+                    // Can be replased with just GET with params. It doesn't need to be more complicated than it can be
+                    var dnRequestObj = {
+                        'nodeId': nodeId,
+                        'oldParent': oldParent,
+                        'newParent': newParent,
+                        'order': order,
+                        'copied': copied
+                    };
+                    Ext.Ajax.request({
+                        url: 'drag_n_drop',
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        jsonData: JSON.stringify(dnRequestObj),
+                        // sucess: function (response) {
+                        //     var obj = Ext.decode(response.responseText);
+                        //     console.log(obj);
+                        // },
+                        failure: function (response) {
+                            Ext.Msg.alert("Error");
+                            console.log(response);
+                        }
+                    });
+                },
                 listeners: {
                     beforedrop: function (node, data, overModel, dropPosition, dropHandler) {
                         if ((dropPosition !== 'append') && (overModel.parentNode.data.root)) {
                             dropHandler.cancelDrop();
                         }
-                        if (data.event.altKey) {
-                            data.records = [this.copyDroppedRecord(data.records[0])];
-                            dropHandler.processDrop();
+
+                        var oldParent = data.parent_internal_id;
+                        var nodeId = data.records[0].data.internal_id;
+
+                        // I came to CERN to create a new order!
+                        var newOrder;
+                        var newParent;
+                        if (dropPosition === 'append') {
+                            newParent = overModel.data.internal_id;
+                            // this is not working with paths, because they don't have children field. Must be fixed.
+                            newOrder = overModel.data.children[overModel.data.children.length - 1].order + 1;
+                        } else if (dropPosition === 'before') {
+                            newParent = overModel.parentNode.data.internal_id;
+                            newOrder = overModel.data.order;
+                        } else if (dropPosition === 'after') {
+                            newParent = overModel.parentNode.data.internal_id;
+                            newOrder = overModel.data.order + 1;
                         }
-                    },
-                    drop: function (node, data, overModel, dropPosition) {
-                        // console.log(data);
-                        // console.log(overModel);
-                        // console.log(dropPosition);
-                        // // I came to CERN to create a new order!
-                        // var newOrder;
-                        // var newParent;
-                        // if (dropPosition === 'append') {
-                        //     newParent = overModel.data.Name;
-                        //     // this is not working with paths, because they don't have children field. Must be fixed.
-                        //     newOrder = overModel.data.children[overModel.data.children.length - 1].order;
-                        // } else if (dropPosition === 'before') {
-                        //     newParent = overModel.parentNode.data.Name;
-                        //     newOrder = overModel.data.order - 1;
-                        // } else if (dropPosition === 'after') {
-                        //     newParent = overModel.parentNode.data.Name;
-                        //     newOrder = overModel.data.order;
-                        // }
-                        // console.log('new parent: ' + newParent);
-                        // console.log('old parent: ' + data.records[0].modified.parentId);
-                        // console.log('new order: ' + newOrder);
-                        // console.log('Drop!');
+                        var copy = data.event.altKey;
+                        if (copy) {
+                            data.records = [this.copyDroppedRecord(data.records[0])];
+                        }
+                        this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy);
+                        dropHandler.processDrop();
                     }
                 }
             },
@@ -121,28 +142,15 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                 custModParams: 'onModParamsForward',
                 cusAlphaOrderClickForward: 'onSortAlphaPaths',
                 cusOrigOrderClickForward: 'onSortOriginalPaths',
-//                custPatDet: 'onPatDetForward',
-//                render: 'onRender',
-//                beforeshow: 'onRender'
-                //scope: 'controller'
                 viewready: function (tree) {
                     var view = tree.getView(),
-                        dd = view.findPlugin('treeviewdragdrop');
-
-                    dd.dragZone.onBeforeDrag = function (data, e) {
-                        // var rec = view.getRecord(e.getTarget(view.itemSelector));
-                        // console.log(data);
-                        // console.log(e);
-                        // data.copy = data.event.altKey;
-                        // console.log('old order: ' + rec.data.order);
-                        // // console.log(rec.parentNode.data.gid);
-                        // console.log('old parent: ' + rec.parentNode.data.Name);
-                        // // console.log(rec);
-                        // console.log('Drag!');
-                        return true;
+                        dz = view.findPlugin('treeviewdragdrop');
+                    dz.dragZone.onBeforeDrag = function (data, e) {
+                        var rec = view.getRecord(e.getTarget(view.itemSelector));
+                        data.parent_internal_id = rec.parentNode.data.internal_id;
                     };
                 }
-        }
+            }
 
     },
     {
@@ -201,23 +209,3 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
 
 });
 
-
-
-
-
-//{
-//        region: 'center',
-//        collapsible: true,
-//        xtype: 'moduledetails',
-//        width: '100%',
-//        height: '25%'
-//    },{
-//        region: 'south',
-////        layout: 'fit',
-//        xtype: 'parameters',
-//        split: true,
-//        height: '100%',
-//        width: '50%',
-//        loadMask: true
-//        
-//    }
