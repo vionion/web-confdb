@@ -116,7 +116,7 @@ CREATE TABLE paths_cache (version_id SERIAL PRIMARY KEY, data JSON);
 
 CREATE TABLE path_items_cache (path_item_id SERIAL PRIMARY KEY, data JSON);
 
-CREATE TABLE path_items_hierarchy (parent_id BIGINT, child_id BIGINT, PRIMARY KEY (parent_id, child_id));
+CREATE TABLE path_items_hierarchy (parent_id BIGINT, child_id BIGINT, child_order INTEGER , PRIMARY KEY (parent_id, child_id));
 
 CREATE TABLE modules_names_cache (version_id SERIAL PRIMARY KEY, names text[]);
 --

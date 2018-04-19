@@ -27,6 +27,7 @@ class PathItemsHierarchy(BaseCache):
     __tablename__ = 'path_items_hierarchy'
     parent_id = Column('parent_id', BigInteger, primary_key=True)
     child_id = Column('child_id', BigInteger, primary_key=True)
+    order = Column('child_order', Integer)
 
 class ModulesNames(BaseCache):
     __tablename__ = 'modules_names_cache'
