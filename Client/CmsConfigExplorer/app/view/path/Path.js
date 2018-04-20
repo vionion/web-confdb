@@ -1,7 +1,7 @@
 
 Ext.define("CmsConfigExplorer.view.path.Path",{
     extend: "Ext.panel.Panel",
-    
+
     requires:['CmsConfigExplorer.view.param.Parameters',
              'CmsConfigExplorer.view.path.Pathtree',
              'CmsConfigExplorer.view.path.ModuleDetails',
@@ -9,11 +9,11 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
              'CmsConfigExplorer.view.path.PathController',
               'CmsConfigExplorer.view.path.PathModel'
              ],
-    
+
     alias:'widget.pathtab',
-    
+
     reference: "pathtab",
-    
+
     controller: "path-path",
     viewModel: {
         type: "path-path"
@@ -23,7 +23,7 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
         cusDetailsClick: 'onDetailsRender',
         scope: 'controller'
     }
-    
+
     ,layout: {
         type: 'border'
     },
@@ -31,7 +31,7 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
 //    listeners:{
 //        custSetVerId: 'onSetVerId'
 //    },
-    
+
     items: [
 //        {
 //            xtype: 'toolbar',
@@ -108,31 +108,35 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                     beforedrop: function (node, data, overModel, dropPosition, dropHandler) {
                         if ((dropPosition !== 'append') && (overModel.parentNode.data.root)) {
                             dropHandler.cancelDrop();
-                        }
+                        } else {
+                            var oldParent = data.parent_internal_id;
+                            var nodeId = data.records[0].data.internal_id;
 
-                        var oldParent = data.parent_internal_id;
-                        var nodeId = data.records[0].data.internal_id;
-
-                        // I came to CERN to create a new order!
-                        var newOrder;
-                        var newParent;
-                        if (dropPosition === 'append') {
-                            newParent = overModel.data.internal_id;
-                            // this is not working with paths, because they don't have children field. Must be fixed.
-                            newOrder = overModel.data.children[overModel.data.children.length - 1].order + 1;
-                        } else if (dropPosition === 'before') {
-                            newParent = overModel.parentNode.data.internal_id;
-                            newOrder = overModel.data.order;
-                        } else if (dropPosition === 'after') {
-                            newParent = overModel.parentNode.data.internal_id;
-                            newOrder = overModel.data.order + 1;
+                            // I came to CERN to create a new order!
+                            var newOrder;
+                            var newParent;
+                            if (dropPosition === 'append') {
+                                if (overModel.parentNode.data.root) {
+                                    // if it was appended to Path node
+                                    newOrder = overModel.lastChild.data.order + 1;
+                                } else {
+                                    newOrder = overModel.data.children[overModel.data.children.length - 1].order + 1;
+                                }
+                                newParent = overModel.data.internal_id;
+                            } else if (dropPosition === 'before') {
+                                newParent = overModel.parentNode.data.internal_id;
+                                newOrder = overModel.data.order;
+                            } else if (dropPosition === 'after') {
+                                newParent = overModel.parentNode.data.internal_id;
+                                newOrder = overModel.data.order + 1;
+                            }
+                            var copy = data.event.altKey;
+                            if (copy) {
+                                data.records = [this.copyDroppedRecord(data.records[0])];
+                            }
+                            this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy);
+                            dropHandler.processDrop();
                         }
-                        var copy = data.event.altKey;
-                        if (copy) {
-                            data.records = [this.copyDroppedRecord(data.records[0])];
-                        }
-                        this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy);
-                        dropHandler.processDrop();
                     }
                 }
             },
@@ -147,7 +151,11 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
                         dz = view.findPlugin('treeviewdragdrop');
                     dz.dragZone.onBeforeDrag = function (data, e) {
                         var rec = view.getRecord(e.getTarget(view.itemSelector));
-                        data.parent_internal_id = rec.parentNode.data.internal_id;
+                        if (rec.parentNode.data.root) {
+                            return false;
+                        } else {
+                            data.parent_internal_id = rec.parentNode.data.internal_id;
+                        }
                     };
                 }
             }
@@ -160,12 +168,12 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
         header: false,
         split: true,
         height: '100%',
-        
+
         layout:{
             type:  'card'
 //            align: 'stretch'
         },
-        
+
         items:[
             {
                 xtype: 'container',
@@ -191,20 +199,20 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
         //                width: '100%',
                         height: '75%'
                     }
-                    
+
                 ]
-                
+
             },
-            {            
+            {
                 xtype: 'pathdetails',
 //                hidden: true,
                 split: true,
                 title: 'Path Details',
-                height: '100%'          
+                height: '100%'
             }
         ]
-        
-    }    
+
+    }
     ]
 
 });
