@@ -67,8 +67,7 @@ class GlobalPset(object):
 class EDSource(object):
 
     def __init__(self, id = 0, id_templ = -1, name = "", tclass = "", order = -1):
-        self.id = id
-        self.gid = -1
+        self.internal_id = id
         self.id_templ = id_templ
         self.name = name
         self.tclass = tclass

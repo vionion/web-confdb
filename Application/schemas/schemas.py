@@ -467,7 +467,7 @@ class GlobalPsetSchema(Schema):
         ordered = True
 
 class EDSourceSchema(Schema):
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     tclass = fields.String()
     icon = fields.Method("get_icon")
@@ -480,7 +480,7 @@ class EDSourceSchema(Schema):
         return False
 
     class Meta:
-        fields = ("gid", "name", "tclass", "icon", "expandable")
+        fields = ("internal_id", "name", "tclass", "icon", "expandable")
         ordered = True
 
 class ESSourceSchema(Schema):

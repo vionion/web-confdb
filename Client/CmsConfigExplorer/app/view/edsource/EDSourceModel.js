@@ -22,7 +22,7 @@ Ext.define('CmsConfigExplorer.view.edsource.EDSourceModel', {
             root: {
                 expanded: false,
                 text: "ED Source",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -40,13 +40,13 @@ Ext.define('CmsConfigExplorer.view.edsource.EDSourceModel', {
                 root: {
                     expanded: false,
                     text: "Parameters",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             
                 listeners: {
                     load: function(store, records, successful, operation, node, eOpts) {
-                            var id = operation.config.node.get('gid')
+                            var id = operation.config.node.get('id')
                             if (id == -1){
                                operation.config.node.expand() 
                             }

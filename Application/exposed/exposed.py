@@ -1899,7 +1899,6 @@ class Exposed(object):
                 c2e = conf2eds_dict[m.id]
                 internal_id = cache.get_internal_id(cache_session, m.id, "ed_source", src, log)
                 eds = EDSource(internal_id, m.id_template, "Source", temp.name, c2e)
-                eds.gid = internal_id
                 edsources.append(eds)
             else:
                 log.error('ERROR: EDSource key error')
