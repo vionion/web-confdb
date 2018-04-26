@@ -16,7 +16,7 @@ Ext.define('CmsConfigExplorer.view.module.ModuleGridController', {
 //            view.fireEvent('custModParams',mid, pid);
 //        }
     
-        var mid = record.get("gid");
+        var mid = record.get("internal_id");
         var view = this.getView();
         view.fireEvent('custGridModParams',mid);
     },

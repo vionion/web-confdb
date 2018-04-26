@@ -163,7 +163,7 @@ class ModuleNameSchema(Schema):
         fields = ('name',)
 
 class ModuleDetailsSchema(Schema):
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     mti = fields.Integer()
     mt =  fields.Method("get_item_type")
@@ -187,7 +187,7 @@ class ModuleDetailsSchema(Schema):
             return 'und'
 
     class Meta:
-        fields = ("gid", "name", "mt", "author", "mclass")
+        fields = ("internal_id", "name", "mt", "author", "mclass")
         ordered = True
 
 class OutputModuleDetailsSchema(Schema):

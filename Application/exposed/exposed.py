@@ -1143,10 +1143,8 @@ class Exposed(object):
             m2t = mod2temps_dict.get(m.id)
             if (templates_dict.has_key(m2t)):
                 temp = templates_dict.get(m2t)
-                md = ModuleDetails(m.id, m.name, temp.id_mtype, "", temp.name)
-
-                md.gid = cache.allmodMappingDictPut(src, m.id, "mod", cache_session, log)
-
+                internal_id = cache.get_internal_id(cache_session, m.id, "mod", src, log)
+                md = ModuleDetails(internal_id, m.name, temp.id_mtype, "", temp.name)
             else:
                 log.error('ERROR: Module key error') 
 

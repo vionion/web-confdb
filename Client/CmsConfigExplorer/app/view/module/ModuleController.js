@@ -107,13 +107,13 @@ Ext.define('CmsConfigExplorer.view.module.ModuleController', {
     }
     
     ,onModparamsLoad: function(store, records, successful, operation, node, eOpts) {
-        var id = operation.config.node.get('gid')
+        var id = operation.config.node.get('id');
         if (id == -1){
            operation.config.node.expand() 
         }
         if(this.lookupReference('paramGrid').isMasked()){
 //            this.lookupReference('modulesGrid').unmask();
-            this.lookupReference('paramGrid').setLoading( false ); 
+            this.lookupReference('paramGrid').setLoading(false);
         }
     }
     

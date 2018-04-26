@@ -38,7 +38,7 @@ Ext.define('CmsConfigExplorer.view.module.ModuleModel', {
                 root: {
                     expanded: false,
                     text: "Parameters",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             
