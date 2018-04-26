@@ -429,7 +429,7 @@ class EvcStatementSchema(Schema):
 #--------------------------ES Module Schema --------------------
 
 class ESModuleDetailsSchema(Schema):
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     mclass = fields.String()
     icon = fields.Method("get_icon")
@@ -442,7 +442,7 @@ class ESModuleDetailsSchema(Schema):
         return False
 
     class Meta:
-        fields = ("gid", "name", "mclass", "icon", "expandable")
+        fields = ("internal_id", "name", "mclass", "icon", "expandable")
         ordered = True
 
 

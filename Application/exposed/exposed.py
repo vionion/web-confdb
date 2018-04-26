@@ -1523,8 +1523,6 @@ class Exposed(object):
                 c2e = conf2esm_dict.get(m.id)
                 internal_id = cache.get_internal_id(cache_session, m.id, "es_mod", src, log)
                 esm = ESModuleDetails(internal_id, m.id_template, m.name, temp.name, c2e)
-                esm.gid = internal_id
-
             else:
                 log.error('ERROR: ES Modules Error Key') 
 

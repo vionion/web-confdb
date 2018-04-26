@@ -84,7 +84,7 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleController', {
     }
     
     ,onEsmodparamsLoad: function(store, records, successful, operation, node, eOpts) {
-        var id = operation.config.node.get('gid')
+        var id = operation.config.node.get('id')
         if (id == -1){
            operation.config.node.expand() 
         }

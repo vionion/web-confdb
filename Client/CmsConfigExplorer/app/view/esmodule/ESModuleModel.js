@@ -23,7 +23,7 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleModel', {
             root: {
                 expanded: false,
                 text: "ES Modules",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -41,7 +41,7 @@ Ext.define('CmsConfigExplorer.view.esmodule.ESModuleModel', {
                 root: {
                     expanded: false,
                     text: "Parameters",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             
