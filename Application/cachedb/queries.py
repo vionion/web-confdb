@@ -461,7 +461,7 @@ class CacheDbQueries(object):
         # this param id must be internal id, which is from one of the 'id' columns in tables in cache. Not from Oracle!
 
         if internal_entity_id < 0 or cache is None:
-            log.error('ERROR: get_module - input parameters error')
+            log.error('ERROR: get_params - input parameters error')
             return -2
 
         try:

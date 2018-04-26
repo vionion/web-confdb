@@ -580,16 +580,12 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def allsrvitems(self, _dc = 101, node = 1, sid = -2,online = "False", verid = -1):
-#        db = cherrypy.request.db
-
-        db = None
         db_online = cherrypy.request.db_online
         db_offline = cherrypy.request.db_offline
-        srvsMap = None
         src = 0
 
         if online == 'file':
-            data = self.par_funcs.getServiceItemsFromFile(verid, int(sid), self.config_dict)
+            data = self.par_funcs.getServiceItemsFromFile(verid, sid, self.config_dict)
             if (data == None):
                 self.log.error('ERROR: allsrvitems - data returned null object')
                 cherrypy.HTTPError(500, "Error in retreiving the Service Parameters")
@@ -598,21 +594,13 @@ class Root(object):
         else:
             if online == 'True' or online == 'true':
                 db = db_online
-                # srvsMap = self.srvsMap_online
                 src = 1
 
             else:
                 db = db_offline
-                # srvsMap = self.srvsMap
-                src = 0
 
-            sid = int(sid)
-
-            # id_s = srvsMap.get(sid)
-            # data = self.funcs.getServiceItems(id_s, db, self.log)
             data = self.funcs.getServiceItems(sid, db, self.log, src, cherrypy.request)
             if (data == None):
-    #            print ("Exception - Error")
                 self.log.error('ERROR: allsrvitems - data returned null object')
                 cherrypy.HTTPError(500, "Error in retreiving the Service Parameters")
 

@@ -9,7 +9,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
         //console.log('in parent, got event');
         var grid = this.lookupReference('paramGrid');
         var online = this.getViewModel().get("online");
-        
+
         this.getViewModel().getStore('parameters').load({params: {sid: sid, online:online}});
         
     },
@@ -43,7 +43,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
     
     onServiceClick: function(v, record, tr, rowIndex, e, eOpts){
         
-        var sid = record.get("gid");
+        var sid = record.get("internal_id");
         var name = record.get("name");
         var online = this.getViewModel().get("online");
         var idv = this.getViewModel().get("idVer");
@@ -573,7 +573,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceController', {
 //        preGrid.setConfig({ enableLocking:true}) ;
 //    }
     ,onSrvparamsLoad: function(store, records, successful, operation, node, eOpts) {
-        var id = operation.config.node.get('gid')
+        var id = operation.config.node.get('id')
         if (id == -1){
            operation.config.node.expand() 
         }

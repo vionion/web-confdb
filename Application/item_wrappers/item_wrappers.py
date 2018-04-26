@@ -7,8 +7,7 @@
 class Service(object):
 
     def __init__(self, id = 0, template_id = -1, release_id = -1, name = "", s_type = ""):
-        self.id = id
-        self.gid = -1
+        self.internal_id = id
         self.template_id = template_id
         self.release_id = release_id
         self.name = name

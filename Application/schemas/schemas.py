@@ -351,8 +351,7 @@ class VersionSchema(Schema):
 #-----------------------------------Services Schemas -------------------------
 
 class ServiceSchema(Schema):
-
-        gid = fields.Integer()
+        internal_id = fields.Integer()
         template_id = fields.Integer()
         release_id = fields.Integer()
         name = fields.String()
@@ -367,7 +366,7 @@ class ServiceSchema(Schema):
             return False
 
         class Meta:
-            fields = ("gid", "name", "template_id", "release_id", "s_type", "icon", "expandable")
+            fields = ("internal_id", "name", "template_id", "release_id", "s_type", "icon", "expandable")
             ordered = True
 
 #-----------------------------------Stream Schema -------------------------

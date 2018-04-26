@@ -28,7 +28,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceModel', {
             root: {
                 expanded: false,
                 text: "Services",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -48,7 +48,7 @@ Ext.define('CmsConfigExplorer.view.service.ServiceModel', {
                 root: {
                     expanded: false,
                     text: "Parameters",
-                    gid: -1
+                    id: -1
 
     //                root: true
                 },

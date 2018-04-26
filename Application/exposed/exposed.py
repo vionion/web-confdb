@@ -1243,18 +1243,14 @@ class Exposed(object):
         for m in services:
             if (templates_dict.has_key(m.id_template)):
                 temp = templates_dict.get(m.id_template)
-
-                srv = Service(m.id, m.id_template, id_rel, temp.name, "")
-
-                srv.gid = cache.srvMappingDictPut(src, m.id, "srv", cache_session, log)
-
+                internal_id = cache.get_internal_id(cache_session, m.id, "srv", src, log)
+                srv = Service(internal_id, m.id_template, id_rel, temp.name, "")
             else:
                 log.error('ERROR: Service key error') #print "ERROR KEY"
 
             if (srv != None):
                 resp.children.append(srv)
 
-        print "len: ", len(resp.children)
         resp.success = True
 
         output = schema.dump(resp)
@@ -1280,7 +1276,8 @@ class Exposed(object):
 
         service_params = cache.get_params(sid_internal, cache_session, log)
         if service_params is None:
-            sid_external = cache.srvMappingDictGetExternal(sid_internal, src, "srv", cache_session, log)
+            print('from db')
+            sid_external = cache.get_external_id(cache_session, sid_internal, "srv", src, log)
             service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
             for param in service_params:
                 param.module_id = sid_internal
