@@ -24,7 +24,7 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceModel', {
             root: {
                 expanded: false,
                 text: "Sequences",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -46,7 +46,7 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceModel', {
                 root: {
                     expanded: false,
 //                    text: "Params",
-                    gid: -1
+                    id: -1
                 },
             
                 listeners: {

@@ -1,6 +1,6 @@
 Ext.define('CmsConfigExplorer.model.Sequenceitem', {
-    extend: 'CmsConfigExplorer.model.Base',
-    
+    extend: 'Ext.data.Model',
+
     fields: [
         { name: 'name', type: 'string' },
         { name: 'pit', type: 'string' }

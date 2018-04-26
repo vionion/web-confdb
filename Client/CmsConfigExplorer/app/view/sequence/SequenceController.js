@@ -1,16 +1,9 @@
 Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.sequence-sequence',
-    
-    onSeqitemsBeforeLoad: function(store, operation, eOpts) {
-//
-//        var pi_type = operation.config.node.get('pit');
-//        
-//        operation.getProxy().setExtraParam('itype',pi_type);
-//        console.log(store.getRoot().get('vid'));
-//        operation.getProxy().setExtraParam('ver',store.getRoot().get('vid')); //operation.config.node.get('pit')
-//        
-//        this.lookupReference('pathTree').mask();
+
+    onSeqitemsBeforeLoad: function (store, operation, eOpts) {
+        operation.getProxy().setExtraParam('node', operation.node.data.internal_id);
     }
     
     ,onSeqitemsLoad: function( store, records, successful, eOpts ){
@@ -86,10 +79,7 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
         if(item_type == "mod"){
 
             // var mid = record.get("orig_id");
-            var mid = record.get("gid");
-            var m_int = parseInt(mid);
-            // m_int = (-1)*m_int;
-            mid = m_int;
+            var mid = record.get("internal_id");
             
             var pid = record.get("id_pathid");
             var online = this.getViewModel().get("online");
@@ -118,7 +108,7 @@ Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
     }
     
     ,onSeqparametersLoad: function(store, records, successful, operation, node, eOpts) {
-        var id = operation.config.node.get('gid')
+        var id = operation.config.node.get('id');
         if (id == -1){
            operation.config.node.expand() 
         }

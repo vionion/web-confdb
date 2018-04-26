@@ -1599,13 +1599,13 @@ class Exposed(object):
         
         while(counter < len(items) and items[counter].lvl == level):
             elem = elements_dict[items[counter].id_pae]
-            item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+            internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+            item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
    
             self.simple_counter = self.simple_counter + 1
    
+            counter = counter + 1
             if item.paetype == 2:
-                item.gid = cache.seqMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log,0)
-                counter = counter + 1
                 if item.name in written_sequences:
                     item.expanded = False     
                     counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, src,request,log)
@@ -1621,10 +1621,6 @@ class Exposed(object):
 
                     written_sequences.add(item.name)
                     built_sequences.add(item)
-
-            elif item.paetype == 1:
-                item.gid = cache.seqMappingDictPut(src, items[counter].id_pae, "mod", cache_session, log,0)
-                counter = counter + 1
                 
             children.append(item)
             
@@ -1685,12 +1681,12 @@ class Exposed(object):
 
             while counter < len(items):
                 elem = elements_dict[items[counter].id_pae]
-                item = Pathitem(items[counter].id_pae, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "seq", src, log)
+                item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
                 self.simple_counter = self.simple_counter + 1
 
                 if item.paetype == 2:
-                    item.gid = cache.seqMappingDictPut(src, items[counter].id_pae, "seq", cache_session, log,0)
                     counter = counter + 1
                     if item.name in written_sequences:
                         counter = self.skipSequence(counter, items, item.lvl+1)
