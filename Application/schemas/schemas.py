@@ -482,7 +482,7 @@ class EDSourceSchema(Schema):
         ordered = True
 
 class ESSourceSchema(Schema):
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     tclass = fields.String()
     icon = fields.Method("get_icon")
@@ -495,7 +495,7 @@ class ESSourceSchema(Schema):
         return False
 
     class Meta:
-        fields = ("gid", "name", "tclass", "icon", "expandable")
+        fields = ("internal_id", "name", "tclass", "icon", "expandable")
         ordered = True
 
 

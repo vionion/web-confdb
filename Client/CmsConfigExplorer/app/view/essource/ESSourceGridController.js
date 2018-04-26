@@ -4,7 +4,7 @@ Ext.define('CmsConfigExplorer.view.essource.ESSourceGridController', {
     
         onGridESSourceClick: function( v, record, tr, rowIndex, e, eOpts) {
     
-        var mid = record.get("gid");
+        var mid = record.get("internal_id");
         var view = this.getView();
         view.fireEvent('custGridESSourceParams',mid);
     }

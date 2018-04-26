@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.model.ESSourceitem', {
-    extend: 'CmsConfigExplorer.model.Base',
+    extend: 'Ext.data.Model',
     
     fields: [
         { name: 'name', type: 'string' },

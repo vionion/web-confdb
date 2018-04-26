@@ -1989,7 +1989,6 @@ class Exposed(object):
                 c2e = conf2ess_dict.get(m.id)
                 internal_id = cache.get_internal_id(cache_session, m.id, "es_source", src, log)
                 ess = ESSource(internal_id, m.id_template, m.name, temp.name, c2e)
-                ess.gid = internal_id
 
             else:
                 log.error('ERROR: ES source Key') #print "ERROR KEY"

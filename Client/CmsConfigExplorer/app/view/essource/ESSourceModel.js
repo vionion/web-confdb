@@ -22,7 +22,7 @@ Ext.define('CmsConfigExplorer.view.essource.ESSourceModel', {
             root: {
                 expanded: false,
                 text: "ES Source",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -40,7 +40,7 @@ Ext.define('CmsConfigExplorer.view.essource.ESSourceModel', {
                 root: {
                     expanded: false,
                     text: "Parameters",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             
