@@ -171,7 +171,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
             
             centralLayout.setActiveItem(0);
 
-            var mid = record.get("gid");
+            var mid = record.get("internal_id");
             var pid = record.get("id_pathid");
 
             //console.log('in child, fwd event');
@@ -186,7 +186,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
             
             centralLayout.setActiveItem(0);
 
-            var mid = record.get("gid");
+            var mid = record.get("internal_id");
             var pid = record.get("id_pathid");
 
             //console.log('in child, fwd event');
@@ -200,7 +200,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
             
             var idc = this.getViewModel().get("idCnf");
             var idv = this.getViewModel().get("idVer");
-            var pid = record.get("gid");
+            var pid = record.get("internal_id");
 
             pathDet.fireEvent( "cusEndPatDetLoaded", pid,  idc, idv, online);
             //console.log("cusEndPatDetLoaded FIRED");
@@ -251,7 +251,8 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
         operation.getProxy().setExtraParam('online',online);
         //console.log(store.getRoot().get('vid'));
         operation.getProxy().setExtraParam('ver',store.getRoot().get('vid')); //operation.config.node.get('pit')
-        
+        operation.getProxy().setExtraParam('node',operation.node.data.internal_id);
+
 //        this.lookupReference('endpathTree').mask();
         
         this.lookupReference('endpathTree').setLoading( "Loading End Paths" );
@@ -445,7 +446,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
                                 term = term.replace(/\s/gm, '');
                                 term = term.replace(/["]+/g,"");
 
-                                sp_item['gid'] = counter;
+                                sp_item['internal_id'] = counter;
     //                            sp_item['path'] = terms[ter];
                                 sp_item['path'] = term;
                                 sp_item['smprescale'] = prescale;
@@ -472,7 +473,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
             
 //        }
         
-        var id = operation.config.node.get('gid');
+        var id = operation.config.node.get('id');
         if (id == -1){
            operation.config.node.expand(); 
         }

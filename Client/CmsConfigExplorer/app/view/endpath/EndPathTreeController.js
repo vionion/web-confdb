@@ -7,7 +7,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathTreeController', {
         var item_type = record.get("pit");
         
         if(item_type == "mod"){
-            var mid = record.get("gid");
+            var mid = record.get("internal_id");
             var pid = record.get("id_pathid");
 
             //console.log('in child, fwd event');
@@ -17,7 +17,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathTreeController', {
         }
         
         else  if(item_type == "pat"){
-            var pid = record.get("gid");
+            var pid = record.get("internal_id");
 
             //console.log('in child, fwd event');
             //console.log(mid);

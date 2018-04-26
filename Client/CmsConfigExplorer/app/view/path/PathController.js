@@ -298,7 +298,7 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
     }
     
     ,onPathModuleParametersLoad: function(store, records, successful, operation, node, eOpts) {
-            var id = operation.config.node.get('id')
+            var id = operation.config.node.get('id');
             if (id == -1){
                operation.config.node.expand() 
             }

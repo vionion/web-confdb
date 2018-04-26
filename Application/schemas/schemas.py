@@ -230,7 +230,7 @@ class ParameterSchema(Schema):
     lvl = fields.Integer()
     default = fields.Integer()
     tracked = fields.Integer()
-    gid = fields.Method("get_gid")
+    internal_id = fields.Method("get_internal_id")
     mit = fields.Method("get_item_type")
     leaf = fields.Method("get_leaf")
     icon = fields.Method("get_icon")
@@ -267,8 +267,7 @@ class ParameterSchema(Schema):
         else:
             return ''
 
-    #gid is not needed at all, or may be replaced by internal id
-    def get_gid(self,obj):
+    def get_internal_id(self,obj):
         return obj.id
 
     def get_moduleId(self,obj):
@@ -291,7 +290,7 @@ class ParameterSchema(Schema):
             return False
 
     class Meta:
-        fields = ("gid", "moduleId", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
+        fields = ("internal_id", "moduleId", "name", "rendervalue", "order", "lvl", "mit", "paramtype", "icon", "isDefault", "tracked", "leaf", "expanded","children")
         ordered = True
 
 #-----------------------------------Folder and Version Schemas -------------------------

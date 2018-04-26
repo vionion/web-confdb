@@ -610,6 +610,42 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
+    # Code in get_paths/get_endpaths and put_path/put_enpaths may be reused
+    @staticmethod
+    def get_endpaths(version_id, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_endpaths - input parameters error')
+            return -2
+
+        try:
+            cached_paths = cache.query(EndPathsCached).filter(
+                EndPathsCached.version_id == version_id).first()
+            if cached_paths is None:
+                return None
+            else:
+                dict_paths = byteify(json.loads(cached_paths.data))
+                wrapped_paths = []
+                for path in dict_paths:
+                    wrapped_paths.append(Path(path['internal_id'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
+                print('from cache')
+                return wrapped_paths
+
+        except Exception as e:
+            msg = 'ERROR: Query get_endpaths() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+
+    @staticmethod
+    def put_endpaths(ver_id, paths, cache, log):
+        try:
+            json_paths = json.dumps(paths, default=lambda o: o.__dict__)
+            params = EndPathsCached(data=json_paths, version_id=ver_id)
+            cache.add(params)
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_endpaths() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
 
     @staticmethod
     def get_modules_names(version_id, cache, log):

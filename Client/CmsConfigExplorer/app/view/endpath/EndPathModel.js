@@ -27,7 +27,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathModel', {
             root: {
                 expanded: false,
                 text: "End Paths",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -49,7 +49,7 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathModel', {
                 root: {
                     expanded: false,
                     text: "Params",
-                    gid: -1
+                    id: -1
                 },
             
                 listeners: {
