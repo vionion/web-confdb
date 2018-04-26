@@ -372,8 +372,7 @@ class ServiceSchema(Schema):
 #-----------------------------------Stream Schema -------------------------
 
 class StreamItemSchema(Schema):
-#    id = fields.Integer()
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     fractodisk = fields.Integer()
     s_type = fields.String()
@@ -398,14 +397,14 @@ class StreamItemSchema(Schema):
             return True
 
     class Meta:
-        fields = ("gid", "name", "fractodisk", "s_type", "leaf", "icon","children")
+        fields = ("internal_id", "name", "fractodisk", "s_type", "leaf", "icon","children")
         ordered = True
 
 #--------------------------Event content statements Schema --------------------
 
 class EvcStatementSchema(Schema):
     id = fields.Integer()
-    gid = fields.Method("get_gid")
+    external_id = fields.Method("get_external_id")
     classn = fields.String()
     modulel = fields.String()
     extran = fields.String()
@@ -414,7 +413,7 @@ class EvcStatementSchema(Schema):
     stype = fields.Method("get_stype")
     statementrank = fields.Integer()
 
-    def get_gid(self,obj):
+    def get_external_id(self,obj):
         return obj.id
 
     def get_stype(self,obj):
@@ -424,7 +423,7 @@ class EvcStatementSchema(Schema):
             return "keep"
 
     class Meta:
-        fields = ("gid", "classn", "modulel", "extran", "processn", "stype", "statementrank")
+        fields = ("external_id", "classn", "modulel", "extran", "processn", "stype", "statementrank")
         ordered = True
 
 #--------------------------ES Module Schema --------------------
@@ -501,8 +500,7 @@ class ESSourceSchema(Schema):
 
 
 class DstPathsTreeSchema(Schema):
-#    id = fields.Integer()
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     id_path = fields.Integer()
     vid = fields.Integer()
     name = fields.String()
@@ -521,7 +519,7 @@ class DstPathsTreeSchema(Schema):
             return 'resources/EndPath.ico'
 
     class Meta:
-        fields = ("gid", "vid", "icon", "id_path", "name", "pit", "expandable")
+        fields = ("internal_id", "vid", "icon", "id_path", "name", "pit", "expandable")
         ordered = True
 
 

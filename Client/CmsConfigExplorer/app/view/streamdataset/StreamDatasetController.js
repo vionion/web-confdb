@@ -22,7 +22,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetController', {
             
             centralLayout.setActiveItem(0);
             Ext.resumeLayouts(true);
-            var dstid = record.get("gid");
+            var dstid = record.get("internal_id");
             var name = record.get("name");
             
             this.getViewModel().set("current_dat",name);
@@ -60,7 +60,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetController', {
         }
         else if(item_type == "evc"){
 
-            var strid = record.get("gid");
+            var strid = record.get("internal_id");
             var name = record.get("name");
             
             this.getViewModel().set("current_evc",name);

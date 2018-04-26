@@ -27,8 +27,7 @@ class PathDetails(object):
 class Streamitem(object):
 
     def __init__(self, id = 0, fractodisk = -1, name = "", s_type = ""):
-        self.id = id
-        self.gid = -1
+        self.internal_id = id
         self.name = name
         self.fractodisk = fractodisk
         self.s_type = s_type

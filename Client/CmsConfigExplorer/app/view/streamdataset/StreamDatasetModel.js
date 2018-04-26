@@ -28,7 +28,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetModel', {
             root: {
                 expanded: false,
                 text: "Streams and Datasets",
-                gid: -1
+                id: -1
 //                root: true
             },
             
@@ -52,7 +52,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamDatasetModel', {
                 root: {
                     expanded: false,
                     text: "Streams and Datasets",
-                    gid: -1
+                    id: -1
     //                root: true
                 },
             

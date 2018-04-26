@@ -1346,53 +1346,45 @@ class Exposed(object):
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
         streams_dict = dict((x.id, x) for x in streams)
         evCoToStr_dict = dict((x.id_streamid, x.id_evcoid) for x in evCoToStr)
-
-
+        # TODO: this logic must be checked
         #---- Building evco ---------------
         evco_dict = {}
         for e in evcontents:
-            si = Streamitem(e.id,-1, e.name,"evc")
-
-            si.gid = cache.strMappingDictPut(src, e.id, "evc", cache_session, log)
+            evco_internal_id = cache.get_internal_id(cache_session, e.id, "evc", src, log)
+            si = Streamitem(evco_internal_id,-1, e.name,"evc")
 
             si.id_stream = -2
-            evco_dict[e.id] = si
+            evco_dict[evco_internal_id] = si
 
         #---- Building streams and datasets
         evcoOut = []
         streams_dict = {}
         for s in streams:
-            si = Streamitem(s.id, s.fractodisk, s.name,"str")
+            stream_internal_id = cache.get_internal_id(cache_session, e.id, "str", src, log)
+            si = Streamitem(stream_internal_id, s.fractodisk, s.name,"str")
             streams_dict[s.id] = si
             if(evCoToStr_dict.has_key(s.id)):
                 evcoid = evCoToStr_dict.get(s.id)
-                evco = evco_dict.get(evcoid)
+                evco_internal_id = cache.get_internal_id(cache_session, evcoid, "evc", src, log)
+                evco = evco_dict.get(evco_internal_id)
                 if (evco.id_stream == -2):
-                    evco.id_stream = s.id
-                    evco_dict[evco.id] = evco
+                    evco.id_stream = stream_internal_id
+                    evco_dict[evco_internal_id] = evco
 
                     si.children.append(evco)
                 else:
-                    new_evco = Streamitem(evco.id,-1, evco.name,"evc")
-
-                    new_evco.gid = cache.strMappingDictPut(src, evco.id, "evc", cache_session, log, 0)
-
+                    new_evco = Streamitem(evco_internal_id,-1, evco.name,"evc")
                     si.children.append(new_evco)
             else:
                 evcoOut.append(si)
-
-
-            si.gid = cache.strMappingDictPut(src, s.id, "str", cache_session, log)
-
 	
         for d in datasets:
             if (d.id == -1):
                 log.error('WARNING: Unassigned Paths')
 
             else:
-                si = Streamitem(d.id,-1, d.name,"dat")
-
-                si.gid = cache.strMappingDictPut(src, d.id, "dat", cache_session, log)
+                ds_internal_id = cache.get_internal_id(cache_session, d.id, "dat", src, log)
+                si = Streamitem(ds_internal_id, -1, d.name,"dat")
                 streamid = relations_dict.get(d.id)
                 streams_dict.get(streamid).children.append(si)
 
@@ -1431,7 +1423,7 @@ class Exposed(object):
         evcostatements = None
         evcotostats = None
 
-        evc = cache.strMappingDictGetExternal(evc, src, "evc", cache_session, log)
+        evc = cache.get_external_id(cache_session, evc, "evc", src, log)
 
         try:
             evcostatements = self.queries.getEvCoStatements(evc, db, log)
@@ -2049,9 +2041,9 @@ class Exposed(object):
         output = schema.dump(resp)
         return output.data
 
-    def getDatasetItems(self, ver=-2, cnf=-2, dstid=-2, db = None, log = None, request = None, src = 0):
-        if (ver==-2 or cnf==-2 or dstid == -2 or db == None):
-            log.error('ERROR: getDatasetItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, dstid=dstid))
+    def getDatasetItems(self, ver=-2, cnf=-2, dsid=-2, db = None, log = None, request = None, src = 0):
+        if (ver==-2 or cnf==-2 or dsid == -2 or db == None):
+            log.error('ERROR: getDatasetItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver, dstid=dsid))
 
 
         cache = self.cache
@@ -2062,7 +2054,7 @@ class Exposed(object):
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
-        dstid = cache.strMappingDictGetExternal(dstid, src, "dat", cache_session, log)
+        ext_ds_id = cache.get_external_id(cache_session, dsid, "dat", src, log)
 
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
@@ -2071,7 +2063,7 @@ class Exposed(object):
         paths = None
 
         try:
-            paths = self.queries.getDatasetPathids(ver_id, dstid, db, log)
+            paths = self.queries.getDatasetPathids(ver_id, ext_ds_id, db, log)
 
         except:
             log.error('ERROR: Query getDatasetPathids Error')
@@ -2082,7 +2074,7 @@ class Exposed(object):
 
         for p in paths:
             p.vid = ver_id
-            p.gid = cache.patMappingDictPut(src, p.id, "pat", cache_session, log)
+            p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
 
         resp.children = paths
 
