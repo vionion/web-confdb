@@ -1116,7 +1116,7 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def allgpsetitems(self, _dc = 101, node = 1, gid = -2, verid = -1, online = "False"):
+    def allgpsetitems(self, _dc = 101, node = 1, set_id = -2, verid = -1, online = "False"):
 #        db = cherrypy.request.db
 
         db = None
@@ -1127,7 +1127,7 @@ class Root(object):
         gpsMap = None
 
         if online == 'file':
-            data = self.par_funcs.getGPsetsItemsFromFile(verid, int(gid), self.config_dict)
+            data = self.par_funcs.getGPsetsItemsFromFile(verid, set_id, self.config_dict)
             if (data == None):
                 self.log.error('ERROR: allgpsetitems - data returned null object')
                 cherrypy.HTTPError(500, "Error in retreiving the Global PSet Parameters")
@@ -1145,11 +1145,7 @@ class Root(object):
                 gpsMap = self.gpsMap
                 src = 0
 
-        gid = int(gid)
-
-        # id_s = gpsMap.get(gid)
-        # data = self.funcs.getGpsetItems(id_s, db, self.log)
-        data = self.funcs.getGpsetItems(gid, db, self.log, cherrypy.request, src)
+        data = self.funcs.getGpsetItems(set_id, db, self.log, cherrypy.request, src)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allgpsetitems - data returned null object')

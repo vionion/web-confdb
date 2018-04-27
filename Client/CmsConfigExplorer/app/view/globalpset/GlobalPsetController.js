@@ -41,7 +41,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
     
     onGpsetClick: function(v, record, tr, rowIndex, e, eOpts){
         
-        var sid = record.get("gid");
+        var sid = record.get("internal_id");
         var online = this.getViewModel().get("online");
         var idv = this.getViewModel().get("idVer");
 //        var name = record.get("name");
@@ -51,7 +51,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
         
 //        var serviceGrid = this.lookupReference('gpsettree');
 //        serviceGrid.fireEvent('custSrvParams',sid);
-        this.getViewModel().getStore('parameters').load({params: {gid: sid, online:online, verid:idv}});
+        this.getViewModel().getStore('parameters').load({params: {set_id: sid, online:online, verid:idv}});
         
         var cp = this.lookupReference("centralGpsetPanel");
         
@@ -174,7 +174,7 @@ Ext.define('CmsConfigExplorer.view.globalpset.GlobalPsetController', {
     }
     
     ,onGpsetparamsLoad: function(store, records, successful, operation, node, eOpts) {
-        var id = operation.config.node.get('gid')
+        var id = operation.config.node.get('id')
         if (id == -1){
            operation.config.node.expand() 
         }

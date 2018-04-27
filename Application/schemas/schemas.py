@@ -448,7 +448,7 @@ class ESModuleDetailsSchema(Schema):
 
 class GlobalPsetSchema(Schema):
 
-    gid = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
     tracked = fields.Integer()
     icon = fields.Method("get_icon")
@@ -461,7 +461,7 @@ class GlobalPsetSchema(Schema):
         return False
 
     class Meta:
-        fields = ("gid", "name", "tracked", "icon", "expandable")
+        fields = ("internal_id", "name", "tracked", "icon", "expandable")
         ordered = True
 
 class EDSourceSchema(Schema):

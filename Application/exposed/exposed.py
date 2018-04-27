@@ -1816,7 +1816,6 @@ class Exposed(object):
         for m in gpsets:
             gps_internal_id = cache.gpsMappingDictPut(src, m.id, "gps", cache_session, log)
             gps = GlobalPset(gps_internal_id, m.name, m.tracked)
-            gps.gid = gps_internal_id
             if (gps != None):
                 resp.children.append(gps)
             else:
