@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.view.path.PathController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'CmsConfigExplorer.view.general.DragNDropController',
     alias: 'controller.path-path',
     
     onRender: function(){
@@ -307,5 +307,5 @@ Ext.define('CmsConfigExplorer.view.path.PathController', {
                 this.lookupReference('paramGrid').setLoading(false);
             }
     }
-    
+
 });
