@@ -303,8 +303,8 @@ class Exposed(object):
 
                 endpath_items.insert(oum.order, oum)
                 endpath_items.sort(key=lambda x: x.order, reverse=False)
-                cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
-                print('added to cache')
+            cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
+            print('added to cache')
 
         resp.success = True
         resp.children = endpath_items

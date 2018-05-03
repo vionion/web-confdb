@@ -23,7 +23,7 @@ from item_wrappers.item_wrappers import *
 from exposed.params_builder import ParamsBuilder
 
 from confdb_v2.tables import Pathelement
-from tables import ParamsCached, IdMapping, PathItemsCached, PathsCached, PathItemsHierarchy, ModulesNames
+from tables import *
 
 
 class CacheDbQueries(object):

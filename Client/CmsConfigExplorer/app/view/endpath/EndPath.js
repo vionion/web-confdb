@@ -50,6 +50,16 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
             height: '100%',
     //        collapsible: true,
             loadMask: true,
+            viewConfig: {
+                loadingHeight: 100,
+                plugins: {
+                    ptype: 'treeviewdragdrop',
+                    dragText: 'Drag and drop to reorganize'
+                },
+                listeners: {
+                    beforedrop: 'beforedrop'
+                }
+            },
             listeners:{
                 cusPathColumnNameHeaderClickForward: 'onPathColumnNameHeaderClickForward',
                 rowclick: 'onEndNodeClick',
@@ -59,7 +69,9 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
                 cusOrigOrderClickForward: 'onSortOriginalPaths',
 //                custPatDet: 'onPatDetForward',
                 render: 'onEndRender',
-                beforeshow: 'onEndRender'
+                beforeshow: 'onEndRender',
+                onBeforeDrop: 'beforedrop',
+                viewready: 'addBeforeDragListener'
                 //scope: 'controller'
             }
 

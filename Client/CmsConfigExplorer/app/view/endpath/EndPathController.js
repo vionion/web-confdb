@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.view.endpath.EndPathController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'CmsConfigExplorer.view.general.DragNDropController',
     alias: 'controller.endpath-endpath',
     
     onEndRender: function(){

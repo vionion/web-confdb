@@ -6,9 +6,6 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
         if ((dropPosition !== 'append') && (overModel.parentNode.data.root)) {
             dropHandler.cancelDrop();
         } else {
-            this.test(overModel.data.internal_id, function () {
-                console.log(overModel.lastChild.data.order);
-            });
             var oldParent = data.parent_internal_id;
             var nodeId = data.records[0].data.internal_id;
 

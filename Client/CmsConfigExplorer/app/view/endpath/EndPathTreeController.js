@@ -107,6 +107,10 @@ Ext.define('CmsConfigExplorer.view.endpath.EndPathTreeController', {
             form.markInvalid('Invalid regular expression');
             console.log(e);
         }
+    },
+
+    beforedrop: function (node, data, overModel, dropPosition, dropHandler) {
+        this.getView().fireEvent('onBeforeDrop', node, data, overModel, dropPosition, dropHandler);
     }
     
     

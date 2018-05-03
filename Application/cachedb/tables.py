@@ -19,7 +19,7 @@ class PathsCached(BaseCache):
     data = Column('data', JSON)
 
 class EndPathsCached(BaseCache):
-    __tablename__ = 'end_paths_cache'
+    __tablename__ = 'endpaths_cache'
     version_id = Column('version_id', Integer, primary_key=True)
     data = Column('data', JSON)
 
