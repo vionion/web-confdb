@@ -62,6 +62,11 @@ Ext.define('CmsConfigExplorer.view.sequence.SequencetreeController', {
             form.markInvalid('Invalid regular expression');
             console.log(e);
         }
+    },
+
+    beforedrop: function (node, data, overModel, dropPosition, dropHandler) {
+        var view = this.getView();
+        view.fireEvent('onBeforeDrop', node, data, overModel, dropPosition, dropHandler);
     }
     
     

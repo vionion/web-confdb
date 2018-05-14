@@ -24,14 +24,25 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
             split: true,
             xtype: 'seqtree',
             height: '100%',
-    //        collapsible: true,
             loadMask: true,
-            listeners:{
+            viewConfig: {
+                loadingHeight: 100,
+                plugins: {
+                    ptype: 'treeviewdragdrop',
+                    dragText: 'Drag and drop to reorganize'
+                },
+                listeners: {
+                    beforedrop: 'beforedrop'
+                }
+            },
+            listeners: {
                 rowclick: 'onSequenceNodeClick',
                 custModParams: 'onSeqModParamsForward',
 //                custPatDet: 'onPatDetForward',
                 render: 'onSequenceRender',
-                beforeshow: 'onSequenceRender'
+                beforeshow: 'onSequenceRender',
+                onBeforeDrop: 'beforedrop',
+                viewready: 'addBeforeDragListener'
                 //scope: 'controller'
         }
 

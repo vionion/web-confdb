@@ -476,7 +476,6 @@ class CacheDbQueries(object):
                 # it is easier to create objects out of dicts
                 obj_params = convert_module_dict2obj(dict_params, log)
                 wrapped_params = ParamsBuilder.buildParameterStructure(log, obj_params, cached_params.id, set_default=False)
-                print('from cache')
                 return wrapped_params
 
         except Exception as e:
@@ -516,7 +515,7 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_path_items(self, parent_id, cache, log):
+    def get_path_items(self, parent_id, cache, log, lvl=0):
         if parent_id < 0 or cache is None:
             log.error('ERROR: get_path_items - input parameters error')
             return -2
@@ -528,10 +527,9 @@ class CacheDbQueries(object):
             else:
                 items = []
                 for children in cached_path_children:
-                    item = self.get_wrapped_item(cache, children)
-                    item.children = self.get_path_items(item.internal_id, cache, log)
+                    item = self.get_wrapped_item(cache, children, lvl)
+                    item.children = self.get_path_items(item.internal_id, cache, log, lvl+1)
                     items.append(item)
-                print('from cache')
                 items.sort(key=lambda x: x.order, reverse=False)
                 return items
 
@@ -540,34 +538,35 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
 
-    def get_wrapped_item(self, cache, children):
+    def get_wrapped_item(self, cache, children, lvl):
         path_item = cache.query(PathItemsCached).filter(
             PathItemsCached.path_item_id == children.child_id).first()
         dict_pathitem = byteify(json.loads(path_item.data))
         item = Pathitem(dict_pathitem['internal_id'], dict_pathitem['name'], dict_pathitem['id_pathid'],
                         dict_pathitem['paetype'], dict_pathitem['id_parent'],
-                        dict_pathitem['lvl'], dict_pathitem['order'], dict_pathitem['operator'])
+                        0, 0, dict_pathitem['operator'])
         item.expanded = dict_pathitem['expanded']
         item.order = children.order
+        item.lvl = lvl
         return item
 
     def put_path_items(self, parrent_id, path_items, cache, log):
         for pathitem in path_items:
-            if not cache.query(exists().where(PathItemsCached.path_item_id == pathitem.internal_id)).scalar():
-                self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
-                self.put_path_item(pathitem, cache, log)
-            params = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id, order=pathitem.order)
-            cache.add(params)
-            cache.commit()
+            self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
+            self.put_path_item(pathitem, parrent_id, cache, log)
 
     @staticmethod
-    def put_path_item(pathitem, cache, log):
+    def put_path_item(pathitem, parrent_id, cache, log):
         pathitem_copy = copy.deepcopy(pathitem)
         pathitem_copy.children = []
         json_path_item = json.dumps(pathitem_copy, default=lambda o: o.__dict__)
         try:
-            params = PathItemsCached(data=json_path_item, path_item_id=pathitem_copy.internal_id)
-            cache.add(params)
+            if not cache.query(exists().where(PathItemsCached.path_item_id == pathitem.internal_id)).scalar():
+                params = PathItemsCached(data=json_path_item, path_item_id=pathitem_copy.internal_id)
+                cache.add(params)
+            if not cache.query(exists().where(PathItemsHierarchy.parent_id == parrent_id).where(PathItemsHierarchy.child_id == pathitem.internal_id)).scalar():
+                pih = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id, order=pathitem.order)
+                cache.add(pih)
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_path_items() Error: ' + e.args[0]
@@ -590,7 +589,6 @@ class CacheDbQueries(object):
                 wrapped_paths = []
                 for path in dict_paths:
                     wrapped_paths.append(Path(path['internal_id'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
-                print('from cache')
                 return wrapped_paths
 
         except Exception as e:
@@ -627,7 +625,6 @@ class CacheDbQueries(object):
                 wrapped_paths = []
                 for path in dict_paths:
                     wrapped_paths.append(Path(path['internal_id'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
-                print('from cache')
                 return wrapped_paths
 
         except Exception as e:
@@ -662,7 +659,6 @@ class CacheDbQueries(object):
                 wrapped_names = []
                 for name in cached_names_list.names:
                     wrapped_names.append(Pathelement(name=name))
-                print('from cache')
                 return wrapped_names
 
         except Exception as e:
@@ -816,6 +812,26 @@ class CacheDbQueries(object):
             return None
         return mapping.internal_id
 
+    def getCompletePathSequencesItems(self, cache, id_pathid, log, lvl=0):
+        result = list()
+        try:
+            cached_path_children = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.parent_id == id_pathid).all()
+            if len(cached_path_children) is 0:
+                return result
+            else:
+                for children in cached_path_children:
+                    item = self.get_wrapped_item(cache, children, lvl)
+                    if (item.paetype == 2 and item.lvl == 0) or item.lvl > 0:
+                        result.append(item)
+                    children = self.getCompletePathSequencesItems(cache, item.internal_id, log, lvl+1)
+                    if children.__len__() > 0:
+                        result.extend(children)
+
+        except Exception as e:
+            msg = 'ERROR: Query getCompletePathSequencesItems() Error: ' + e.args[0]
+            log.error(msg)
+        return result
 
 def convert_module_dict2obj(dict_params, log):
     obj_params = []

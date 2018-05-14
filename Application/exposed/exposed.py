@@ -90,7 +90,6 @@ class Exposed(object):
         pats = cache.get_path_items(internal_path_id, cache_session, log)
 
         if pats is None:
-            print('from db')
             pats = []
 
             ext_pat_id = cache.get_external_id(cache_session, internal_path_id, "pat", src, log)
@@ -121,7 +120,7 @@ class Exposed(object):
 
             while counter < len(items):
                 elem = elements_dict[items[counter].id_pae]
-                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "seq", src, log)
                 item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
                 self.simple_counter = self.simple_counter + 1
@@ -155,7 +154,7 @@ class Exposed(object):
 
             for l in lista:
                 elem = lvlzelems_dict[l.id_pae]
-                internal_id = cache.get_internal_id(cache_session, l.id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
+                internal_id = cache.get_internal_id(cache_session, l.id_pae, "mod", src, log)
                 item = Pathitem(internal_id, elem.name, l.id_pathid, elem.paetype, l.id_parent, l.lvl, l.order, l.operator)
                 pats.insert(item.order, item)
 
@@ -171,7 +170,6 @@ class Exposed(object):
             pats.sort(key=lambda x: x.order, reverse=False)
 
             cache.put_path_items(internal_path_id, pats, cache_session, log)
-            print('added to cache')
 
         if pats is None:
             return None
@@ -197,7 +195,6 @@ class Exposed(object):
         endpath_items = cache.get_path_items(internal_endpath_id, cache_session, log)
 
         if endpath_items is None:
-            print('from db')
             endpath_items = []
             external_id = cache.get_external_id(cache_session, internal_endpath_id, "pat", src, log)
 
@@ -304,7 +301,6 @@ class Exposed(object):
                 endpath_items.insert(oum.order, oum)
                 endpath_items.sort(key=lambda x: x.order, reverse=False)
             cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
-            print('added to cache')
 
         resp.success = True
         resp.children = endpath_items
@@ -347,27 +343,7 @@ class Exposed(object):
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
 
-        paths = cache.get_paths(ver_id, cache_session, log)
-        if paths is None:
-            print('from db')
-            try:
-                paths = queries.getPaths(ver_id, db, log)
-                i = 0
-                path_wraped = []
-                for p in paths:
-                    p.vid = ver_id
-                    p.order = i
-                    # p.gid = patsMap.put(p)
-                    p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
-                    i = i + 1
-                    path_wraped.append(Path(p.internal_id, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
-                cache.put_paths(ver_id, path_wraped, cache_session, log)
-                print('added to cache')
-
-            except:
-                log.error('ERROR: Query getPaths Error')
-                return None
-
+        paths = self.getPathsFromCache(cache_session, db, ver_id, log, src)
         if paths is None:
             return None
 
@@ -376,6 +352,25 @@ class Exposed(object):
         output = schema.dump(resp)
         return output.data
 
+    def getPathsFromCache(self, cache_session, db, ver_id, log, src):
+        paths = self.cache.get_paths(ver_id, cache_session, log)
+        if paths is None:
+            try:
+                paths = self.queries.getPaths(ver_id, db, log)
+                i = 0
+                path_wraped = []
+                for p in paths:
+                    p.vid = ver_id
+                    p.order = i
+                    p.internal_id = self.cache.get_internal_id(cache_session, p.id, "pat", src, log)
+                    i = i + 1
+                    path_wraped.append(Path(p.internal_id, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
+                self.cache.put_paths(ver_id, path_wraped, cache_session, log)
+
+            except:
+                log.error('ERROR: Query getPaths Error')
+                return None
+        return paths
 
     #Returns the end paths
     #@params: patsMap: map of paths database ids
@@ -411,38 +406,37 @@ class Exposed(object):
         version = self.getRequestedVersion(ver, cnf, db, log)
         ver_id = version.id
 
-        paths = cache.get_endpaths(ver_id, cache_session, log)
-        if paths is None:
-            print('from db')
-            try:
-                paths = queries.getEndPaths(ver_id, db, log)
-                i = 0
-                path_wraped = []
-                for p in paths:
-                    p.vid = ver_id
-                    p.order = i
-                    # p.gid = patsMap.put(p)
-                    p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
-                    i = i + 1
-                    path_wraped.append(
-                        Path(p.internal_id, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
-                cache.put_endpaths(ver_id, path_wraped, cache_session, log)
-                print('added to cache')
-
-            except:
-                log.error('ERROR: Query getEndPaths Error')
-                return None
-
-        if paths is None:
+        end_paths = self.getEndPathsFromCache(cache_session, db, ver_id, log, src)
+        if end_paths is None:
             return None
 
-        resp.children = paths
+        resp.children = end_paths
         resp.success = True
 
         output = schema.dump(resp)
         #assert isinstance(output.data, OrderedDict)
 
         return output.data
+
+    def getEndPathsFromCache(self, cache_session, db, ver_id, log, src):
+        end_paths = self.cache.get_endpaths(ver_id, cache_session, log)
+        if end_paths is None:
+            try:
+                end_paths = self.queries.getEndPaths(ver_id, db, log)
+                i = 0
+                path_wraped = []
+                for p in end_paths:
+                    p.vid = ver_id
+                    p.order = i
+                    p.internal_id = self.cache.get_internal_id(cache_session, p.id, "pat", src, log)
+                    i = i + 1
+                    path_wraped.append(Path(p.internal_id, p.id_path, p.description, p.name, p.vid, p.order, p.isEndPath))
+                self.cache.put_endpaths(ver_id, path_wraped, cache_session, log)
+
+            except:
+                log.error('ERROR: Query getEndPaths Error')
+                return None
+        return end_paths
 
     #Returns the paths
     #@params: patsMap: map of paths database ids
@@ -465,7 +459,6 @@ class Exposed(object):
 
         oumodule_params = cache.get_params(oumid, cache_session, log)
         if oumodule_params is None:
-            print('from db')
             external_id = cache.get_external_id(cache_session, oumid, "oum", src, log)
 
             oumodule_params = self.params_builder.outputModuleParamsBuilder(external_id, self.queries, db, log)
@@ -473,7 +466,6 @@ class Exposed(object):
                 param.module_id = oumid
 
             cache.put_params(oumid, oumodule_params, cache_session, log)
-            print('added to cache')
 
         if oumodule_params is None:
             return None
@@ -532,7 +524,6 @@ class Exposed(object):
         module_params = cache.get_params(internal_module_id, cache_session, log)
 
         if module_params is None:
-            print('from db')
             external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", src, log)
 
             module_params = self.params_builder.moduleParamsBuilder(external_module_id, queries, db, log)
@@ -541,7 +532,6 @@ class Exposed(object):
                 param.module_id = internal_module_id
 
             cache.put_params(internal_module_id, module_params, cache_session, log)
-            print('added to cache')
 
         if module_params is None:
             return None
@@ -1175,7 +1165,6 @@ class Exposed(object):
         ver_id = version.id
         module_names = cache.get_modules_names(ver_id, cache_session, log)
         if module_names is None:
-            print('from db')
             try:
                 module_names = queries.getConfPaelements(ver_id, db, log)
                 cache.put_modules_names(ver_id, [o.name for o in module_names], cache_session, log)
@@ -1276,14 +1265,12 @@ class Exposed(object):
 
         service_params = cache.get_params(sid_internal, cache_session, log)
         if service_params is None:
-            print('from db')
             sid_external = cache.get_external_id(cache_session, sid_internal, "srv", src, log)
             service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
             for param in service_params:
                 param.module_id = sid_internal
 
             cache.put_params(sid_internal, service_params, cache_session, log)
-            print('added to cache')
 
         if service_params is None:
             return None
@@ -1560,7 +1547,6 @@ class Exposed(object):
                 param.module_id = internal_esmod_id
 
             cache.put_params(internal_esmod_id, es_mod_params, cache_session, log)
-            print('added to cache')
 
         if es_mod_params is None:
             return None
@@ -1573,33 +1559,36 @@ class Exposed(object):
 
 
     def skipSequence(self, counter, items, level):
-        while(counter < len(items) and items[counter].lvl >= level):
+        while counter < len(items) and items[counter].lvl >= level:
             counter = counter + 1
         return counter
     
-    def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences, idgen_new,src,request,log):
+    def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences,src,request,log):
         children = []
 	cache = self.cache
         cache_session = request.db_cache
         
         while(counter < len(items) and items[counter].lvl == level):
-            elem = elements_dict[items[counter].id_pae]
-            internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "mod" if elem.paetype == 1 else "seq", src, log)
-            item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
-   
+            if hasattr(items[counter], "internal_id"):
+                item = items[counter]
+            else:
+                elem = elements_dict[items[counter].id_pae]
+                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "seq", src, log)
+                item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+
             self.simple_counter = self.simple_counter + 1
    
             counter = counter + 1
             if item.paetype == 2:
                 if item.name in written_sequences:
-                    item.expanded = False     
-                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new, src,request,log)
+                    item.expanded = False
+                    counter, new_children, written_sequences, built_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src,request,log)
 
                     for child in new_children:
                         item.children.append(child)
                 else:
                     item.expanded = False
-                    counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new,src,request,log)
+                    counter, new_children, written_sequences, built_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences,src,request,log)
 
                     for child in new_children:
                         item.children.append(child)
@@ -1608,8 +1597,10 @@ class Exposed(object):
                     built_sequences.add(item)
                 
             children.append(item)
+
+        children.sort(key=lambda x: x.order, reverse=False)
             
-        return counter, children, written_sequences, built_sequences, idgen_new
+        return counter, children, written_sequences, built_sequences
     
     def getAllSequences(self, cnf=-2, ver=-2, db = None, log = None, request = None, src = 0):
 
@@ -1639,8 +1630,8 @@ class Exposed(object):
         #Retreive all the sequences and their items of the path
 
         try:
-            paths    = queries.getPaths(ver_id, db, log)
-            endpaths = queries.getEndPaths(ver_id, db, log)
+            paths = self.getPathsFromCache(cache_session, db, ver_id, log, src)
+            endpaths = self.getEndPathsFromCache(cache_session, db, ver_id, log, src)
         except Exception as e:
             msg = 'ERROR: getAllSequences: error querying database for Paths and EndPaths:\n' + e.args[0]
             log.error(msg)
@@ -1649,45 +1640,52 @@ class Exposed(object):
         written_sequences = set()
         elements = None
         items = None
+        items_to_save = list()
 
         for path in itertools.chain(paths, endpaths):
+            cached_items = cache.getCompletePathSequencesItems(cache_session, path.internal_id, log)
+            external_id = cache.get_external_id(cache_session, path.internal_id, "pat", src, log)
             try:
-                elements = queries.getCompletePathSequences(path.id, ver_id, db, log)
-                items    = queries.getCompletePathSequencesItems(path.id, ver_id, db, log)
+                elements = queries.getCompletePathSequences(external_id, ver_id, db, log)
+                if len(cached_items) > 0:
+                    items = cached_items
+                else:
+                    items = queries.getCompletePathSequencesItems(external_id, ver_id, db, log)
             except Exception as e:
                 msg = 'ERROR: getSequences: error querying database for getCompletePathSequences and Items:\n' + e.args[0]
-                self.logger.error(msg)
+                log.error(msg)
 #                raise
 
             elements_dict = dict((element.id, element) for element in elements)
 
             counter = 0
-            idgen_new = 1
 
             while counter < len(items):
-                elem = elements_dict[items[counter].id_pae]
-                internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "seq", src, log)
-                item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                if hasattr(items[counter], "internal_id"):
+                    item = items[counter]
+                else:
+                    elem = elements_dict[items[counter].id_pae]
+                    internal_id = cache.get_internal_id(cache_session, items[counter].id_pae, "seq", src, log)
+                    item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
+                    items_to_save.append(item)
 
                 self.simple_counter = self.simple_counter + 1
 
-                if item.paetype == 2:
-                    counter = counter + 1
-                    if item.name in written_sequences:
-                        counter = self.skipSequence(counter, items, item.lvl+1)
-                    else:
-                        counter, new_children, written_sequences, built_sequences, idgen_new = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, idgen_new,src, request,log)
-
-                        for child in new_children:
-                            item.children.append(child)
-
-                        written_sequences.add(item.name)
-                        item.expanded = False
-                        built_sequences.add(item)
-
+                counter = counter + 1
+                if item.name in written_sequences:
+                    counter = self.skipSequence(counter, items, item.lvl+1)
                 else:
-                    counter = counter + 1
+                    counter, new_children, written_sequences, built_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences,src, request,log)
 
+                    for child in new_children:
+                        item.children.append(child)
+
+                    written_sequences.add(item.name)
+                    item.expanded = False
+                    built_sequences.add(item)
+            cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
+
+        built_sequences = sorted(built_sequences, key=lambda x: x.name, reverse=False)
         resp.success = True
         resp.children = built_sequences
         
@@ -1760,7 +1758,6 @@ class Exposed(object):
                 param.module_id = internal_gpset_id
 
             cache.put_params(internal_gpset_id, gpset_params, cache_session, log)
-            print('added to cache')
 
         if gpset_params is None:
             return None
@@ -1873,7 +1870,7 @@ class Exposed(object):
 #            return None
 
         templates_dict = dict((x.id, x) for x in templates)
-        modules_dict = dict((x.id, x) for x in modules)
+        modules_dict = dict((x.id, x) for lvlx in modules)
         conf2eds_dict = dict((x.id_edsource, x.order) for x in conf2eds)
 
         edsources = []
@@ -1920,7 +1917,6 @@ class Exposed(object):
                 param.module_id = internal_ed_source_id
 
             cache.put_params(internal_ed_source_id, ed_source_params, cache_session, log)
-            print('added to cache')
 
         if ed_source_params is None:
             return None
@@ -2026,7 +2022,6 @@ class Exposed(object):
                 param.module_id = internal_essource_id
 
             cache.put_params(internal_essource_id, essource_params, cache_session, log)
-            print('added to cache')
 
         if essource_params is None:
             return None

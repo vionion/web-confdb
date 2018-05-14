@@ -1,5 +1,5 @@
 Ext.define('CmsConfigExplorer.view.sequence.SequenceController', {
-    extend: 'Ext.app.ViewController',
+    extend: 'CmsConfigExplorer.view.general.DragNDropController',
     alias: 'controller.sequence-sequence',
 
     onSeqitemsBeforeLoad: function (store, operation, eOpts) {
