@@ -31,8 +31,12 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             if (copy) {
                 data.records = [this.copyDroppedRecord(data.records[0])];
             }
-            this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy);
-            dropHandler.processDrop();
+            this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy,
+                function () {
+                    dropHandler.processDrop();
+                });
+            dropHandler.cancelDrop();
+
         }
     },
 
@@ -48,8 +52,8 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
 
     },
 
-    sendDnDrequest: function (nodeId, oldParent, newParent, order, copied) {
-        // Can be replased with just GET with params. It doesn't need to be more complicated than it can be
+    sendDnDrequest: function (nodeId, oldParent, newParent, order, copied, _process_drop_callback) {
+        // Can be replaced with just GET with params. It doesn't need to be more complicated than it can be
         var dnRequestObj = {
             'nodeId': nodeId,
             'oldParent': oldParent,
@@ -62,13 +66,13 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             jsonData: JSON.stringify(dnRequestObj),
-            // sucess: function (response) {
-            //     var obj = Ext.decode(response.responseText);
-            //     console.log(obj);
-            // },
             failure: function (response) {
-                Ext.Msg.alert("Error");
+                Ext.Msg.alert('Error', response.responseText);
                 console.log(response);
+            }, success: function (response) {
+                // if (response.status == 200) {
+                    _process_drop_callback();
+                // }
             }
         });
     },
