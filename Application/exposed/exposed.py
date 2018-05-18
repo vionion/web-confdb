@@ -485,9 +485,18 @@ class Exposed(object):
         cache_session = request.db_cache
         cache.drag_n_drop_reorder(node_id, old_parent, new_order, cache_session, log)
 
-    def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log):
+    def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log, version=-2):
         cache = self.cache
         cache_session = request.db_cache
+        if version > 0:
+            max_order = cache.get_max_order(cache_session, new_parent, log)
+            if max_order == 0:
+                db_offline = request.db_offline
+                # db selection and src is hardcoded, not good
+                self.getPathItems(new_parent, version, db_offline, log, 0, request)
+                max_order = cache.get_max_order(cache_session, new_parent, log)
+            new_order = max_order
+
         if copied:
             cache.drag_n_drop_add_parent(node_id, new_parent, new_order, cache_session, log)
         else:

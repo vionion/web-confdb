@@ -528,7 +528,7 @@ class CacheDbQueries(object):
                 items = []
                 for children in cached_path_children:
                     item = self.get_wrapped_item(cache, children, lvl)
-                    item.children = self.get_path_items(item.internal_id, cache, log, lvl+1)
+                    item.children = self.get_path_items(item.internal_id, cache, log, lvl + 1)
                     items.append(item)
                 items.sort(key=lambda x: x.order, reverse=False)
                 return items
@@ -708,16 +708,28 @@ class CacheDbQueries(object):
 
     def drag_n_drop_add_parent(self, node_id, parent_id, new_order, cache, log):
         try:
-            copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order)
-            max_order = cache.query(func.max(PathItemsHierarchy.order)).filter(
-                PathItemsHierarchy.parent_id == parent_id)
+            max_order = self.get_max_order(cache, parent_id, log)
+            if not cache.query(exists().where(PathItemsHierarchy.parent_id == parent_id).where(
+                    PathItemsHierarchy.child_id == node_id)).scalar():
+                copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order)
+                cache.add(copied_node)
             self.update_orders(cache, new_order, max_order, parent_id, 1)
-            cache.add(copied_node)
 
         except Exception as e:
             msg = 'ERROR: Query drag_n_drop_add_parent() Error: ' + e.args[0]
             log.error(msg)
             return -2
+
+    @staticmethod
+    def get_max_order(cache, parent_id, log):
+        try:
+            max_order = cache.query(PathItemsHierarchy.order).filter(
+                PathItemsHierarchy.parent_id == parent_id).count()
+        except Exception as e:
+            msg = 'ERROR: Query get_max_order() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+        return max_order
 
     def drag_n_drop_move(self, node_id, parent_id, old_parent_id, new_order, cache, log):
         self.drag_n_drop_add_parent(node_id, parent_id, new_order, cache, log)
@@ -727,8 +739,7 @@ class CacheDbQueries(object):
         try:
             moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(
                 PathItemsHierarchy.child_id == node_id).first()
-            max_order = cache.query(func.max(PathItemsHierarchy.order)).filter(
-                PathItemsHierarchy.parent_id == parent_id)
+            max_order = self.get_max_order(cache, parent_id, log)
             self.update_orders(cache, moved_node.order, max_order, parent_id, -1)
             cache.delete(moved_node)
 
@@ -824,7 +835,7 @@ class CacheDbQueries(object):
                     item = self.get_wrapped_item(cache, children, lvl)
                     if (item.paetype == 2 and item.lvl == 0) or item.lvl > 0:
                         result.append(item)
-                    children = self.getCompletePathSequencesItems(cache, item.internal_id, log, lvl+1)
+                    children = self.getCompletePathSequencesItems(cache, item.internal_id, log, lvl + 1)
                     if children.__len__() > 0:
                         result.extend(children)
 

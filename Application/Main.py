@@ -301,18 +301,19 @@ class Root(object):
     @cherrypy.tools.json_in()
     def drag_n_drop(self):
         input_json = byteify(cherrypy.request.json)
-        node_id = input_json['nodeId']
-        old_parent = input_json['oldParent']
-        new_parent = input_json['newParent']
-        order = input_json['order']
-        copied = input_json['copied']
+        node_id = input_json.get('nodeId')
+        old_parent = input_json.get('oldParent')
+        new_parent = input_json.get('newParent')
+        order = input_json.get('order')
+        copied = input_json.get('copied')
+        version = input_json.get('version', -2)
         cherrypy.response.status = 200
         try:
             # raise Exception('test exception')
             if old_parent == new_parent:
                 self.funcs.drag_n_drop_reorder(node_id, old_parent, order, cherrypy.request, self.log)
             else:
-                self.funcs.drag_n_drop(node_id, old_parent, new_parent, order, copied, cherrypy.request, self.log)
+                self.funcs.drag_n_drop(node_id, old_parent, new_parent, order, copied, cherrypy.request, self.log, version)
         except Exception as e:
             cherrypy.response.status = 500
             return '500 ERROR: drag_n_drop failed:' + e.args[0]

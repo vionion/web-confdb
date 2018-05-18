@@ -21,7 +21,8 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
 
     listeners:{
         cusDetailsClick: 'onDetailsRender',
-        scope: 'controller'
+        scope: 'controller',
+        doSmthToAllNodes: 'doSmthToAllNodes'
     }
 
     ,layout: {

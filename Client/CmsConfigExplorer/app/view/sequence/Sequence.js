@@ -6,6 +6,10 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
     viewModel: {
         type: "sequence-sequence"
     },
+
+    listeners:{
+        doSmthToAllNodes: 'doSmthToAllNodes'
+    },
     
     requires:['CmsConfigExplorer.model.Sequenceitem'],
     

@@ -22,11 +22,11 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
     layout: {
         type: 'border'
     },
-    
-//    listeners:{
-//        custSetVerId: 'onSetVerId'
-//    },
-    
+
+    listeners:{
+        doSmthToAllNodes: 'doSmthToAllNodes'
+    },
+
     items: [
 //        {
 //            xtype: 'toolbar',
