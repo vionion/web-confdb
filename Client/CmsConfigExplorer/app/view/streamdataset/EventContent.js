@@ -15,7 +15,15 @@ Ext.define("CmsConfigExplorer.view.streamdataset.EventContent",{
     },
 
     scrollable: true,
-    
+
+    plugins: {
+        ptype: 'cellediting',
+        clicksToEdit: 2,
+        listeners: {
+            edit: 'onEditDone'
+        }
+    },
+
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'top',
@@ -56,13 +64,81 @@ Ext.define("CmsConfigExplorer.view.streamdataset.EventContent",{
             ] 
     
     }],
-    
-    columns:[
-        { xtype: 'gridcolumn', header: 'Type', dataIndex: 'stype', flex: 1 },
-        { xtype: 'gridcolumn', header: 'Class Name', dataIndex: 'classn', flex: 1 },
-        { xtype: 'gridcolumn', header: 'Module element', dataIndex: 'modulel', flex: 1 },
-        { xtype: 'gridcolumn', header: 'Extra name', dataIndex: 'extran', flex: 1 },
-        { xtype: 'gridcolumn', header: 'Process name', dataIndex: 'processn', flex: 1 }
+
+    columns: [
+        {
+            xtype: 'gridcolumn',
+            header: 'Type',
+            dataIndex: 'stype',
+            flex: 1,
+            editor: {
+                xtype: 'combobox',
+                store: ['drop', 'keep'],
+                allowBlank: false,
+                forceSelection: true,
+                editable: true,
+                onFocus: function () {
+                    var bool = this;
+                    if (!bool.isExpanded) {
+                        bool.expand()
+                    }
+                    bool.getPicker().focus();
+                }
+            }
+        },
+        {
+            xtype: 'gridcolumn',
+            header: 'Class Name',
+            dataIndex: 'classn',
+            flex: 1,
+            editor: {
+                xtype: 'textfield',
+                editable: true
+            }
+        },
+        {
+            xtype: 'gridcolumn',
+            header: 'Module element',
+            dataIndex: 'modulel',
+            flex: 1,
+            editor: {
+                xtype: 'combo',
+                queryMode: 'local',
+                autoLoad: false,
+                // to allow freetype
+                forceSelection: false,
+                hideTrigger: true,
+                typeAhead: true,
+                store: inputTags,
+                displayField: 'name'
+            },
+            renderer: function (v, meta) {
+                if (v && (inputTags.findExact('name', v.split(":")[0]) === -1)  && v !== '*') {
+                    meta.style = "color:red;";
+                }
+                return v;
+            }
+        },
+        {
+            xtype: 'gridcolumn',
+            header: 'Extra name',
+            dataIndex: 'extran',
+            flex: 1,
+            editor: {
+                xtype: 'textfield',
+                editable: true
+            }
+        },
+        {
+            xtype: 'gridcolumn',
+            header: 'Process name',
+            dataIndex: 'processn',
+            flex: 1,
+            editor: {
+                xtype: 'textfield',
+                editable: true
+            }
+        }
     ]
     
 });
