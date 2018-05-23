@@ -197,7 +197,10 @@ function validate(value, prevVal, type, callback) {
     // InputTag: we don't really validate, but mark non-existing values with red
     else if (type === 'InputTag') {
         valid = true;
-        if (inputTags.findExact('name', value.split(":")[0]) === -1) {
+        if (!value || value === '""' || value === "''") {
+            valid = false;
+            callback(valid, prevVal);
+        } else if (inputTags.findExact('name', value.split(":")[0]) === -1) {
             Ext.MessageBox.confirm('Confirm', 'This module doesn\'t exists yet. Do you really want to change this InputTag value?', function (btn) {
                 if (btn === 'no') {
                     callback(valid, prevVal);
