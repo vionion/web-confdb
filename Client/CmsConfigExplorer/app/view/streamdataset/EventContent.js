@@ -27,24 +27,22 @@ Ext.define("CmsConfigExplorer.view.streamdataset.EventContent",{
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'top',
-        
-                    items:[ 
-                    {
-                        text: 'Keep',
-                        disabled: true
-//                        listeners: {
-//                            click: 'onKeepClick',
-//                            scope: 'controller'
-//                        }
-                    },
-                    {
-                        text: 'Drop',
-                        disabled: true
-//                        listeners: {
-//                            click: 'onDropClick',
-//                            scope: 'controller'
-//                        }
-                    },
+
+        items: [
+            {
+                text: 'Keep',
+                listeners: {
+                    click: 'onKeepClick',
+                    scope: 'controller'
+                }
+            },
+            {
+                text: 'Drop',
+                listeners: {
+                    click: 'onDropClick',
+                    scope: 'controller'
+                }
+            },
                     {
                         text: 'Keep All',
                         disabled: true

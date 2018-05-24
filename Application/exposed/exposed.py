@@ -479,6 +479,11 @@ class Exposed(object):
         cache_session = request.db_cache
         cache.update_event_statements(internal_id, statementrank, column, value, cache_session, log)
 
+    def add_event_statement(self, internal_id, drop_line, request, log):
+        cache = self.cache
+        cache_session = request.db_cache
+        return cache.add_event_statement(internal_id, drop_line, cache_session, log)
+
     def update_cached_param(self, mod_id, src, param_name, value, request, log):
         cache = self.cache
         cache_session = request.db_cache

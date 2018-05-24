@@ -321,6 +321,20 @@ class Root(object):
     @cherrypy.expose
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
+    def add_event_statement(self):
+        input_json = byteify(cherrypy.request.json)
+        internal_id = input_json.get('internal_id')
+        drop_line = input_json.get('drop_line')
+        cherrypy.response.status = 200
+        try:
+            return self.funcs.add_event_statement(internal_id, drop_line, cherrypy.request, self.log)
+        except Exception as e:
+            cherrypy.response.status = 500
+            return '500 ERROR: add_event_statement failed:' + e.args[0]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
     def update_param_val(self):
         input_json = byteify(cherrypy.request.json)
         value = input_json['value']

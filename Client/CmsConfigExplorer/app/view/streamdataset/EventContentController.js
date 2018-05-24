@@ -2,6 +2,35 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.streamdataset-eventcontent',
 
+    send_add_line_request: function (drop_line) {
+        var internal_id = this.getViewModel().getStore('ecstats').first().get('internal_id');
+        var statement_request = {
+            'internal_id': internal_id,
+            'drop_line': drop_line
+        };
+        var store = this.getViewModel().getStore('ecstats');
+        Ext.Ajax.request({
+            url: 'add_event_statement',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            jsonData: JSON.stringify(statement_request),
+            failure: function (response) {
+                Ext.Msg.alert('Error', response.responseText);
+                console.log(response);
+            }, success: function (response) {
+                store.add(Ext.decode(response.responseText));
+            }
+        });
+    },
+
+    onKeepClick: function () {
+        this.send_add_line_request(false);
+    },
+
+    onDropClick: function () {
+        this.send_add_line_request(true);
+    },
+
     onEditDone: function (editor, context, eOpts) {
 
         var column = context.column.config.dataIndex;

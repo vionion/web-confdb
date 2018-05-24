@@ -838,7 +838,7 @@ class CacheDbQueries(object):
                 for statement in cached_statements:
                     dict_statement = byteify(json.loads(statement.data))
                     wrapped_statements.append(
-                        EvCoStatement(dict_statement['internal_id'], dict_statement['modulel'],
+                        EvCoStatement(statement.statement_id, dict_statement['modulel'],
                                       dict_statement['classn'], dict_statement['extran'], dict_statement['processn'],
                                       dict_statement['statementtype'], statement.statement_rank))
                 return wrapped_statements
@@ -852,8 +852,8 @@ class CacheDbQueries(object):
         for statement in statements:
             json_params = json.dumps(statement, default=lambda o: o.__dict__)
             try:
-                params = EventStatementsCached(data=json_params, statement_id=statement_id, statement_rank=statement.statementrank)
-                cache.add(params)
+                cached_statement = EventStatementsCached(data=json_params, statement_id=statement_id, statement_rank=statement.statementrank)
+                cache.add(cached_statement)
                 cache.commit()
             except Exception as e:
                 msg = 'ERROR: Query put_params() Error: ' + e.args[0]
@@ -875,6 +875,39 @@ class CacheDbQueries(object):
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    @staticmethod
+    def get_max_rank(cache, statements_id, log):
+        try:
+            max_rank = cache.query(EventStatementsCached.statement_rank).filter(
+                EventStatementsCached.statement_id == statements_id).count()
+        except Exception as e:
+            msg = 'ERROR: Query get_max_rank() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+        return max_rank
+
+    def add_event_statement(self, statements_id, drop_line, cache, log):
+        try:
+            new_rank = self.get_max_rank(cache, statements_id, log)
+            data = {
+                "classn": "*",
+                "internal_id": statements_id,
+                "statementtype": 0 if drop_line else 1,
+                "processn": "*",
+                "extran": "*",
+                "modulel": "*",
+                "statementrank": new_rank}
+            statement = EventStatementsCached(statement_id=statements_id, statement_rank=new_rank, data=json.dumps(data))
+            cache.add(statement)
+            cache.commit()
+
+            data['stype'] = 'keep' if data.get('statementtype') == 1 else 'drop'
+            return data
+        except Exception as e:
+            msg = 'ERROR: Query add_event_statement() Error: ' + e.args[0]
             log.error(msg)
             return -2
 
