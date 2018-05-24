@@ -5,8 +5,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
     onEditDone: function (editor, context, eOpts) {
 
         var column = context.column.config.dataIndex;
-        // var modId = context.record.get('moduleId');
-        // hmm, maybe it is time to change it to internal_id?
+        var internal_id = context.record.get('internal_id');
         // var parName = context.record.get('name');
         // var type = context.record.get('dataIndex');
         var prevVal = context.value;

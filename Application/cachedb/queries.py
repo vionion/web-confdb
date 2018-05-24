@@ -823,6 +823,41 @@ class CacheDbQueries(object):
             return None
         return mapping.internal_id
 
+    def get_event_statements(self, int_id, cache, log):
+        if int_id < 0 or cache is None:
+            log.error('ERROR: get_event_statements - input parameters error')
+            return -2
+
+        try:
+            cached_statements = cache.query(EventStatementsCached).filter(
+                EventStatementsCached.id == int_id).first()
+            if cached_statements is None:
+                return None
+            else:
+                dict_statements = byteify(json.loads(cached_statements.data))
+                wrapped_statements = []
+                for statement in dict_statements:
+                    wrapped_statements.append(
+                        EvCoStatement(statement['internal_id'], statement['classn'], statement['modulel'], statement['extran'], statement['processn'], statement['statementtype'],
+                                      statement['statementrank']))
+                return wrapped_statements
+
+        except Exception as e:
+            msg = 'ERROR: Query get_event_statements() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+
+    def put_event_statements(self,int_id, statements, cache, log):
+        json_params = json.dumps(statements, default=lambda o: o.__dict__)
+        try:
+            params = EventStatementsCached(data=json_params, id=int_id)
+            cache.add(params)
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_params() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
     def getCompletePathSequencesItems(self, cache, id_pathid, log, lvl=0):
         result = list()
         try:

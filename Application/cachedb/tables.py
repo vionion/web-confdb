@@ -46,3 +46,7 @@ class IdMapping(BaseCache):
     itemtype = Column('itemtype', String)
     source = Column('source', Integer)
 
+class EventStatementsCached(BaseCache):
+    __tablename__ = 'event_statements_cache'
+    id = Column('id', Integer, primary_key=True)
+    data = Column('data', JSON)

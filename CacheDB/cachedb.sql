@@ -126,6 +126,7 @@ CREATE TABLE modules_names_cache (version_id SERIAL PRIMARY KEY, names text[]);
 --
 CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id BIGINT, itemtype text, source INTEGER);
 
+CREATE TABLE event_statements_cache (id SERIAL PRIMARY KEY, data JSON);
 
 CREATE or REPLACE FUNCTION getClientMappings(BIGINT, text, text) RETURNS text[] AS $$
 DECLARE

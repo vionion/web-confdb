@@ -404,6 +404,7 @@ class StreamItemSchema(Schema):
 
 class EvcStatementSchema(Schema):
     id = fields.Integer()
+    internal_id = fields.Integer()
     external_id = fields.Method("get_external_id")
     classn = fields.String()
     modulel = fields.String()
@@ -423,7 +424,7 @@ class EvcStatementSchema(Schema):
             return "keep"
 
     class Meta:
-        fields = ("external_id", "classn", "modulel", "extran", "processn", "stype", "statementrank")
+        fields = ("internal_id", "classn", "modulel", "extran", "processn", "stype", "statementrank")
         ordered = True
 
 #--------------------------ES Module Schema --------------------
@@ -544,13 +545,14 @@ class SummaryValueSchema(Schema):
 class SummaryItemSchema(Schema):
     gid = fields.Integer()
     name = fields.String()
+    sit = fields.String()
     leaf = fields.Boolean() #fields.Method("get_leaf")
     icon = fields.String() #fields.Method("get_icon")
     values = fields.List(fields.String()) #Nested(SummaryValueSchema, many=True)
     children = fields.Nested('self', many=True)
 
     class Meta:
-        fields = ("gid", "name", "leaf", "icon", "values", "children") #"order", "sit",
+        fields = ("gid", "name", "sit", "leaf", "icon", "values", "children") #"order", "sit",
         ordered = True
 
 #------------ Url Schema -------------------------

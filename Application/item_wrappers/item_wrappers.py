@@ -189,3 +189,16 @@ class Path(object):
         self.order = order
         self.isEndPath = isEndPath
         self.pit = "pat"
+
+
+class EvCoStatement(object):
+
+    def __init__(self, internal_id=0, modulel="", classn="", extran="", processn="", statementtype="",
+                 statementrank=""):
+        self.internal_id = internal_id
+        self.classn = classn
+        self.modulel = modulel
+        self.extran = extran
+        self.processn = processn
+        self.statementtype = statementtype
+        self.statementrank = statementrank

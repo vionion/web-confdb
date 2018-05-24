@@ -1407,10 +1407,10 @@ class Exposed(object):
     #         db: database session object
     #
 
-    def getEvcStatements(self, evc=-2, db = None, log = None, request = None, src = 0):
+    def getEvcStatements(self, internal_evc_id=-2, db = None, log = None, request = None, src = 0):
 
-        if (evc==-2 or db == None):
-            log.error('ERROR: getEvcStatements - input parameters error' + self.log_arguments(evc=evc))
+        if (internal_evc_id==-2 or db == None):
+            log.error('ERROR: getEvcStatements - input parameters error' + self.log_arguments(evc=internal_evc_id))
 
         cache = self.cache
         cache_session = request.db_cache
@@ -1419,29 +1419,35 @@ class Exposed(object):
         evcostatements = None
         evcotostats = None
 
-        evc = cache.get_external_id(cache_session, evc, "evc", src, log)
+        evcostatements_wraped = cache.get_event_statements(internal_evc_id, cache_session, log)
 
-        try:
-            evcostatements = self.queries.getEvCoStatements(evc, db, log)
-            evcotostats = self.queries.getEvCoToStat(evc, db, log)
+        if evcostatements_wraped is None:
+            external_evc_id = cache.get_external_id(cache_session, internal_evc_id, "evc", src, log)
 
-        except:
-            log.error('ERROR: Query getEvCoStatements/getEvCoToStat Error')
+            try:
+                evcostatements = self.queries.getEvCoStatements(external_evc_id, db, log)
+                evcotostats = self.queries.getEvCoToStat(external_evc_id, db, log)
+
+            except:
+                log.error('ERROR: Query getEvCoStatements/getEvCoToStat Error')
+                return None
+
+            evcotostats_dict = dict((x.id_stat, x.statementrank) for x in evcotostats)
+            evcostatements_wraped = []
+            for st in evcostatements:
+                r = evcotostats_dict.get(st.id)
+                st.statementrank = r
+                st.internal_id = internal_evc_id
+                evcostatements_wraped.append(EvCoStatement(st.internal_id, st.classn, st.modulel, st.extran, st.processn, st.statementtype, st.statementrank))
+            cache.put_event_statements(internal_evc_id, evcostatements_wraped, cache_session, log)
+
+        if evcostatements_wraped is None:
             return None
 
-#        if (evcostatements == None or evcotostats == None):
-#            return None
-
-        evcotostats_dict = dict((x.id_stat, x.statementrank) for x in evcotostats)
-
-        for st in evcostatements:
-            r = evcotostats_dict.get(st.id)
-            st.statementrank = r
-
-        evcostatements.sort(key=lambda par: par.statementrank)
+        evcostatements_wraped.sort(key=lambda par: par.statementrank)
 
         resp = Response()
-        resp.children = evcostatements
+        resp.children = evcostatements_wraped
         schema = ResponseEvcStatementSchema()
 
         resp.success = True
