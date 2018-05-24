@@ -48,5 +48,6 @@ class IdMapping(BaseCache):
 
 class EventStatementsCached(BaseCache):
     __tablename__ = 'event_statements_cache'
-    id = Column('id', Integer, primary_key=True)
+    statement_id = Column('statement_id', Integer, primary_key=True)
+    statement_rank = Column('statement_rank', Integer, primary_key=True)
     data = Column('data', JSON)

@@ -823,23 +823,24 @@ class CacheDbQueries(object):
             return None
         return mapping.internal_id
 
-    def get_event_statements(self, int_id, cache, log):
-        if int_id < 0 or cache is None:
+    def get_event_statements(self, statement_id, cache, log):
+        if statement_id < 0 or cache is None:
             log.error('ERROR: get_event_statements - input parameters error')
             return -2
 
         try:
             cached_statements = cache.query(EventStatementsCached).filter(
-                EventStatementsCached.id == int_id).first()
-            if cached_statements is None:
+                EventStatementsCached.statement_id == statement_id).all()
+            if len(cached_statements) is 0:
                 return None
             else:
-                dict_statements = byteify(json.loads(cached_statements.data))
                 wrapped_statements = []
-                for statement in dict_statements:
+                for statement in cached_statements:
+                    dict_statement = byteify(json.loads(statement.data))
                     wrapped_statements.append(
-                        EvCoStatement(statement['internal_id'], statement['modulel'], statement['classn'], statement['extran'], statement['processn'], statement['statementtype'],
-                                      statement['statementrank']))
+                        EvCoStatement(dict_statement['internal_id'], dict_statement['modulel'],
+                                      dict_statement['classn'], dict_statement['extran'], dict_statement['processn'],
+                                      dict_statement['statementtype'], statement.statement_rank))
                 return wrapped_statements
 
         except Exception as e:
@@ -847,30 +848,30 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
 
-    def put_event_statements(self,int_id, statements, cache, log):
-        json_params = json.dumps(statements, default=lambda o: o.__dict__)
-        try:
-            params = EventStatementsCached(data=json_params, id=int_id)
-            cache.add(params)
-            cache.commit()
-        except Exception as e:
-            msg = 'ERROR: Query put_params() Error: ' + e.args[0]
-            log.error(msg)
-            return -2
+    def put_event_statements(self, statement_id, statements, cache, log):
+        for statement in statements:
+            json_params = json.dumps(statement, default=lambda o: o.__dict__)
+            try:
+                params = EventStatementsCached(data=json_params, statement_id=statement_id, statement_rank=statement.statementrank)
+                cache.add(params)
+                cache.commit()
+            except Exception as e:
+                msg = 'ERROR: Query put_params() Error: ' + e.args[0]
+                log.error(msg)
+                return -2
 
     @staticmethod
     def update_event_statements(internal_id, statementrank, param_name, param_value, cache, log):
         try:
-            statements = cache.query(EventStatementsCached)\
-                .filter(EventStatementsCached.id == internal_id)\
+            statement = cache.query(EventStatementsCached)\
+                .filter(EventStatementsCached.statement_id == internal_id)\
+                .filter(EventStatementsCached.statement_rank == statementrank)\
                 .first()
-            json_params = json.loads(statements.data)
-            for statement in json_params:
-                if statement.get('statementrank') == statementrank:
-                    statement[param_name] = param_value
-                    print("updated: " + param_name + " - " + str(param_value))
-                    statements.data = json.dumps(json_params)
-                    flag_modified(statements, 'data')
+            json_statement = json.loads(statement.data)
+            json_statement[param_name] = param_value
+            print("updated: " + param_name + " - " + str(param_value))
+            statement.data = json.dumps(json_statement)
+            flag_modified(statement, 'data')
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]
