@@ -652,7 +652,7 @@ class CacheDbQueries(object):
 
         try:
             cached_names_list = cache.query(ModulesNames).filter(
-                PathsCached.version_id == version_id).first()
+                ModulesNames.version_id == version_id).first()
             if cached_names_list is None:
                 return None
             else:
