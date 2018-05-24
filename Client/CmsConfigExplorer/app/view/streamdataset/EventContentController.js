@@ -6,8 +6,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
 
         var column = context.column.config.dataIndex;
         var internal_id = context.record.get('internal_id');
-        // var parName = context.record.get('name');
-        // var type = context.record.get('dataIndex');
+        var statementrank = context.record.get('statementrank');
         var prevVal = context.value;
         if (context.record.modified) {
             prevVal = context.record.modified[column];
@@ -18,20 +17,28 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
                 context.value = validValue;
                 context.record.modified[column] = validValue;
                 context.record.set(column, validValue);
-        //         if (valid) {
-                    // var myObject = {'value': context.value, 'parName': parName, 'modId': modId};
-                    // Ext.Ajax.request({
-                    //     url: 'update_param_val',
-                    //     // why the hell it doesn't work with UPDATE?
-                    //     method: 'POST',
-                    //     headers: {'Content-Type': 'application/json'},
-                    //     jsonData: JSON.stringify(myObject),
-                    //     failure: function (response) {
-                    //         Ext.Msg.alert("Error");
-                    //         console.log(response);
-                    //     }
-                    // });
-                // }
+                if (valid) {
+                    if (column === 'stype') {
+                        column = 'statementtype';
+                        context.value = context.value === 'keep' ? 1 : 0;
+                    }
+                    var statement_request = {
+                        'value': context.value,
+                        'column': column,
+                        'internal_id': internal_id,
+                        'statementrank': statementrank
+                    };
+                    Ext.Ajax.request({
+                        url: 'update_event_statement',
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        jsonData: JSON.stringify(statement_request),
+                        failure: function (response) {
+                            Ext.Msg.alert("Error");
+                            console.log(response);
+                        }
+                    });
+                }
             }
         );
 
@@ -81,7 +88,7 @@ function validateEvent(value, prevVal, type, callback) {
         if (!value || value === '""' || value === "''") {
             valid = false;
             callback(valid, prevVal);
-        } else if (inputTags.findExact('name', value.split(":")[0]) === -1) {
+        } else if ((inputTags.findExact('name', value.split(":")[0]) === -1)  && value !== '*') {
             Ext.MessageBox.confirm('Confirm', 'This module doesn\'t exists yet. Do you really want to change this InputTag value?', function (btn) {
                 if (btn === 'no') {
                     callback(valid, prevVal);

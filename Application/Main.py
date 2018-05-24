@@ -318,7 +318,6 @@ class Root(object):
             cherrypy.response.status = 500
             return '500 ERROR: drag_n_drop failed:' + e.args[0]
 
-
     @cherrypy.expose
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
@@ -335,6 +334,24 @@ class Root(object):
         self.funcs.update_cached_param(mod_id, src, param_name, value, cherrypy.request, self.log)
         # TODO: remove it, it is stupid. Return something more enhanced
         return input_json
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    def update_event_statement(self):
+        input_json = byteify(cherrypy.request.json)
+        value = input_json.get('value')
+        column = input_json.get('column')
+        internal_id = input_json.get('internal_id')
+        statementrank = input_json.get('statementrank')
+
+        # TODO: it still might be different from 0, so remove hardcode
+        src = 0
+        try:
+            self.funcs.update_event_statement(internal_id, statementrank, src, column, value, cherrypy.request, self.log)
+        except Exception as e:
+            cherrypy.response.status = 500
+            return '500 ERROR: update_event_statement failed:' + e.args[0]
+        cherrypy.response.status = 200
 
     @cherrypy.expose
     @cherrypy.tools.json_out()

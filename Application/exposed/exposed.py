@@ -474,8 +474,12 @@ class Exposed(object):
         output = schema.dump(resp)
         return output.data
 
-    def update_cached_param(self, mod_id, src, param_name, value, request, log):
+    def update_event_statement(self, internal_id, statementrank, src, column, value, request, log):
+        cache = self.cache
+        cache_session = request.db_cache
+        cache.update_event_statements(internal_id, statementrank, column, value, cache_session, log)
 
+    def update_cached_param(self, mod_id, src, param_name, value, request, log):
         cache = self.cache
         cache_session = request.db_cache
         cache.update_params(mod_id, param_name, value, cache_session, log)
@@ -1438,7 +1442,7 @@ class Exposed(object):
                 r = evcotostats_dict.get(st.id)
                 st.statementrank = r
                 st.internal_id = internal_evc_id
-                evcostatements_wraped.append(EvCoStatement(st.internal_id, st.classn, st.modulel, st.extran, st.processn, st.statementtype, st.statementrank))
+                evcostatements_wraped.append(EvCoStatement(st.internal_id, st.modulel, st.classn, st.extran, st.processn, st.statementtype, st.statementrank))
             cache.put_event_statements(internal_evc_id, evcostatements_wraped, cache_session, log)
 
         if evcostatements_wraped is None:

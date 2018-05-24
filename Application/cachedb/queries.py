@@ -838,7 +838,7 @@ class CacheDbQueries(object):
                 wrapped_statements = []
                 for statement in dict_statements:
                     wrapped_statements.append(
-                        EvCoStatement(statement['internal_id'], statement['classn'], statement['modulel'], statement['extran'], statement['processn'], statement['statementtype'],
+                        EvCoStatement(statement['internal_id'], statement['modulel'], statement['classn'], statement['extran'], statement['processn'], statement['statementtype'],
                                       statement['statementrank']))
                 return wrapped_statements
 
@@ -855,6 +855,25 @@ class CacheDbQueries(object):
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_params() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    @staticmethod
+    def update_event_statements(internal_id, statementrank, param_name, param_value, cache, log):
+        try:
+            statements = cache.query(EventStatementsCached)\
+                .filter(EventStatementsCached.id == internal_id)\
+                .first()
+            json_params = json.loads(statements.data)
+            for statement in json_params:
+                if statement.get('statementrank') == statementrank:
+                    statement[param_name] = param_value
+                    print("updated: " + param_name + " - " + str(param_value))
+                    statements.data = json.dumps(json_params)
+                    flag_modified(statements, 'data')
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]
             log.error(msg)
             return -2
 
