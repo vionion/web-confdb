@@ -67,6 +67,18 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
             form.markInvalid('Invalid regular expression');
             console.log(e);
         }
+    },
+
+    onBeforeNodeEdit: function (editor, context, eOpts) {
+        if (context.record.data.s_type === 'evc') {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    onNodeEditDone: function (editor, context, eOpts) {
+        console.log('done');
+        // TODO: send request about node name change, receive new internal_id and update node
     }
-    
 });

@@ -13,7 +13,15 @@ Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
     bind:{
         store:'{streamitems}'
     },
-    
+
+    plugins: {
+        ptype: 'cellediting',
+        clicksToEdit: 2,
+        listeners: {
+            beforeedit: 'onBeforeNodeEdit',
+            edit: 'onNodeEditDone'
+        }
+    },
 //    title: "Stream and Datasets",
     
     header: false,
@@ -102,9 +110,16 @@ Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
             }
         ]
     }],
-    
+
     columns: [
-        { xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1, sortable: false }
+        {
+            xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1, sortable: false,
+            editor: {
+                xtype: 'textfield',
+                selectOnFocus: true,
+                editable: true
+            }
+        }
 
     ]
 });
