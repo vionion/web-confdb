@@ -22,7 +22,6 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
                         // magic number to show that desired action is to append node to the unloaded path
                         newOrder = -78;
                         version = this.getViewModel().get("idVer");
-                        var online = this.getViewModel().get("online");
                     } else {
                         newOrder = overModel.childNodes.length + 1;
                     }

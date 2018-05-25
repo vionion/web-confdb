@@ -2,6 +2,7 @@ from collections import namedtuple
 
 import copy
 from sqlalchemy import *
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import *
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import select
@@ -516,16 +517,16 @@ class CacheDbQueries(object):
             return -2
 
     def get_path_items(self, parent_id, cache, log, lvl=0):
+        items = []
         if parent_id < 0 or cache is None:
             log.error('ERROR: get_path_items - input parameters error')
-            return -2
+            return items
         try:
             cached_path_children = cache.query(PathItemsHierarchy).filter(
                 PathItemsHierarchy.parent_id == parent_id).all()
             if len(cached_path_children) is 0:
-                return None
+                return items
             else:
-                items = []
                 for children in cached_path_children:
                     item = self.get_wrapped_item(cache, children, lvl)
                     item.children = self.get_path_items(item.internal_id, cache, log, lvl + 1)
@@ -536,7 +537,7 @@ class CacheDbQueries(object):
         except Exception as e:
             msg = 'ERROR: Query get_path_items() Error: ' + e.args[0]
             log.error(msg)
-            return None
+            return []
 
     def get_wrapped_item(self, cache, children, lvl):
         path_item = cache.query(PathItemsCached).filter(
@@ -551,9 +552,16 @@ class CacheDbQueries(object):
         return item
 
     def put_path_items(self, parrent_id, path_items, cache, log):
+        nodes = []
         for pathitem in path_items:
-            self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
+            children = self.get_path_items(pathitem.internal_id, cache, log, pathitem.lvl + 1)
+            if len(children) is 0:
+                self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
+            else:
+                pathitem.children = children
             self.put_path_item(pathitem, parrent_id, cache, log)
+            nodes.append(pathitem)
+        return nodes
 
     @staticmethod
     def put_path_item(pathitem, parrent_id, cache, log):
@@ -571,7 +579,10 @@ class CacheDbQueries(object):
         except Exception as e:
             msg = 'ERROR: Query put_path_items() Error: ' + e.args[0]
             log.error(msg)
-            return -2
+        except IntegrityError as e:
+            cache.rollback()
+            msg = 'ERROR: Query put_path_items() Error: ' + e.args[0]
+            log.error(msg)
 
     @staticmethod
     def get_paths(version_id, cache, log):

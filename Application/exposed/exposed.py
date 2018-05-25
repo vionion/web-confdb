@@ -89,8 +89,7 @@ class Exposed(object):
 
         pats = cache.get_path_items(internal_path_id, cache_session, log)
 
-        if pats is None:
-            pats = []
+        if len(pats) is 0:
 
             ext_pat_id = cache.get_external_id(cache_session, internal_path_id, "pat", src, log)
 
@@ -169,7 +168,7 @@ class Exposed(object):
 
             pats.sort(key=lambda x: x.order, reverse=False)
 
-            cache.put_path_items(internal_path_id, pats, cache_session, log)
+            pats = cache.put_path_items(internal_path_id, pats, cache_session, log)
 
         if pats is None:
             return None
@@ -194,8 +193,7 @@ class Exposed(object):
 
         endpath_items = cache.get_path_items(internal_endpath_id, cache_session, log)
 
-        if endpath_items is None:
-            endpath_items = []
+        if len(endpath_items) is 0:
             external_id = cache.get_external_id(cache_session, internal_endpath_id, "pat", src, log)
 
             try:
@@ -300,7 +298,8 @@ class Exposed(object):
 
                 endpath_items.insert(oum.order, oum)
                 endpath_items.sort(key=lambda x: x.order, reverse=False)
-            cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
+
+            endpath_items = cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
 
         resp.success = True
         resp.children = endpath_items
@@ -497,6 +496,8 @@ class Exposed(object):
     def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log, version=-2):
         cache = self.cache
         cache_session = request.db_cache
+        cache_session.begin_nested()
+        cache_session.execute('LOCK TABLE path_items_hierarchy IN ACCESS EXCLUSIVE MODE;')
         if version > 0:
             max_order = cache.get_max_order(cache_session, new_parent, log)
             if max_order == 0:
@@ -510,6 +511,9 @@ class Exposed(object):
             cache.drag_n_drop_add_parent(node_id, new_parent, new_order, cache_session, log)
         else:
             cache.drag_n_drop_move(node_id, new_parent, old_parent, new_order, cache_session, log)
+        cache_session.commit()
+        # to close nested transaction
+        cache_session.commit()
 
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
@@ -1707,7 +1711,7 @@ class Exposed(object):
                     written_sequences.add(item.name)
                     item.expanded = False
                     built_sequences.add(item)
-            cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
+            built_sequences = cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
 
         built_sequences = sorted(built_sequences, key=lambda x: x.name, reverse=False)
         resp.success = True
