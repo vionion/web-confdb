@@ -81,25 +81,18 @@ function validateEvent(value, prevVal, type, callback) {
     var valid = true;
     // string
     if (type === 'classn' || type === 'extran' || type === 'processn') {
-        var regex_start = new RegExp("^\"");
+        var regex_spaces = new RegExp(" ");
+        var regex_quotes = new RegExp("[\"\']");
 
-        while (regex_start.test(value)) {
-            value = value.replace(/^"/g, "");
+        if (regex_quotes.test(value) || regex_spaces.test(value)) {
+            valid = false;
+            callback(valid, prevVal);
+        } else if (type !== 'extran' && !value){
+            valid = false;
+            callback(valid, prevVal);
+        } else {
+            callback(valid, value);
         }
-
-        var regex_end = new RegExp("\"$");
-        while (regex_end.test(value)) {
-            value = value.replace(/"$/g, "");
-        }
-
-        var regex_inner_quote = new RegExp("([^\\\\])(\")");
-        while (regex_inner_quote.test(value)) {
-            value = value.replace(regex_inner_quote, "$1\\$2");
-        }
-
-        // value = '"' + value;
-        // value = value + '"';
-        callback(valid, value);
     }
 
     // stype, just one more time, why not
@@ -111,14 +104,14 @@ function validateEvent(value, prevVal, type, callback) {
             callback(valid, value);
         }
     }
-    // InputTag: we don't really validate, but mark non-existing values with red
+    // module element: we don't really validate, but mark non-existing values with red
     else if (type === 'modulel') {
         valid = true;
         if (!value || value === '""' || value === "''") {
             valid = false;
             callback(valid, prevVal);
         } else if ((inputTags.findExact('name', value.split(":")[0]) === -1)  && value !== '*') {
-            Ext.MessageBox.confirm('Confirm', 'This module doesn\'t exists yet. Do you really want to change this InputTag value?', function (btn) {
+            Ext.MessageBox.confirm('Confirm', 'This module doesn\'t exists yet. Do you really want to change this value?', function (btn) {
                 if (btn === 'no') {
                     callback(valid, prevVal);
                 } else {
