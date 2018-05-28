@@ -23,7 +23,7 @@ from item_wrappers.item_wrappers import *
 
 from exposed.params_builder import ParamsBuilder
 
-from confdb_v2.tables import Pathelement
+from confdb_v2.tables import Pathelement, EvCoToStream
 from tables import *
 
 
@@ -919,6 +919,34 @@ class CacheDbQueries(object):
             return data
         except Exception as e:
             msg = 'ERROR: Query add_event_statement() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    def add_stream_event_relation(self, stream_id, event_id, version_id, cache, log):
+        try:
+            if not cache.query(exists().where(StreamEventHierarchy.stream_id == stream_id).where(StreamEventHierarchy.version_id == version_id)).scalar():
+                seh = StreamEventHierarchy(stream_id=stream_id, event_id=event_id, version_id=version_id)
+                cache.add(seh)
+                cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query add_stream_event_relation() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    def get_streams_events_relations(self, version_id, cache, log):
+        try:
+            cached_relations = cache.query(StreamEventHierarchy).filter(
+                StreamEventHierarchy.version_id == version_id).all()
+            if len(cached_relations) is 0:
+                return []
+            else:
+                wrapped_relations = []
+                for s_e_relation in cached_relations:
+                    wrapped_relations.append(
+                        {'id_streamid': s_e_relation.stream_id, 'id_evcoid': s_e_relation.event_id})
+                return wrapped_relations
+        except Exception as e:
+            msg = 'ERROR: Query get_streams_events_relations() Error: ' + e.args[0]
             log.error(msg)
             return -2
 

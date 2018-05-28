@@ -128,6 +128,8 @@ CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id BIG
 
 CREATE TABLE event_statements_cache (statement_id BIGINT, statement_rank BIGINT, data JSON, PRIMARY KEY (statement_id, statement_rank));
 
+CREATE TABLE stream_event_hierarchy (stream_id BIGINT, event_id BIGINT, ver_id BIGINT,  PRIMARY KEY (stream_id, event_id, ver_id));
+
 CREATE or REPLACE FUNCTION getClientMappings(BIGINT, text, text) RETURNS text[] AS $$
 DECLARE
     external_id ALIAS FOR $1;

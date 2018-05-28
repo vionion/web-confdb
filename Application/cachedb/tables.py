@@ -34,6 +34,12 @@ class PathItemsHierarchy(BaseCache):
     child_id = Column('child_id', BigInteger, primary_key=True)
     order = Column('child_order', Integer)
 
+class StreamEventHierarchy(BaseCache):
+    __tablename__ = 'stream_event_hierarchy'
+    stream_id = Column('stream_id', BigInteger, primary_key=True)
+    event_id = Column('event_id', BigInteger, primary_key=True)
+    version_id = Column('ver_id', BigInteger, primary_key=True)
+
 class ModulesNames(BaseCache):
     __tablename__ = 'modules_names_cache'
     version_id = Column('version_id', Integer, primary_key=True)

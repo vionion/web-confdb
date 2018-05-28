@@ -1344,6 +1344,7 @@ class Exposed(object):
             evcontents = self.queries.getConfEventContents(ver_id, db, log)
     #        evcostatements = self.queries.getConfEventContents(ver_id, db, log)
             evCoToStr = self.queries.getEvCoToStream(ver_id, db, log)
+            evCoToStr_cached = cache.get_streams_events_relations(ver_id, cache_session, log)
 
         except:
             log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
@@ -1355,6 +1356,7 @@ class Exposed(object):
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
         streams_dict = dict((x.id, x) for x in streams)
         evCoToStr_dict = dict((x.id_streamid, x.id_evcoid) for x in evCoToStr)
+        evCoToStr_dict_cached = dict((x['id_streamid'], x['id_evcoid']) for x in evCoToStr_cached)
         # TODO: this logic must be checked
         #---- Building evco ---------------
         evco_dict = {}
@@ -1372,9 +1374,13 @@ class Exposed(object):
             stream_internal_id = cache.get_internal_id(cache_session, e.id, "str", src, log)
             si = Streamitem(stream_internal_id, s.fractodisk, s.name,"str")
             streams_dict[s.id] = si
-            if(evCoToStr_dict.has_key(s.id)):
-                evcoid = evCoToStr_dict.get(s.id)
-                evco_internal_id = cache.get_internal_id(cache_session, evcoid, "evc", src, log)
+            if (evCoToStr_dict_cached.has_key(s.id)) or (evCoToStr_dict.has_key(s.id)):
+                if evCoToStr_dict_cached.has_key(stream_internal_id):
+                    evco_internal_id = evCoToStr_dict_cached.get(stream_internal_id)
+                else:
+                    evcoid = evCoToStr_dict.get(s.id)
+                    evco_internal_id = cache.get_internal_id(cache_session, evcoid, "evc", src, log)
+                    cache.add_stream_event_relation(stream_internal_id, evco_internal_id, ver_id, cache_session, log)
                 evco = evco_dict.get(evco_internal_id)
                 if (evco.id_stream == -2):
                     evco.id_stream = stream_internal_id
