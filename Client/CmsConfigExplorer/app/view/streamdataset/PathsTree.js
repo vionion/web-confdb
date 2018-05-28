@@ -107,9 +107,17 @@ Ext.define("CmsConfigExplorer.view.streamdataset.PathsTree",{
             }
         ]
     }],
-    
+
+    viewConfig: {
+        plugins: {
+            ptype: 'treeviewdragdrop',
+            dragText: 'Drag path to another dataset',
+            dragGroup: 'path',
+            enableDrop: false
+        }
+    },
     columns: [
-        { xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1 , sortable: true}
+        {xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1, sortable: true}
 
     ]
 });

@@ -1,15 +1,15 @@
 
 Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
     extend: "Ext.tree.Panel",
-    
+
     requires:['CmsConfigExplorer.view.streamdataset.StreamTreeController'],
-    
+
     alias: 'widget.streamtree',
-    
+
     controller: "streamdataset-streamtree",
 
     reference: "streamTree",
-    
+
     bind:{
         store:'{streamitems}'
     },
@@ -110,7 +110,18 @@ Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
             }
         ]
     }],
-
+    viewConfig: {
+                    plugins: {
+                        pluginId: 'dd_plugin',
+                        ptype: 'treeviewdragdrop',
+                        dragText: 'Drop path here to add to another dataset',
+                        dropGroup : 'path',
+                        enableDrag: false
+                    },
+                    listeners: {
+                        beforedrop: 'beforePathDrop'
+                    }
+                },
     columns: [
         {
             xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1, sortable: false,

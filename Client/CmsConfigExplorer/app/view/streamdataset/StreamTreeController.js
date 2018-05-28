@@ -80,5 +80,43 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
     onNodeEditDone: function (editor, context, eOpts) {
         console.log('done');
         // TODO: send request about node name change, receive new internal_id and update node
+    },
+
+    beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {
+        if (overModel.data.s_type === 'dat') {
+            console.log('append this path to dataset with id ' + overModel.data.internal_id);
+                        var nodeId = data.records[0].data.internal_id;
+            console.log('pathId is id ' + nodeId);
+        }
+        dropHandler.cancelDrop();
+    },
+
+    afterRender: function (tree) {
+        var view = tree.getView(),
+            plugin = view.findPlugin('treeviewdragdrop');
+        plugin.dropZone.onNodeOver = function (node, dragZone, e, data) {
+            var me = this;
+
+            var element = Ext.fly(node);
+            if (e.getTarget(view.itemSelector) !== null) {
+                var rec = view.getRecord(e.getTarget(view.itemSelector));
+                if (!element || (element && !(rec.data.s_type === 'dat'))) {
+                    me.invalidateDrop();
+                    return me.dropNotAllowed;
+                } else if (me.valid) {
+                    me.getIndicator().show();
+                }
+            } else {
+                me.invalidateDrop();
+                return me.dropNotAllowed;
+            }
+
+            if (!Ext.Array.contains(data.records, me.view.getRecord(node))) {
+                me.positionIndicator(node, data, e);
+            }
+
+            return me.valid ? me.dropAllowed : me.dropNotAllowed;
+        }
     }
+
 });
