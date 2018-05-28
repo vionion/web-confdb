@@ -202,3 +202,10 @@ class EvCoStatement(object):
         self.processn = processn
         self.statementtype = statementtype
         self.statementrank = statementrank
+
+
+class EvcoName(object):
+
+    def __init__(self, internal_id=0, name=""):
+        self.internal_id = internal_id
+        self.name = name

@@ -70,7 +70,19 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
     },
 
     onBeforeNodeEdit: function (editor, context, eOpts) {
+        var evcoNamesEditor = new Ext.grid.plugin.CellEditing({
+            xtype: 'combo',
+            queryMode: 'local',
+            autoLoad: false,
+            // to allow freetype
+            forceSelection: false,
+            hideTrigger: true,
+            typeAhead: true,
+            store: evcoNames,
+            displayField: 'name'
+        });
         if (context.record.data.s_type === 'evc') {
+            context.column.setEditor(evcoNamesEditor);
             return true;
         } else {
             return false;

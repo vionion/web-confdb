@@ -693,6 +693,44 @@ class CacheDbQueries(object):
     def update_modules_names(version_id, params_list, cache, log):
         print('not implemented yet')
 
+    @staticmethod
+    def get_evcon_names(version_id, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_evcon_names - input parameters error')
+            return []
+
+        try:
+            cached_names = cache.query(EvconNames).filter(
+                EvconNames.version_id == version_id).all()
+            if len(cached_names) is 0:
+                return []
+            else:
+                wrapped_names = []
+                for evconName in cached_names:
+                    wrapped_names.append(EvcoName(evconName.event_id, evconName.name))
+                return wrapped_names
+
+        except Exception as e:
+            msg = 'ERROR: Query get_evcon_names() Error: ' + e.args[0]
+            log.error(msg)
+            return []
+
+    def put_evcon_names(self, ver_id, names_list, cache, src, log):
+        try:
+            evcon_names = []
+            for name in names_list:
+                internal_id = self.get_internal_id(cache, name.id_evco, 'evc', src, log)
+                if not cache.query(exists().where(EvconNames.event_id == internal_id).where(EvconNames.version_id == ver_id)).scalar():
+                    evco_name = EvconNames(event_id=internal_id, name=name.name, version_id=ver_id)
+                    evcon_names.append(evco_name)
+                    cache.add(evco_name)
+            cache.commit()
+            return evcon_names
+        except Exception as e:
+            msg = 'ERROR: Query put_evcon_names() Error: ' + e.args[0]
+            log.error(msg)
+            return []
+
     def drag_n_drop_reorder(self, node_id, parent_id, new_order, cache, log):
         try:
             moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(

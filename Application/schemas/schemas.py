@@ -162,6 +162,13 @@ class ModuleNameSchema(Schema):
     class Meta:
         fields = ('name',)
 
+class EvconNameSchema(Schema):
+    internal_ev_id = fields.Integer()
+    name = fields.String()
+
+    class Meta:
+        fields = ('internal_ev_id', 'name',)
+
 class ModuleDetailsSchema(Schema):
     internal_id = fields.Integer()
     name = fields.String()

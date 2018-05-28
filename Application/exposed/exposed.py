@@ -1200,6 +1200,29 @@ class Exposed(object):
         output = schema.dump(resp)
         return output.data
 
+    def get_evcon_names(self, ver_id=-2, log=None, db=None, request=None, src=0):
+        queries = self.queries
+        cache = self.cache
+        cache_session = request.db_cache
+        if ver_id == -2 or db == None:
+            log.error('ERROR: get_evcon_names - input parameters error' + self.log_arguments(ver=ver_id))
+        resp = Response()
+        schema = ResponseEvconNamesSchema()
+        evcon_names = cache.get_evcon_names(ver_id, cache_session, log)
+        if len(evcon_names) is 0:
+            try:
+                evcons = queries.getConfEventContents(ver_id, db, log)
+                evcon_names = cache.put_evcon_names(ver_id, evcons, cache_session, src, log)
+            except:
+                log.error('ERROR: Query getConfPaelements Error')
+                return None
+        if evcon_names is None:
+            return None
+        resp.success = True
+        resp.children = evcon_names
+        output = schema.dump(resp)
+        return output.data
+
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
     #@params: cnf: Configuration Table id

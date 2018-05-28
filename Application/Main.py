@@ -395,6 +395,24 @@ class Root(object):
 
         return data
 
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def get_evcon_names(self, query="", ver=-2, online="False"):
+        ver = int(ver)
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        if online == 'True' or online == 'true':
+            db = db_online
+            src = 1
+        else:
+            db = db_offline
+            src = 0
+        data = self.funcs.get_evcon_names(ver, self.log, db, cherrypy.request, src)
+        if data is None:
+            self.log.error('ERROR: get_evcon_names - data returned null object')
+            cherrypy.HTTPError(500, "Error in retreiving the evcon tags names")
+        return data
+
     #Get the directories of the DB
 
     @cherrypy.expose
