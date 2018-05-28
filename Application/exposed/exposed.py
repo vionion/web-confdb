@@ -1371,7 +1371,7 @@ class Exposed(object):
         evcoOut = []
         streams_dict = {}
         for s in streams:
-            stream_internal_id = cache.get_internal_id(cache_session, e.id, "str", src, log)
+            stream_internal_id = cache.get_internal_id(cache_session, s.id, "str", src, log)
             si = Streamitem(stream_internal_id, s.fractodisk, s.name,"str")
             streams_dict[s.id] = si
             if (evCoToStr_dict_cached.has_key(s.id)) or (evCoToStr_dict.has_key(s.id)):
