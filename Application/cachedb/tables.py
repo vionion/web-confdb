@@ -49,7 +49,7 @@ class EvconNames(BaseCache):
     __tablename__ = 'event_configs_names_cache'
     event_id = Column('event_id', BigInteger, primary_key=True)
     name = Column('name', String)
-    version_id = Column('ver_id', Integer)
+    version_id = Column('ver_id', Integer, primary_key=True)
 
 class IdMapping(BaseCache):
     __tablename__ = 'ext2int_id_mapping'

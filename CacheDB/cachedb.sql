@@ -130,7 +130,7 @@ CREATE TABLE event_statements_cache (statement_id BIGINT, statement_rank BIGINT,
 
 CREATE TABLE stream_event_hierarchy (stream_id BIGINT, event_id BIGINT, ver_id BIGINT,  PRIMARY KEY (stream_id, event_id, ver_id));
 
-CREATE TABLE event_configs_names_cache (event_id BIGINT, name text, ver_id BIGINT,  PRIMARY KEY (event_id));
+CREATE TABLE event_configs_names_cache (event_id BIGINT, name text, ver_id BIGINT,  PRIMARY KEY (event_id, ver_id));
 
 CREATE or REPLACE FUNCTION getClientMappings(BIGINT, text, text) RETURNS text[] AS $$
 DECLARE

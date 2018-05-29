@@ -163,11 +163,11 @@ class ModuleNameSchema(Schema):
         fields = ('name',)
 
 class EvconNameSchema(Schema):
-    internal_ev_id = fields.Integer()
+    internal_id = fields.Integer()
     name = fields.String()
 
     class Meta:
-        fields = ('internal_ev_id', 'name',)
+        fields = ('internal_id', 'name',)
 
 class ModuleDetailsSchema(Schema):
     internal_id = fields.Integer()

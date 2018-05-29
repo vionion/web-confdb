@@ -2,7 +2,7 @@ Ext.define('EvcoName', {
     extend: 'Ext.data.Model',
 
     fields: [
-        {name: 'internal_ev_id', type: 'string'},
+        {name: 'internal_id', type: 'string'},
         {name: 'name', type: 'string'}
     ]
 

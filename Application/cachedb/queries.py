@@ -717,15 +717,15 @@ class CacheDbQueries(object):
 
     def put_evcon_names(self, ver_id, names_list, cache, src, log):
         try:
-            evcon_names = []
+            wrapped_names = []
             for name in names_list:
                 internal_id = self.get_internal_id(cache, name.id_evco, 'evc', src, log)
                 if not cache.query(exists().where(EvconNames.event_id == internal_id).where(EvconNames.version_id == ver_id)).scalar():
                     evco_name = EvconNames(event_id=internal_id, name=name.name, version_id=ver_id)
-                    evcon_names.append(evco_name)
+                    wrapped_names.append(EvcoName(evco_name.event_id, evco_name.name))
                     cache.add(evco_name)
             cache.commit()
-            return evcon_names
+            return wrapped_names
         except Exception as e:
             msg = 'ERROR: Query put_evcon_names() Error: ' + e.args[0]
             log.error(msg)
@@ -960,7 +960,34 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def add_stream_event_relation(self, stream_id, event_id, version_id, cache, log):
+    @staticmethod
+    def update_streams_event(stream_id, internal_evcon_id, version_id, value, cache, log):
+        try:
+            if internal_evcon_id > 0:
+                seh = cache.query(StreamEventHierarchy).filter(
+                    StreamEventHierarchy.stream_id == stream_id).filter(
+                    StreamEventHierarchy.version_id == version_id).first()
+                seh.event_id = internal_evcon_id
+                cache.commit()
+            else:
+
+            # statement = cache.query(EventStatementsCached)\
+            #     .filter(EventStatementsCached.statement_id == internal_id)\
+            #     .filter(EventStatementsCached.statement_rank == statementrank)\
+            #     .first()
+            # json_statement = json.loads(statement.data)
+            # json_statement[param_name] = param_value
+                print("implement it")
+            # statement.data = json.dumps(json_statement)
+            # flag_modified(statement, 'data')
+            # cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]
+            log.error(msg)
+            return -2
+
+    @staticmethod
+    def add_stream_event_relation(stream_id, event_id, version_id, cache, log):
         try:
             if not cache.query(exists().where(StreamEventHierarchy.stream_id == stream_id).where(StreamEventHierarchy.version_id == version_id)).scalar():
                 seh = StreamEventHierarchy(stream_id=stream_id, event_id=event_id, version_id=version_id)
@@ -971,7 +998,8 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_streams_events_relations(self, version_id, cache, log):
+    @staticmethod
+    def get_streams_events_relations(version_id, cache, log):
         try:
             cached_relations = cache.query(StreamEventHierarchy).filter(
                 StreamEventHierarchy.version_id == version_id).all()

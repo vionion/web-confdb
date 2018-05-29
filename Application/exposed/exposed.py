@@ -62,9 +62,9 @@ class Exposed(object):
 
                     written_sequences.add(item.name)
                     built_sequences.add(item)
-                
+
             children.append(item)
-            
+
         return counter, children, written_sequences, built_sequences
 
     #Returns the path items (Sequences and Modules)
@@ -473,6 +473,11 @@ class Exposed(object):
         output = schema.dump(resp)
         return output.data
 
+    def update_streams_event(self, stream_id, internal_evcon_id, version_id, value, request, log):
+        cache = self.cache
+        cache_session = request.db_cache
+        cache.update_streams_event(stream_id, internal_evcon_id, version_id, value, cache_session, log)
+
     def update_event_statement(self, internal_id, statementrank, src, column, value, request, log):
         cache = self.cache
         cache_session = request.db_cache
@@ -879,7 +884,7 @@ class Exposed(object):
 
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
-        
+
         ext_pat_id = cache.get_external_id(cache_session, pid, "pat", src, log)
 
         #ToDo IdV_er / CNF
@@ -1158,7 +1163,7 @@ class Exposed(object):
                 internal_id = cache.get_internal_id(cache_session, m.id, "mod", src, log)
                 md = ModuleDetails(internal_id, m.name, temp.id_mtype, "", temp.name)
             else:
-                log.error('ERROR: Module key error') 
+                log.error('ERROR: Module key error')
 
             if (md != None):
                 resp.children.append(md)
@@ -1342,7 +1347,7 @@ class Exposed(object):
 
         cache = self.cache
         cache_session = request.db_cache
-        
+
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
@@ -1377,14 +1382,14 @@ class Exposed(object):
 #            return None
 
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
-        streams_dict = dict((x.id, x) for x in streams)
-        evCoToStr_dict = dict((x.id_streamid, x.id_evcoid) for x in evCoToStr)
+        evcontents_dict = dict((x.id, x) for x in evcontents)
+        evCoToStr_dict = dict((x.id_streamid, evcontents_dict.get(x.id_evcoid).id_evco) for x in evCoToStr)
         evCoToStr_dict_cached = dict((x['id_streamid'], x['id_evcoid']) for x in evCoToStr_cached)
         # TODO: this logic must be checked
         #---- Building evco ---------------
         evco_dict = {}
         for e in evcontents:
-            evco_internal_id = cache.get_internal_id(cache_session, e.id, "evc", src, log)
+            evco_internal_id = cache.get_internal_id(cache_session, e.id_evco, "evc", src, log)
             si = Streamitem(evco_internal_id,-1, e.name,"evc")
 
             si.id_stream = -2
@@ -1397,7 +1402,7 @@ class Exposed(object):
             stream_internal_id = cache.get_internal_id(cache_session, s.id, "str", src, log)
             si = Streamitem(stream_internal_id, s.fractodisk, s.name,"str")
             streams_dict[s.id] = si
-            if (evCoToStr_dict_cached.has_key(s.id)) or (evCoToStr_dict.has_key(s.id)):
+            if (evCoToStr_dict_cached.has_key(stream_internal_id)) or (evCoToStr_dict.has_key(s.id)):
                 if evCoToStr_dict_cached.has_key(stream_internal_id):
                     evco_internal_id = evCoToStr_dict_cached.get(stream_internal_id)
                 else:
@@ -1568,7 +1573,7 @@ class Exposed(object):
                 internal_id = cache.get_internal_id(cache_session, m.id, "es_mod", src, log)
                 esm = ESModuleDetails(internal_id, m.id_template, m.name, temp.name, c2e)
             else:
-                log.error('ERROR: ES Modules Error Key') 
+                log.error('ERROR: ES Modules Error Key')
 
             if (esm != None):
                 esmodules.append(esm)
@@ -1619,12 +1624,12 @@ class Exposed(object):
         while counter < len(items) and items[counter].lvl >= level:
             counter = counter + 1
         return counter
-    
+
     def getSequenceChildren(self, counter, written_sequences, items, elements_dict, level, built_sequences,src,request,log):
         children = []
 	cache = self.cache
         cache_session = request.db_cache
-        
+
         while(counter < len(items) and items[counter].lvl == level):
             if hasattr(items[counter], "internal_id"):
                 item = items[counter]
@@ -1634,7 +1639,7 @@ class Exposed(object):
                 item = Pathitem(internal_id, elem.name, items[counter].id_pathid, elem.paetype, items[counter].id_parent, items[counter].lvl, items[counter].order, items[counter].operator)
 
             self.simple_counter = self.simple_counter + 1
-   
+
             counter = counter + 1
             if item.paetype == 2:
                 if item.name in written_sequences:
@@ -1652,20 +1657,20 @@ class Exposed(object):
 
                     written_sequences.add(item.name)
                     built_sequences.add(item)
-                
+
             children.append(item)
 
         children.sort(key=lambda x: x.order, reverse=False)
-            
+
         return counter, children, written_sequences, built_sequences
-    
+
     def getAllSequences(self, cnf=-2, ver=-2, db = None, log = None, request = None, src = 0):
 
         #params check
         if (cnf == -1 or db == None or ver == -1):
 
             log.error('ERROR: getAllSequences - input parameters error')
-        
+
         queries = self.queries
         cache = self.cache
         cache_session = request.db_cache
@@ -1745,11 +1750,11 @@ class Exposed(object):
         built_sequences = sorted(built_sequences, key=lambda x: x.name, reverse=False)
         resp.success = True
         resp.children = built_sequences
-        
+
         output = schema.dump(resp)
-        
+
         return output.data
-        
+
 
 
     def getOUTModuleDetails(self, mod_id = -2, pat_id = -2, db = None, log = None, request = None, src = 0):
@@ -1799,7 +1804,7 @@ class Exposed(object):
 
         if (internal_gpset_id == -2 or db == None):
             log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(internal_gpset_id=internal_gpset_id))
-        
+
         cache = self.cache
         cache_session = request.db_cache
 
@@ -1873,7 +1878,7 @@ class Exposed(object):
             if (gps != None):
                 resp.children.append(gps)
             else:
-                log.error('ERROR: GPSets Error Key') 
+                log.error('ERROR: GPSets Error Key')
 
         print "len: ", len(resp.children)
         resp.success = True
@@ -2161,7 +2166,7 @@ class Exposed(object):
 
         cache = self.cache
         cache_session = request.db_cache
-        
+
         if (cnf != -2 and cnf != -1):
             cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
 
@@ -2184,7 +2189,7 @@ class Exposed(object):
             log.error('ERROR: getSummaryItems - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
 
         cache = self.cache
-        cache_session = request.db_cache      
+        cache_session = request.db_cache
         resp = Response()
         schema = ResponseSummaryItemSchema()
 
@@ -2276,7 +2281,7 @@ class Exposed(object):
             log.error('ERROR: Query getConfStreams/getConfDatasets/getConfStrDatRels/getConfEventContents/getEvCoToStream Error')
             output = schema.dump(resp)
             return output.data
-	
+
 	streams_dict = dict((x.id, x) for x in streams)
         dats_dict = dict((x.id, x) for x in datasets)
 
@@ -2293,7 +2298,7 @@ class Exposed(object):
             pats = self.queries.getPaths(ver_id, db, log)
 
             dprels = self.queries.getAllDatsPatsRels(ver_id, idis, db, log)
-	    
+
 	    #get realations output modules - streams
             oumrels = self.queries.getOumStreamRels(ver_id, str_idis, db, log)
 
@@ -2355,7 +2360,7 @@ class Exposed(object):
 
         for s in streams:
             si = Summaryitem(s.id, s.name,"str", False,'resources/Stream.ico')
-            
+
 	    try:
 
             	if s.id in oum_rels_keys:
@@ -2364,7 +2369,7 @@ class Exposed(object):
 
                     #Check for "HltPrescale" module
                     oumpre = self.queries.getEndPathPrescaleMod(endp_id, db, log)
-            
+
                     if oumpre is not None and len(oumpre) > 0:
 
                         pre_item = EndPathPrescale(s.id)
@@ -2377,7 +2382,7 @@ class Exposed(object):
                         if(preRows_dict.has_key(p_name)):
                             r_i = preRows_dict.get(p_name)
                             param_values = preRows[r_i].children[1].value
-                            values = map(int, re.findall('\d+', param_values)) 
+                            values = map(int, re.findall('\d+', param_values))
 
                             if(not(len(labels) == len(values))):
                                 log.error("PRESCALE ERROR: NOT SAME CARDINALITY")
@@ -2396,13 +2401,13 @@ class Exposed(object):
                         end_path_prescale_dict[s.id] = pre_item
 
             except:
-                log.error('ERROR: End Path Prescales not retreived') 
+                log.error('ERROR: End Path Prescales not retreived')
 
 	    streams_dict[s.id] = si
 
             si.gid = cache.sumMappingDictPut(src, si.id, "str", cache_session, log)
 
-	
+
         ep_pre_keys = end_path_prescale_dict.keys()
 
         for d in datasets:
@@ -2461,7 +2466,7 @@ class Exposed(object):
                                     sp_value = smart_paths[p.name]
                                     smpr = "smart_pre" + "###" + str(sp_value)
                                     pat.values.append(smpr)
-					
+
 				    #--STREAM - END PATH PRESCALE ------------------
 
                                     if streamid in ep_pre_keys:
@@ -2473,7 +2478,7 @@ class Exposed(object):
                                             ep_pre_val = ep_item.prescales[c.name]
                                             pre_value = int(values[i2])*int(ep_pre_val)
                                             new_value = sp_value*pre_value
-                                            
+
                                             sv = c.name + "###" + str(new_value)
                                             pat.values.append(sv)
                                             i2 = i2 + 1
@@ -2485,10 +2490,10 @@ class Exposed(object):
 
                                             pre_value = int(values[i2])
                                             new_value = sp_value*pre_value
-                                            
+
                                             sv = c.name + "###" + str(new_value)
                                             pat.values.append(sv)
-                                            i2 = i2 + 1  
+                                            i2 = i2 + 1
 
 #                                    for c in columns:
 #
@@ -2511,7 +2516,7 @@ class Exposed(object):
 
                             # Put The path with prescales 0
                             else:
-#                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
+#                                pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat"
                                 pat = Summaryitem(p.id,(p.name),"pat", True,'resources/Path_3.ico')
                                 # pat.gid = sumMap.put(pat, False)
                                 pat.gid = cache.sumMappingDictPut(src, p.id, "pat", cache_session, log,0)
@@ -2539,7 +2544,7 @@ class Exposed(object):
 
                                 paths[pat.gid] = pat
                         else:
-#                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat" 
+#                            pat_id = str(p.id)+"pat"+str(d.id) #str(d.id) + "pat"
                             pat = Summaryitem(p.id, p.name,"pat", True,'resources/Path_3.ico')
                             # pat.gid = sumMap.put(pat, False)
                             pat.gid = cache.sumMappingDictPut(src, p.id, "pat", cache_session, log,0)
@@ -2559,7 +2564,7 @@ class Exposed(object):
 
                                 else:
                                     values = one_values
-				
+
 				#--- END PATH PRESCALES ----------------------------------
                                 if streamid in ep_pre_keys:
                                     # APPLY END PATH PRESCALE
@@ -2570,7 +2575,7 @@ class Exposed(object):
 
                                         ep_pre_val = ep_item.prescales[c.name]
                                         new_value = int(values[i2])*int(ep_pre_val)
-                                        
+
                                         sv = c.name + "###" + str(new_value)
                                         pat.values.append(sv)
                                         i2 = i2 + 1
@@ -2642,11 +2647,11 @@ class Exposed(object):
             return -1
 
         confVer_id = -1
-	
+
         path_tokens = name.split('/')
         last_token = path_tokens[-1]
 
-	
+
         if pattern.match(last_token) is not None:
 
             #There is the VERSION NUMBER
@@ -2658,8 +2663,8 @@ class Exposed(object):
                 msg = 'ERROR: Query getConfigurationByName Error: ' + e.args[0]
                 log.error(msg)
                 return -1
-        
-        else:   
+
+        else:
 
             #NO Version number: the last version is chosen
             try:

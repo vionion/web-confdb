@@ -90,8 +90,36 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
     },
 
     onNodeEditDone: function (editor, context, eOpts) {
-        console.log('done');
-        // TODO: send request about node name change, receive new internal_id and update node
+        var modified = false;
+        if (context.record.modified && context.record.modified.name) {
+            modified = true;
+        }
+        if (modified) {
+            var evcon_replace = {
+                'stream_id': context.record.parentNode.data.internal_id,
+                'version_id': this.getViewModel().get("idVer")
+            };
+            var evcon = evcoNames.findRecord('name', context.value);
+            if (!evcon) {
+                evcon_replace['value'] = context.value;
+                evcon_replace['internal_evcon_id'] = -1;
+            } else {
+                evcon_replace['internal_evcon_id'] = evcon.data.internal_id;
+            }
+            Ext.Ajax.request({
+                url: 'update_streams_event',
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                jsonData: JSON.stringify(evcon_replace),
+                failure: function (response) {
+                    Ext.Msg.alert("Error");
+                    console.log(response);
+                },
+                success: function (response) {
+                    console.log(response.responseText);
+                }
+            });
+        }
     },
 
     beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {

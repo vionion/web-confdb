@@ -368,6 +368,23 @@ class Root(object):
         cherrypy.response.status = 200
 
     @cherrypy.expose
+    @cherrypy.tools.json_in()
+    def update_streams_event(self):
+        input_json = byteify(cherrypy.request.json)
+        internal_evcon_id = input_json.get('internal_evcon_id')
+        stream_id = input_json.get('stream_id')
+        version_id = input_json.get('version_id')
+        value = None
+        if internal_evcon_id == -1:
+            value = input_json.get('value')
+        try:
+            self.funcs.update_streams_event(stream_id, internal_evcon_id, version_id, value, cherrypy.request, self.log)
+        except Exception as e:
+            cherrypy.response.status = 500
+            return '500 ERROR: update_event_statement failed:' + e.args[0]
+        cherrypy.response.status = 200
+
+    @cherrypy.expose
     @cherrypy.tools.json_out()
     def get_module_names(self, query="", ver = -2, cnf = -2,online = "False"):
         db = None
