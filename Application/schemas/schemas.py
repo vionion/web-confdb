@@ -513,6 +513,7 @@ class DstPathsTreeSchema(Schema):
     vid = fields.Integer()
     name = fields.String()
     isEndPath = fields.Integer()
+    dataset_id = fields.Integer()
     pit = fields.String()
     icon = fields.Method("get_icon")
     expandable = fields.Method("get_exp")
@@ -527,7 +528,7 @@ class DstPathsTreeSchema(Schema):
             return 'resources/EndPath.ico'
 
     class Meta:
-        fields = ("internal_id", "vid", "icon", "id_path", "name", "pit", "expandable")
+        fields = ("internal_id", "vid", "icon", "dataset_id", "id_path", "name", "pit", "expandable")
         ordered = True
 
 

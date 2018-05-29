@@ -51,12 +51,16 @@ class EvconNames(BaseCache):
     name = Column('name', String)
     version_id = Column('ver_id', Integer, primary_key=True)
 
-class Path2Datasets(BaseCache):
-    __tablename__ = 'paths2datasets_cache'
+class PathsCache(BaseCache):
+    __tablename__ = 'paths_cache2'
     path_id = Column('path_id', BigInteger, primary_key=True)
-    dataset_ids = Column('dataset_ids', ARRAY(BigInteger))
     name = Column('name', String)
     isEndPath = Column('is_endpath', Integer)
+
+class Path2Datasets(BaseCache):
+    __tablename__ = 'paths2datasets_relation'
+    dataset_id = Column('dataset_id', BigInteger, primary_key=True)
+    path_ids = Column('path_ids', ARRAY(BigInteger))
     version_id = Column('ver_id', Integer, primary_key=True)
 
 class IdMapping(BaseCache):

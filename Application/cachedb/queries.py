@@ -738,15 +738,16 @@ class CacheDbQueries(object):
             log.error('ERROR: get_datasets_paths - input parameters error')
             return []
         try:
-            cached_paths = cache.query(Path2Datasets).filter(
+            dataset_relation = cache.query(Path2Datasets).filter(
                 Path2Datasets.version_id == version_id).filter(
-                Path2Datasets.dataset_ids.any(dsid)).all()
-            if len(cached_paths) is 0:
+                Path2Datasets.dataset_id == dsid).first()
+            if dataset_relation is None:
                 return []
             else:
                 paths_wrapped = []
-                for path in cached_paths:
-                    paths_wrapped.append(DatasetsPath(path.path_id, path.name, 0, 'pit', path.isEndPath, version_id))
+                for path_id in dataset_relation.path_ids:
+                    cached_path = cache.query(PathsCache).filter(PathsCache.path_id == path_id).first()
+                    paths_wrapped.append(DatasetsPath(cached_path.path_id, cached_path.name, 0, dsid, 'pit', cached_path.isEndPath, version_id))
                 return paths_wrapped
 
         except Exception as e:
@@ -754,21 +755,58 @@ class CacheDbQueries(object):
             log.error(msg)
             return []
 
-    def put_datasets_paths(self, paths, dsid, ver_id, cache, log):
+    @staticmethod
+    def put_datasets_paths(paths, dsid, ver_id, cache, log):
         try:
             for path in paths:
-                cached_path = cache.query(Path2Datasets).filter(
+                if not cache.query(exists().where(PathsCache.path_id == path.internal_id)).scalar():
+                    cached_path = PathsCache(path_id=path.internal_id, name=path.name, isEndPath=path.isEndPath)
+                    cache.add(cached_path)
+                dataset_relation = cache.query(Path2Datasets).filter(
                     Path2Datasets.version_id == ver_id).filter(
-                    Path2Datasets.path_id == path.internal_id).first()
-                if cached_path is None:
-                    path = Path2Datasets(dataset_ids=[dsid], path_id=path.internal_id, name=path.name, isEndPath=path.isEndPath, version_id=ver_id)
-                    cache.add(path)
+                    Path2Datasets.dataset_id == dsid).first()
+                if dataset_relation is None:
+                    path_relation = Path2Datasets(dataset_id=dsid, path_ids=[path.internal_id], version_id=ver_id)
+                    cache.add(path_relation)
                 else:
-                    cached_path.dataset_ids.append(dsid)
-                    flag_modified(cached_path, 'dataset_ids')
+                    if path.internal_id not in dataset_relation.path_ids:
+                        dataset_relation.path_ids.append(path.internal_id)
+                        flag_modified(dataset_relation, 'path_ids')
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_datasets_paths() Error: ' + e.args[0]
+            log.error(msg)
+
+    @staticmethod
+    def add_parrent2dataset(path_id, dsid, version, cache, log):
+        try:
+            dataset_relation = cache.query(Path2Datasets).filter(
+                    Path2Datasets.version_id == version).filter(
+                    Path2Datasets.dataset_id == dsid).first()
+            if dataset_relation is None:
+                dataset_relation = Path2Datasets(dataset_id=dsid, path_ids=[path_id], version_id=version)
+                cache.add(dataset_relation)
+            else:
+                if path_id not in dataset_relation.path_ids:
+                    dataset_relation.path_ids.append(path_id)
+                    flag_modified(dataset_relation, 'path_ids')
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query add_parrent2dataset() Error: ' + e.args[0]
+            log.error(msg)
+
+    @staticmethod
+    def remove_parrent2dataset(path_id, dsid, version, cache, log):
+        try:
+            dataset_relation = cache.query(Path2Datasets).filter(
+                    Path2Datasets.version_id == version).filter(
+                    Path2Datasets.dataset_id == dsid).first()
+            if path_id in dataset_relation.path_ids:
+                dataset_relation.path_ids.remove(path_id)
+                flag_modified(dataset_relation, 'path_ids')
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query remove_parrent2dataset() Error: ' + e.args[0]
             log.error(msg)
 
     def drag_n_drop_reorder(self, node_id, parent_id, new_order, cache, log):

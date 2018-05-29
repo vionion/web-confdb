@@ -122,11 +122,38 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
         }
     },
 
+    sendPathMoveRequest: function (newDatasetId, oldDatasetId, nodeId) {
+        // Can be replaced with just GET with params. It doesn't need to be more complicated than it can be
+        if (newDatasetId !== oldDatasetId) {
+            var pathMoveRequestObj = {
+                'newParent': newDatasetId,
+                'oldParent': oldDatasetId,
+                'nodeId': nodeId,
+                'version': this.getViewModel().get("idVer")
+            };
+            var store = this.getViewModel().getStore('datasetpaths');
+            Ext.Ajax.request({
+                url: 'path_move',
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                jsonData: JSON.stringify(pathMoveRequestObj),
+                failure: function (response) {
+                    Ext.Msg.alert('Error', response.responseText);
+                    console.log(response);
+                }, success: function (response) {
+                    // if (response.status == 200) {
+                    store.reload();
+                    // }
+                }
+            });
+        }
+    },
+
     beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {
         if (overModel.data.s_type === 'dat') {
-            console.log('append this path to dataset with id ' + overModel.data.internal_id);
-                        var nodeId = data.records[0].data.internal_id;
-            console.log('pathId is id ' + nodeId);
+            var nodeId = data.records[0].data.internal_id;
+            var oldDatasetId = data.records[0].data.dataset_id;
+            this.sendPathMoveRequest(overModel.data.internal_id, oldDatasetId, nodeId);
         }
         dropHandler.cancelDrop();
     },

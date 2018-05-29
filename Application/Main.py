@@ -299,6 +299,21 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
+    def path_move(self):
+        input_json = byteify(cherrypy.request.json)
+        node_id = input_json.get('nodeId')
+        new_parent = input_json.get('newParent')
+        old_parent = input_json.get('oldParent')
+        version = input_json.get('version')
+        cherrypy.response.status = 200
+        try:
+            self.funcs.path_move(node_id, new_parent, old_parent, cherrypy.request, self.log, version)
+        except Exception as e:
+            cherrypy.response.status = 500
+            return '500 ERROR: path_move failed:' + e.args[0]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
     def drag_n_drop(self):
         input_json = byteify(cherrypy.request.json)
         node_id = input_json.get('nodeId')

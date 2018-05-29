@@ -520,6 +520,33 @@ class Exposed(object):
         # to close nested transaction
         cache_session.commit()
 
+    def path_move(self, path_id, new_parent, old_parent, request, log, version):
+        cache = self.cache
+        cache_session = request.db_cache
+        cache_session.begin_nested()
+        cache_session.execute('LOCK TABLE paths2datasets_relation IN ACCESS EXCLUSIVE MODE;')
+        paths_wrapped = cache.get_datasets_paths(version, new_parent, cache_session, log)
+        if len(paths_wrapped) is 0:
+            try:
+                # src and db are hardcoded again. Doubt that it is ok...
+                src = 0
+                db_offline = request.db_offline
+                ext_ds_id = cache.get_external_id(cache_session, new_parent, "dat", src, log)
+                paths = self.queries.getDatasetPathids(version, ext_ds_id, db_offline, log)
+                for p in paths:
+                    p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
+                cache.put_datasets_paths(paths, new_parent, version, cache_session, log)
+            except:
+                log.error('ERROR: Query path_move Error')
+
+        cache.add_parrent2dataset(path_id, new_parent, version, cache_session, log)
+        cache.remove_parrent2dataset(path_id, old_parent, version, cache_session, log)
+
+        cache_session.commit()
+        # to close nested transaction
+        cache_session.commit()
+
+
     def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
 
         if (mid == -2 or db == None):
@@ -2126,7 +2153,7 @@ class Exposed(object):
             for p in paths:
                 p.vid = ver_id
                 p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
-                paths_wrapped.append(DatasetsPath(p.internal_id, p.name, p.id_path, p.pit, p.isEndPath, p.vid))
+                paths_wrapped.append(DatasetsPath(p.internal_id, p.name, p.id_path, dsid, p.pit, p.isEndPath, p.vid))
             cache.put_datasets_paths(paths, dsid, ver_id, cache_session, log)
         if paths_wrapped is None:
             return None
