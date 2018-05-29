@@ -2115,21 +2115,22 @@ class Exposed(object):
         #DB Query
         paths = None
 
-        try:
-            paths = self.queries.getDatasetPathids(ver_id, ext_ds_id, db, log)
-
-        except:
-            log.error('ERROR: Query getDatasetPathids Error')
+        paths_wrapped = cache.get_datasets_paths(ver_id, dsid, cache_session, log)
+        if len(paths_wrapped) is 0:
+            try:
+                paths = self.queries.getDatasetPathids(ver_id, ext_ds_id, db, log)
+                paths_wrapped = []
+            except:
+                log.error('ERROR: Query getDatasetPathids Error')
+                return None
+            for p in paths:
+                p.vid = ver_id
+                p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
+                paths_wrapped.append(DatasetsPath(p.internal_id, p.name, p.id_path, p.pit, p.isEndPath, p.vid))
+            cache.put_datasets_paths(paths, dsid, ver_id, cache_session, log)
+        if paths_wrapped is None:
             return None
-
-#        if (modules == None or templates == None or conf2eds == None):
-#            return None
-
-        for p in paths:
-            p.vid = ver_id
-            p.internal_id = cache.get_internal_id(cache_session, p.id, "pat", src, log)
-
-        resp.children = paths
+        resp.children = paths_wrapped
 
         resp.success = True
         output = schema.dump(resp)

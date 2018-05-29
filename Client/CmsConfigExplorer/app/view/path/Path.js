@@ -22,7 +22,7 @@ Ext.define("CmsConfigExplorer.view.path.Path",{
     listeners:{
         cusDetailsClick: 'onDetailsRender',
         scope: 'controller',
-        doSmthToAllNodes: 'doSmthToAllNodes'
+        doSmthToAllNodes: 'updateAllNodes'
     }
 
     ,layout: {

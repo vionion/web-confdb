@@ -209,3 +209,13 @@ class EvcoName(object):
     def __init__(self, internal_id=0, name=""):
         self.internal_id = internal_id
         self.name = name
+
+class DatasetsPath(object):
+
+    def __init__(self, internal_id=0, name="", id_path="", pit="", isEndPath=0, vid=""):
+        self.internal_id = internal_id
+        self.name = name
+        self.id_path = id_path
+        self.pit = pit
+        self.isEndPath = isEndPath
+        self.vid = vid

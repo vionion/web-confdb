@@ -8,7 +8,7 @@ Ext.define("CmsConfigExplorer.view.sequence.Sequence",{
     },
 
     listeners:{
-        doSmthToAllNodes: 'doSmthToAllNodes'
+        doSmthToAllNodes: 'updateAllNodes'
     },
     
     requires:['CmsConfigExplorer.model.Sequenceitem'],

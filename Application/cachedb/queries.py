@@ -657,6 +657,7 @@ class CacheDbQueries(object):
 
     @staticmethod
     def get_modules_names(version_id, cache, log):
+        #TODO: refactor it to return [] in case of error or if list doesn't exists
         if version_id < 0 or cache is None:
             log.error('ERROR: get_module_names - input parameters error')
             return -2
@@ -730,6 +731,45 @@ class CacheDbQueries(object):
             msg = 'ERROR: Query put_evcon_names() Error: ' + e.args[0]
             log.error(msg)
             return []
+
+    @staticmethod
+    def get_datasets_paths(version_id, dsid, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_datasets_paths - input parameters error')
+            return []
+        try:
+            cached_paths = cache.query(Path2Datasets).filter(
+                Path2Datasets.version_id == version_id).filter(
+                Path2Datasets.dataset_ids.any(dsid)).all()
+            if len(cached_paths) is 0:
+                return []
+            else:
+                paths_wrapped = []
+                for path in cached_paths:
+                    paths_wrapped.append(DatasetsPath(path.path_id, path.name, 0, 'pit', path.isEndPath, version_id))
+                return paths_wrapped
+
+        except Exception as e:
+            msg = 'ERROR: Query get_datasets_paths() Error: ' + e.args[0]
+            log.error(msg)
+            return []
+
+    def put_datasets_paths(self, paths, dsid, ver_id, cache, log):
+        try:
+            for path in paths:
+                cached_path = cache.query(Path2Datasets).filter(
+                    Path2Datasets.version_id == ver_id).filter(
+                    Path2Datasets.path_id == path.internal_id).first()
+                if cached_path is None:
+                    path = Path2Datasets(dataset_ids=[dsid], path_id=path.internal_id, name=path.name, isEndPath=path.isEndPath, version_id=ver_id)
+                    cache.add(path)
+                else:
+                    cached_path.dataset_ids.append(dsid)
+                    flag_modified(cached_path, 'dataset_ids')
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query put_datasets_paths() Error: ' + e.args[0]
+            log.error(msg)
 
     def drag_n_drop_reorder(self, node_id, parent_id, new_order, cache, log):
         try:

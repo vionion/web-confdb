@@ -44,13 +44,13 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy, version,
                 function () {
                     // dropHandler.processDrop();
-                    view.fireEvent("doSmthToAllNodes", data.view.panel.getRootNode().childNodes, newParent, oldParent, data.records[0], newOrder, data.records[0].data.Name, overModel.id, copy);
+                    view.fireEvent("updateAllNodes", data.view.panel.getRootNode().childNodes, newParent, oldParent, data.records[0], newOrder, data.records[0].data.Name, overModel.id, copy);
                 });
             dropHandler.cancelDrop();
         }
     },
 
-    doSmthToAllNodes: function (children, newParentId, oldParentId, orig, newOrder, name, newParentClientId, copy) {
+    updateAllNodes: function (children, newParentId, oldParentId, orig, newOrder, name, newParentClientId, copy) {
         for (var i = 0, len = children.length; i < len; i++) {
             if (newOrder !== -78) {
                 // adding
@@ -78,14 +78,13 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
                     }
                 }
             }
-            this.doSmthToAllNodes(children[i].childNodes, newParentId, oldParentId, orig, newOrder, name, newParentClientId, copy);
+            this.updateAllNodes(children[i].childNodes, newParentId, oldParentId, orig, newOrder, name, newParentClientId, copy);
         }
     },
 
     update_orders: function (children) {
         for (var i = 0, len = children.length; i < len; i++) {
             children[i].data.order = i;
-            // console.log(children[i].data.Name + ' - ' + children[i].data.order);
         }
     },
 
