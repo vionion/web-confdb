@@ -476,7 +476,7 @@ class Exposed(object):
     def update_streams_event(self, stream_id, internal_evcon_id, version_id, value, request, log):
         cache = self.cache
         cache_session = request.db_cache
-        cache.update_streams_event(stream_id, internal_evcon_id, version_id, value, cache_session, log)
+        return cache.update_streams_event(stream_id, internal_evcon_id, version_id, value, cache_session, log)
 
     def update_event_statement(self, internal_id, statementrank, src, column, value, request, log):
         cache = self.cache
@@ -1397,6 +1397,7 @@ class Exposed(object):
             relations = self.queries.getConfStrDatRels(ver_id, db, log)
 
             evcontents = self.queries.getConfEventContents(ver_id, db, log)
+            evcontents_cached = cache.get_evcon_names(ver_id, cache_session, log)
     #        evcostatements = self.queries.getConfEventContents(ver_id, db, log)
             evCoToStr = self.queries.getEvCoToStream(ver_id, db, log)
             evCoToStr_cached = cache.get_streams_events_relations(ver_id, cache_session, log)
@@ -1421,6 +1422,12 @@ class Exposed(object):
 
             si.id_stream = -2
             evco_dict[evco_internal_id] = si
+        # adding event configs which are not saved to db yet, but created in cache:
+        for ec in evcontents_cached:
+            if ec.internal_id not in evco_dict:
+                si = Streamitem(ec.internal_id, -1, ec.name, "evc")
+                si.id_stream = -2
+                evco_dict[ec.internal_id] = si
 
         #---- Building streams and datasets
         evcoOut = []
@@ -1429,8 +1436,8 @@ class Exposed(object):
             stream_internal_id = cache.get_internal_id(cache_session, s.id, "str", src, log)
             si = Streamitem(stream_internal_id, s.fractodisk, s.name,"str")
             streams_dict[s.id] = si
-            if (evCoToStr_dict_cached.has_key(stream_internal_id)) or (evCoToStr_dict.has_key(s.id)):
-                if evCoToStr_dict_cached.has_key(stream_internal_id):
+            if (stream_internal_id in evCoToStr_dict_cached) or (s.id in evCoToStr_dict):
+                if stream_internal_id in evCoToStr_dict_cached:
                     evco_internal_id = evCoToStr_dict_cached.get(stream_internal_id)
                 else:
                     evcoid = evCoToStr_dict.get(s.id)

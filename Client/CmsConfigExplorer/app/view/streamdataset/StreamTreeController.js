@@ -95,9 +95,11 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
             modified = true;
         }
         if (modified) {
+            var idVer = this.getViewModel().get("idVer");
+            var online = this.getViewModel().get("online");
             var evcon_replace = {
                 'stream_id': context.record.parentNode.data.internal_id,
-                'version_id': this.getViewModel().get("idVer")
+                'version_id': idVer
             };
             var evcon = evcoNames.findRecord('name', context.value);
             if (!evcon) {
@@ -106,6 +108,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
             } else {
                 evcon_replace['internal_evcon_id'] = evcon.data.internal_id;
             }
+            var ecstats_store = this.getViewModel().getStore('ecstats');
             Ext.Ajax.request({
                 url: 'update_streams_event',
                 method: 'POST',
@@ -113,10 +116,28 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
                 jsonData: JSON.stringify(evcon_replace),
                 failure: function (response) {
                     Ext.Msg.alert("Error");
+                    var prevVal = context.record.modified.name;
+                    context.value = prevVal;
+                    context.record.set('name', prevVal);
+                    context.record.modified = {name: prevVal};
                     console.log(response);
                 },
                 success: function (response) {
-                    console.log(response.responseText);
+                    var newValue = context.value;
+                    context.value = newValue;
+                    context.record.set('name', newValue);
+                    context.record.modified = {name: newValue};
+                    context.record.set('internal_id', response.responseText);
+                    ecstats_store.load({
+                        params: {
+                            strid: context.record.get('internal_id'),
+                            online: online,
+                            verid: idVer
+                        }
+                    });
+                    if (!evcon) {
+                        evcoNames.reload();
+                    }
                 }
             });
         }
@@ -131,7 +152,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
                 'nodeId': nodeId,
                 'version': this.getViewModel().get("idVer")
             };
-            var store = this.getViewModel().getStore('datasetpaths');
+            var datasetpaths_store = this.getViewModel().getStore('datasetpaths');
             Ext.Ajax.request({
                 url: 'path_move',
                 method: 'POST',

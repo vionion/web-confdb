@@ -390,14 +390,14 @@ class Root(object):
         stream_id = input_json.get('stream_id')
         version_id = input_json.get('version_id')
         value = None
+        cherrypy.response.status = 200
         if internal_evcon_id == -1:
             value = input_json.get('value')
         try:
-            self.funcs.update_streams_event(stream_id, internal_evcon_id, version_id, value, cherrypy.request, self.log)
+            return str(self.funcs.update_streams_event(stream_id, internal_evcon_id, version_id, value, cherrypy.request, self.log))
         except Exception as e:
             cherrypy.response.status = 500
             return '500 ERROR: update_event_statement failed:' + e.args[0]
-        cherrypy.response.status = 200
 
     @cherrypy.expose
     @cherrypy.tools.json_out()

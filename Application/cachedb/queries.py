@@ -907,7 +907,7 @@ class CacheDbQueries(object):
                 IdMapping.external_id == ext_id).filter(
                 IdMapping.source == src).filter(
                 IdMapping.itemtype == itemtype).first()
-            if mapping is None:
+            if mapping is None or mapping.external_id < 0:
                 internal_id = self.put_external_id(cache, ext_id, itemtype, src, log)
             else:
                 internal_id = mapping.internal_id
@@ -1038,27 +1038,25 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    @staticmethod
-    def update_streams_event(stream_id, internal_evcon_id, version_id, value, cache, log):
+    def update_streams_event(self, stream_id, internal_evcon_id, version_id, value, cache, log):
         try:
+            seh = cache.query(StreamEventHierarchy).filter(
+                StreamEventHierarchy.stream_id == stream_id).filter(
+                StreamEventHierarchy.version_id == version_id).first()
             if internal_evcon_id > 0:
-                seh = cache.query(StreamEventHierarchy).filter(
-                    StreamEventHierarchy.stream_id == stream_id).filter(
-                    StreamEventHierarchy.version_id == version_id).first()
                 seh.event_id = internal_evcon_id
                 cache.commit()
+                return internal_evcon_id
             else:
-
-            # statement = cache.query(EventStatementsCached)\
-            #     .filter(EventStatementsCached.statement_id == internal_id)\
-            #     .filter(EventStatementsCached.statement_rank == statementrank)\
-            #     .first()
-            # json_statement = json.loads(statement.data)
-            # json_statement[param_name] = param_value
-                print("implement it")
-            # statement.data = json.dumps(json_statement)
-            # flag_modified(statement, 'data')
-            # cache.commit()
+                # Hardcoded again :(
+                src = 0
+                internal_id = self.get_internal_id(cache, -1, 'evc', src, log)
+                evco_name = EvconNames(event_id=internal_id, name=value, version_id=version_id)
+                cache.add(evco_name)
+                seh.event_id = internal_id
+                cache.commit()
+                self.add_event_statement(internal_id, true, cache, log)
+                return internal_id
         except Exception as e:
             msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]
             log.error(msg)
