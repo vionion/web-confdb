@@ -111,17 +111,26 @@ Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
         ]
     }],
     viewConfig: {
-                    plugins: {
-                        pluginId: 'dd_plugin',
-                        ptype: 'treeviewdragdrop',
-                        dragText: 'Drop path here to add to another dataset',
-                        dropGroup : 'path',
-                        enableDrag: false
-                    },
-                    listeners: {
-                        beforedrop: 'beforePathDrop'
-                    }
-                },
+        plugins: [
+            {
+                pluginId: 'ds_drop_plugin',
+                ptype: 'treeviewdragdrop',
+                dragText: 'Drop path here to add to another dataset',
+                dropGroup: 'path',
+                enableDrag: false
+            },
+            {
+                pluginId: 'event_move_plugin',
+                ptype: 'treeviewdragdrop',
+                dragText: 'Move this event config statements node to replace an existing one in another stream',
+                dragGroup: 'event',
+                dropGroup: 'event'
+            }
+        ],
+        listeners: {
+            beforedrop: 'beforePathDrop'
+        }
+    },
     columns: [
         {
             xtype: 'treecolumn', header: 'Name', dataIndex: 'name', flex: 1, sortable: false,

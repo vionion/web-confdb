@@ -89,57 +89,61 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
         }
     },
 
+    sendEvConReplaceRequest: function (streamId, evconName, prevVal, rec) {
+        var idVer = this.getViewModel().get("idVer");
+        var online = this.getViewModel().get("online");
+        var evcon_replace = {
+            'stream_id': streamId,
+            'version_id': idVer
+        };
+        var evcon = evcoNames.findRecord('name', evconName);
+        if (!evcon) {
+            evcon_replace['value'] = evconName;
+            evcon_replace['internal_evcon_id'] = -1;
+        } else {
+            evcon_replace['internal_evcon_id'] = evcon.data.internal_id;
+        }
+        var ecstats_store = this.getViewModel().getStore('ecstats');
+        Ext.Ajax.request({
+            url: 'update_streams_event',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            jsonData: JSON.stringify(evcon_replace),
+            failure: function (response) {
+                Ext.Msg.alert('Error', response.responseText);
+                evconName = prevVal;
+                rec.set('name', prevVal);
+                rec.modified = {name: prevVal};
+                console.log(response);
+            },
+            success: function (response) {
+                rec.set('name', evconName);
+                rec.modified = {name: evconName};
+                rec.set('internal_id', response.responseText);
+                ecstats_store.load({
+                    params: {
+                        strid: rec.get('internal_id'),
+                        online: online,
+                        verid: idVer
+                    }
+                });
+                if (!evcon) {
+                    evcoNames.reload();
+                }
+            }
+        });
+    },
+
     onNodeEditDone: function (editor, context, eOpts) {
         var modified = false;
         if (context.record.modified && context.record.modified.name) {
             modified = true;
         }
         if (modified) {
-            var idVer = this.getViewModel().get("idVer");
-            var online = this.getViewModel().get("online");
-            var evcon_replace = {
-                'stream_id': context.record.parentNode.data.internal_id,
-                'version_id': idVer
-            };
-            var evcon = evcoNames.findRecord('name', context.value);
-            if (!evcon) {
-                evcon_replace['value'] = context.value;
-                evcon_replace['internal_evcon_id'] = -1;
-            } else {
-                evcon_replace['internal_evcon_id'] = evcon.data.internal_id;
-            }
-            var ecstats_store = this.getViewModel().getStore('ecstats');
-            Ext.Ajax.request({
-                url: 'update_streams_event',
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                jsonData: JSON.stringify(evcon_replace),
-                failure: function (response) {
-                    Ext.Msg.alert("Error");
-                    var prevVal = context.record.modified.name;
-                    context.value = prevVal;
-                    context.record.set('name', prevVal);
-                    context.record.modified = {name: prevVal};
-                    console.log(response);
-                },
-                success: function (response) {
-                    var newValue = context.value;
-                    context.value = newValue;
-                    context.record.set('name', newValue);
-                    context.record.modified = {name: newValue};
-                    context.record.set('internal_id', response.responseText);
-                    ecstats_store.load({
-                        params: {
-                            strid: context.record.get('internal_id'),
-                            online: online,
-                            verid: idVer
-                        }
-                    });
-                    if (!evcon) {
-                        evcoNames.reload();
-                    }
-                }
-            });
+            var rec = context.record;
+            var prevVal = context.record.modified.name;
+            var streamId = rec.parentNode.data.internal_id;
+            this.sendEvConReplaceRequest(streamId, context.value, prevVal, rec);
         }
     },
 
@@ -163,15 +167,37 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
                     console.log(response);
                 }, success: function (response) {
                     // if (response.status == 200) {
-                    store.reload();
+                    datasetpaths_store.reload();
                     // }
                 }
             });
         }
     },
 
+
+
     beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {
-        if (overModel.data.s_type === 'dat') {
+        // if it is not path node
+        if (data.records[0].data.s_type){
+            //, but event node
+            if (data.records[0].data.s_type === 'evc'){
+                var destinationStreamId = overModel.data.s_type === 'str' ? overModel.data.internal_id : overModel.parentNode.data.internal_id;
+                var parentStreamId = data.records[0].parentNode.data.internal_id;
+                if (parentStreamId !== destinationStreamId) {
+                    var newVal = data.records[0].data.name;
+                    if (overModel.data.s_type === 'evc') {
+                        var rec = overModel;
+                    } else if (overModel.data.s_type === 'str') {
+                        var rec = overModel.firstChild;
+                    } else if (overModel.data.s_type === 'dat') {
+                        var rec = overModel.parentNode.firstChild;
+                    }
+                    var prevVal = rec.data.name;
+                    this.sendEvConReplaceRequest(destinationStreamId, newVal, prevVal, rec);
+                }
+            }
+        // or it is path node dropped to another dataset
+        }else if (overModel.data.s_type === 'dat') {
             var nodeId = data.records[0].data.internal_id;
             var oldDatasetId = data.records[0].data.dataset_id;
             this.sendPathMoveRequest(overModel.data.internal_id, oldDatasetId, nodeId);
@@ -187,8 +213,15 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
 
             var element = Ext.fly(node);
             if (e.getTarget(view.itemSelector) !== null) {
+                var nodeType = data.records[0].data.s_type;
+                var oldDatasetId = data.records[0].data.dataset_id;
                 var rec = view.getRecord(e.getTarget(view.itemSelector));
-                if (!element || (element && !(rec.data.s_type === 'dat'))) {
+                var targetType = rec.data.s_type;
+                var targetDatasetId = rec.data.internal_id;
+                var destinationStreamId = targetType === 'str' ? rec.data.internal_id : rec.parentNode.data.internal_id;
+                var parentStreamId = data.records[0].parentNode.data.internal_id;
+                // I am sorry for this conditions
+                if (!element || (element && !((targetType === 'dat' && !nodeType && oldDatasetId !== targetDatasetId) || (nodeType === 'evc' && destinationStreamId !== parentStreamId)))) {
                     me.invalidateDrop();
                     return me.dropNotAllowed;
                 } else if (me.valid) {
