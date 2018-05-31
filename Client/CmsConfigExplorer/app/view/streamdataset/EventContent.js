@@ -43,6 +43,13 @@ Ext.define("CmsConfigExplorer.view.streamdataset.EventContent",{
                     scope: 'controller'
                 }
             },
+            {
+                text: 'Delete line',
+                listeners: {
+                    click: 'onDeleteLine',
+                    scope: 'controller'
+                }
+            },
                     {
                         text: 'Keep All',
                         disabled: true

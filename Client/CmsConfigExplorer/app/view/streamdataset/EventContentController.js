@@ -3,7 +3,8 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
     alias: 'controller.streamdataset-eventcontent',
 
     send_add_line_request: function (drop_line) {
-        var internal_id = this.getViewModel().getStore('ecstats').first().get('internal_id');
+        var streamsTab = this.getView().up().up();
+        var internal_id = streamsTab.lookupReference('streamTree').getSelectionModel().getSelection()[0].data.internal_id;
         var statement_request = {
             'internal_id': internal_id,
             'drop_line': drop_line
@@ -23,12 +24,46 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
         });
     },
 
+    send_delete_line_request: function () {
+        var grid = this.getView();
+        var selectedRecord = grid.getSelectionModel().getSelection()[0];
+        if (selectedRecord) {
+            var streamsTab = this.getView().up().up();
+            var internal_id = streamsTab.lookupReference('streamTree').getSelectionModel().getSelection()[0].data.internal_id;
+            var statementrank = selectedRecord.data.statementrank;
+            if (statementrank > 0) {
+                var statement_request = {
+                    'internal_id': internal_id,
+                    'rank': statementrank
+                };
+                var store = this.getViewModel().getStore('ecstats');
+                Ext.Ajax.request({
+                    url: 'delete_event_statement',
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    jsonData: JSON.stringify(statement_request),
+                    failure: function (response) {
+                        Ext.Msg.alert('Error', response.responseText);
+                        console.log(response);
+                    }, success: function (response) {
+                        store.remove(selectedRecord);
+                        store.reload();
+                    }
+                });
+            }
+        }
+    },
+
     onKeepClick: function () {
         this.send_add_line_request(false);
     },
 
     onDropClick: function () {
         this.send_add_line_request(true);
+    },
+
+    onDeleteLine: function () {
+        this.send_delete_line_request();
     },
 
     onEditDone: function (editor, context, eOpts) {

@@ -178,22 +178,25 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
 
     beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {
         // if it is not path node
-        if (data.records[0].data.s_type){
+        if (data.records[0].data.s_type) {
             //, but event node
-            if (data.records[0].data.s_type === 'evc'){
+            if (data.records[0].data.s_type === 'evc') {
                 var destinationStreamId = overModel.data.s_type === 'str' ? overModel.data.internal_id : overModel.parentNode.data.internal_id;
                 var parentStreamId = data.records[0].parentNode.data.internal_id;
                 if (parentStreamId !== destinationStreamId) {
                     var newVal = data.records[0].data.name;
+                    var rec = null;
                     if (overModel.data.s_type === 'evc') {
-                        var rec = overModel;
+                        rec = overModel;
                     } else if (overModel.data.s_type === 'str') {
-                        var rec = overModel.firstChild;
+                        rec = overModel.firstChild;
                     } else if (overModel.data.s_type === 'dat') {
-                        var rec = overModel.parentNode.firstChild;
+                        rec = overModel.parentNode.firstChild;
                     }
-                    var prevVal = rec.data.name;
-                    this.sendEvConReplaceRequest(destinationStreamId, newVal, prevVal, rec);
+                    if (rec !==null) {
+                        var prevVal = rec.data.name;
+                        this.sendEvConReplaceRequest(destinationStreamId, newVal, prevVal, rec);
+                    }
                 }
             }
         // or it is path node dropped to another dataset

@@ -1038,6 +1038,28 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
+    @staticmethod
+    def delete_event_statement(statements_id, rank, cache, log):
+        try:
+            cache.query(EventStatementsCached) \
+                .filter(EventStatementsCached.statement_id == statements_id) \
+                .filter(EventStatementsCached.statement_rank == rank) \
+                .delete()
+            cache.commit()
+            statements_to_update = cache.query(EventStatementsCached).filter(
+                EventStatementsCached.statement_id == statements_id).filter(
+                EventStatementsCached.statement_rank > rank).all()
+            if len(statements_to_update) > 0:
+                for statement in statements_to_update:
+                    dict_statement = byteify(json.loads(statement.data))
+                    statement.statement_rank = statement.statement_rank - 1
+                    dict_statement['statementrank'] = statement.statement_rank
+                    statement.data = json.dumps(dict_statement)
+                cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query delete_event_statement() Error: ' + e.args[0]
+            log.error(msg)
+
     def update_streams_event(self, stream_id, internal_evcon_id, version_id, value, cache, log):
         try:
             seh = cache.query(StreamEventHierarchy).filter(
