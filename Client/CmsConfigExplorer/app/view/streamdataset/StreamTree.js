@@ -128,7 +128,7 @@ Ext.define("CmsConfigExplorer.view.streamdataset.StreamTree",{
             }
         ],
         listeners: {
-            beforedrop: 'beforePathDrop'
+            beforedrop: 'beforeDrop'
         }
     },
     columns: [

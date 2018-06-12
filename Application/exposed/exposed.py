@@ -353,7 +353,7 @@ class Exposed(object):
 
     def getPathsFromCache(self, cache_session, db, ver_id, log, src):
         paths = self.cache.get_paths(ver_id, cache_session, log)
-        if paths is None:
+        if len(paths) is 0:
             try:
                 paths = self.queries.getPaths(ver_id, db, log)
                 i = 0
@@ -546,6 +546,20 @@ class Exposed(object):
 
         cache.add_parrent2dataset(path_id, new_parent, version, cache_session, log)
         cache.remove_parrent2dataset(path_id, old_parent, version, cache_session, log)
+
+        cache_session.commit()
+        # to close nested transaction
+        cache_session.commit()
+
+    def dataset_update(self, dataset_id, path_ids, request, log, version):
+        cache = self.cache
+        cache_session = request.db_cache
+        cache_session.begin_nested()
+        cache_session.execute('LOCK TABLE paths2datasets_relation IN ACCESS EXCLUSIVE MODE;')
+        try:
+            cache.update_datasets_paths(path_ids, dataset_id, version, cache_session, log)
+        except:
+            log.error('ERROR: Query dataset_update Error')
 
         cache_session.commit()
         # to close nested transaction

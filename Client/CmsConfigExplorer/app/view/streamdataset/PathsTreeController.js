@@ -67,6 +67,103 @@ Ext.define('CmsConfigExplorer.view.streamdataset.PathsTreeController', {
             form.markInvalid('Invalid regular expression');
             console.log(e);
         }
+    },
+
+    onEditDataset: function () {
+        var datasetPaths = this.getViewModel().getStore('datasetpaths');
+        var streamsDatasetTab = this.getView().up().up();
+        var pathTab = streamsDatasetTab.prev().prev().prev().prev().prev().prev();
+        var allPaths = pathTab.getViewModel().getStore('pathitems');
+        var selected = [];
+        datasetPaths.each(function (rec) {
+                selected.push(rec.data.internal_id);
+            }
+        );
+        var datasetpaths_store = this.getViewModel().getStore('datasetpaths');
+        var version = this.getViewModel().get("idVer");
+        var win = new Ext.Window({
+            layout: 'border', width: "75%",
+            height: 460, closeAction: 'hide', buttonAlign: 'center',
+            animShow: function () {
+                this.el.slideIn('t', {
+                    duration: 1, callback: function () {
+                        this.afterShow(true);
+                    }, scope: this
+                });
+            },
+            animHide: function () {
+                this.el.disableShadow();
+                this.el.slideOut('t', {
+                    duration: 1, callback: function () {
+                        this.el.hide();
+                        this.afterHide();
+                    }, scope: this
+                });
+            },
+            items: [{
+                xtype: 'itemselectorfield',
+                name: 'Features',
+                region: 'center',
+                padding: 20,
+                store: allPaths,
+                displayField: 'Name',
+                valueField: 'internal_id',
+                value: selected,
+                allowBlank: true,
+                fromTitle: 'Available',
+                toTitle: 'Selected',
+                buttons: ['add', 'remove'],
+                delimiter: undefined
+            }],
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'bottom',
+                ui: 'footer',
+                defaults: {
+                    minWidth: 75
+                },
+                items: [{
+                    text: 'Save',
+                    handler: function () {
+                        var selector = this.up().up().items.items[0];
+                        if (selector.isValid()) {
+                            // please, replace such stupid code pieces
+                            var datasetId = streamsDatasetTab.lookupReference('streamTree').getSelectionModel().getSelection()[0].data.internal_id;
+                            var pathIds = selector.value;
+                            var requestObj = {
+                                'datasetId': datasetId,
+                                'pathIds': pathIds,
+                                'version': version
+                            };
+                            Ext.Ajax.request({
+                                url: 'dataset_update',
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                jsonData: JSON.stringify(requestObj),
+                                failure: function (response) {
+                                    Ext.Msg.alert('Error', response.responseText);
+                                    console.log(response);
+                                }, success: function (response) {
+                                    // if (response.status == 200) {
+                                    datasetpaths_store.reload();
+                                    // }
+                                }
+                            });
+
+                        }
+                    }
+                },
+                    {
+                        text: 'Close',
+                        handler: function () {
+                            win.hide();
+                        }
+                    }]
+            }]
+        });
+
+
+        win.show(Ext.getBody());
     }
-    
+
 });

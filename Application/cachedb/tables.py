@@ -13,11 +13,6 @@ class ParamsCached(BaseCache):
     id = Column('id', Integer, primary_key=True)
     data = Column('data', JSON)
 
-class PathsCached(BaseCache):
-    __tablename__ = 'paths_cache'
-    version_id = Column('version_id', Integer, primary_key=True)
-    data = Column('data', JSON)
-
 class EndPathsCached(BaseCache):
     __tablename__ = 'endpaths_cache'
     version_id = Column('version_id', Integer, primary_key=True)
@@ -52,10 +47,12 @@ class EvconNames(BaseCache):
     version_id = Column('ver_id', Integer, primary_key=True)
 
 class PathsCache(BaseCache):
-    __tablename__ = 'paths_cache2'
+    __tablename__ = 'paths_cache'
     path_id = Column('path_id', BigInteger, primary_key=True)
     name = Column('name', String)
+    data = Column('data', JSON)
     isEndPath = Column('is_endpath', Integer)
+    version_id = Column('version_id', Integer, primary_key=True)
 
 class Path2Datasets(BaseCache):
     __tablename__ = 'paths2datasets_relation'

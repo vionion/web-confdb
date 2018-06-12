@@ -176,7 +176,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.StreamTreeController', {
 
 
 
-    beforePathDrop: function (node, data, overModel, dropPosition, dropHandler) {
+    beforeDrop: function (node, data, overModel, dropPosition, dropHandler) {
         // if it is not path node
         if (data.records[0].data.s_type) {
             //, but event node

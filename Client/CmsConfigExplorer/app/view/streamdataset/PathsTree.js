@@ -28,6 +28,13 @@ Ext.define("CmsConfigExplorer.view.streamdataset.PathsTree",{
         dock: 'top',
 
         items: [
+            {
+                text: 'Edit',
+                listeners: {
+                    click: 'onEditDataset',
+                    scope: 'controller'
+                }
+            },
             { 
                 xtype: 'tbtext',
                 bind: {

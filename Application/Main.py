@@ -314,6 +314,20 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
+    def dataset_update(self):
+        input_json = byteify(cherrypy.request.json)
+        dataset_id = input_json.get('datasetId')
+        path_ids = input_json.get('pathIds')
+        version = input_json.get('version')
+        cherrypy.response.status = 200
+        try:
+            self.funcs.dataset_update(dataset_id, path_ids, cherrypy.request, self.log, version)
+        except Exception as e:
+            cherrypy.response.status = 500
+            return '500 ERROR: dataset_update failed:' + e.args[0]
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
     def drag_n_drop(self):
         input_json = byteify(cherrypy.request.json)
         node_id = input_json.get('nodeId')

@@ -588,31 +588,32 @@ class CacheDbQueries(object):
     def get_paths(version_id, cache, log):
         if version_id < 0 or cache is None:
             log.error('ERROR: get_paths - input parameters error')
-            return -2
+            return []
 
         try:
-            cached_paths = cache.query(PathsCached).filter(
-                PathsCached.version_id == version_id).first()
-            if cached_paths is None:
-                return None
+            cached_paths = cache.query(PathsCache).filter(
+                PathsCache.version_id == version_id).all()
+            if len(cached_paths) is 0:
+                return []
             else:
-                dict_paths = byteify(json.loads(cached_paths.data))
                 wrapped_paths = []
-                for path in dict_paths:
-                    wrapped_paths.append(Path(path['internal_id'], path['id_path'], path['description'], path['name'], path['vid'], path['order'], path['isEndPath']))
+                for path in cached_paths:
+                    dict_path = byteify(json.loads(path.data))
+                    wrapped_paths.append(Path(dict_path['internal_id'], dict_path['id_path'], dict_path['description'], dict_path['name'], dict_path['vid'], dict_path['order'], dict_path['isEndPath']))
                 return wrapped_paths
 
         except Exception as e:
             msg = 'ERROR: Query get_paths() Error: ' + e.args[0]
             log.error(msg)
-            return None
+            return []
 
     @staticmethod
     def put_paths(ver_id, paths, cache, log):
         try:
-            json_paths = json.dumps(paths, default=lambda o: o.__dict__)
-            params = PathsCached(data=json_paths, version_id=ver_id)
-            cache.add(params)
+            for path in paths:
+                json_path = json.dumps(path, default=lambda o: o.__dict__)
+                cached_path = PathsCache(data=json_path, version_id=ver_id, isEndPath=path.isEndPath, name=path.name, path_id=path.internal_id)
+                cache.add(cached_path)
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_paths() Error: ' + e.args[0]
@@ -760,7 +761,9 @@ class CacheDbQueries(object):
         try:
             for path in paths:
                 if not cache.query(exists().where(PathsCache.path_id == path.internal_id)).scalar():
-                    cached_path = PathsCache(path_id=path.internal_id, name=path.name, isEndPath=path.isEndPath)
+                    json_path = json.dumps(path, default=lambda o: o.__dict__)
+                    cached_path = PathsCache(data=json_path, version_id=ver_id, isEndPath=path.isEndPath,
+                                             name=path.name, path_id=path.internal_id)
                     cache.add(cached_path)
                 dataset_relation = cache.query(Path2Datasets).filter(
                     Path2Datasets.version_id == ver_id).filter(
@@ -775,6 +778,20 @@ class CacheDbQueries(object):
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query put_datasets_paths() Error: ' + e.args[0]
+            log.error(msg)
+
+    @staticmethod
+    def update_datasets_paths(path_ids, dsid, ver_id, cache, log):
+        try:
+            dataset_relation = cache.query(Path2Datasets).filter(
+                Path2Datasets.version_id == ver_id).filter(
+                Path2Datasets.dataset_id == dsid).first()
+            if dataset_relation is not None:
+                dataset_relation.path_ids = path_ids
+                flag_modified(dataset_relation, 'path_ids')
+                cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query update_datasets_paths() Error: ' + e.args[0]
             log.error(msg)
 
     @staticmethod
