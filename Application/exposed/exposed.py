@@ -531,7 +531,7 @@ class Exposed(object):
         cache_session.begin_nested()
         cache_session.execute('LOCK TABLE paths2datasets_relation IN ACCESS EXCLUSIVE MODE;')
         paths_wrapped = cache.get_datasets_paths(version, new_parent, cache_session, log)
-        if len(paths_wrapped) is 0:
+        if paths_wrapped is None:
             try:
                 # src and db are hardcoded again. Doubt that it is ok...
                 src = 0
@@ -2169,7 +2169,7 @@ class Exposed(object):
         paths = None
 
         paths_wrapped = cache.get_datasets_paths(ver_id, dsid, cache_session, log)
-        if len(paths_wrapped) is 0:
+        if paths_wrapped is None:
             try:
                 paths = self.queries.getDatasetPathids(ver_id, ext_ds_id, db, log)
                 paths_wrapped = []

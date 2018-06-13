@@ -146,6 +146,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.PathsTreeController', {
                                 }, success: function (response) {
                                     // if (response.status == 200) {
                                     datasetpaths_store.reload();
+                                    win.hide();
                                     // }
                                 }
                             });

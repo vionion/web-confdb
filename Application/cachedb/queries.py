@@ -737,13 +737,13 @@ class CacheDbQueries(object):
     def get_datasets_paths(version_id, dsid, cache, log):
         if version_id < 0 or cache is None:
             log.error('ERROR: get_datasets_paths - input parameters error')
-            return []
+            return None
         try:
             dataset_relation = cache.query(Path2Datasets).filter(
                 Path2Datasets.version_id == version_id).filter(
                 Path2Datasets.dataset_id == dsid).first()
             if dataset_relation is None:
-                return []
+                return None
             else:
                 paths_wrapped = []
                 for path_id in dataset_relation.path_ids:
@@ -754,7 +754,7 @@ class CacheDbQueries(object):
         except Exception as e:
             msg = 'ERROR: Query get_datasets_paths() Error: ' + e.args[0]
             log.error(msg)
-            return []
+            return None
 
     @staticmethod
     def put_datasets_paths(paths, dsid, ver_id, cache, log):
@@ -818,10 +818,12 @@ class CacheDbQueries(object):
             dataset_relation = cache.query(Path2Datasets).filter(
                     Path2Datasets.version_id == version).filter(
                     Path2Datasets.dataset_id == dsid).first()
-            if path_id in dataset_relation.path_ids:
+
+            if dataset_relation is not None and path_id in dataset_relation.path_ids:
                 dataset_relation.path_ids.remove(path_id)
                 flag_modified(dataset_relation, 'path_ids')
             cache.commit()
+            print dataset_relation.path_ids
         except Exception as e:
             msg = 'ERROR: Query remove_parrent2dataset() Error: ' + e.args[0]
             log.error(msg)
