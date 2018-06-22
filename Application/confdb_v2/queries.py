@@ -3,6 +3,7 @@
 # to retrieve records from the ConfDb
 #
 # Class: ConfDbQueries
+from collections import OrderedDict
 
 from sqlalchemy import *
 from sqlalchemy.orm import *
@@ -54,6 +55,28 @@ class ConfDbQueries(object):
                                                         + "and u_pathid2conf.id_confver=:leng "
                                                         + "order by u_pathid2pae.id ")).params(node=id_pathid,
                                                                                                leng=id_version)
+        results = query.all()
+        return results
+
+    @staticmethod
+    def get_conf_pathitems(id_version, db, log):
+        if id_version == -2 or db is None:
+            log.error('ERROR: getConfPathItems - input parameters error')
+
+        query = db.query(Pathitems).from_statement(text("SELECT "
+                                                        + "u_pathid2pae.id, "
+                                                        + "u_pathid2pae.id_pathid, "
+                                                        + "u_pathid2pae.id_pae, "
+                                                        + "u_pathid2pae.id_parent,"
+                                                        + "u_pathid2pae.lvl, "
+                                                        + "u_pathid2pae.ord, "
+                                                        + "u_pathid2pae.operator "
+                                                        + "FROM u_pathid2pae, u_paelements, u_pathid2conf  "
+                                                        + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
+                                                        + "and u_pathid2pae.id_pae=u_paelements.id "
+                                                        + "and u_pathid2conf.id_confver=:ver "
+                                                        + "order by u_pathid2pae.id ")).params(ver=id_version)
+
         results = query.all()
         return results
 
@@ -489,10 +512,10 @@ class ConfDbQueries(object):
 
         return element
 
-    def getConfPaelements(self, id_ver, db, log):
+    def getConfModules(self, id_ver, db, log):
 
         if (db == None or id_ver == -2):
-            log.error('ERROR: getConfPaelements - input parameters error')
+            log.error('ERROR: getConfModules - input parameters error')
 
         elements = db.query(Pathelement).from_statement(text("SELECT UNIQUE u_paelements.id, u_paelements.name "
                                                              + "FROM u_pathid2pae, u_paelements, u_pathid2conf "  # , u_mod2templ
@@ -503,6 +526,18 @@ class ConfDbQueries(object):
                                                              + "and u_pathid2conf.id_confver=:ver order by u_paelements.name")).params(
             ver=id_ver).all()
 
+        return elements
+
+    @staticmethod
+    def get_conf_paelements(id_ver, db, log):
+        if db is None or id_ver == -2:
+            log.error('ERROR: getConfModules - input parameters error')
+        elements = db.query(Pathelement).from_statement(text("SELECT UNIQUE u_paelements.id, u_paelements.name "
+                                                             + "FROM u_pathid2pae, u_paelements, u_pathid2conf "
+                                                             + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
+                                                             + "and u_pathid2pae.id_pae=u_paelements.id "
+                                                             + "and u_pathid2conf.id_confver=:ver order by u_paelements.name")
+                                                        ).params(ver=id_ver).all()
         return elements
 
     def getRelTemplates(self, id_rel, db, log):
@@ -1269,3 +1304,66 @@ class ConfDbQueries(object):
         print "RESULT CNF: " + str(conf)
 
         return conf.id
+
+    def save_version(self, version, db=None, log=None):
+        if db is None or version is None:
+            log.error('ERROR: save_version - input parameters error')
+        db.query(Version).filter_by(creator='admin').delete()
+        return self.save_obj(version, db, log)
+
+    def save_get_id_mapping(self, obj_array, db=None, log=None):
+        old2new = OrderedDict()
+        if db is None or obj_array is None or len(obj_array) is 0:
+            log.error('ERROR: save_get_id_mapping - input parameters error')
+        else:
+            for obj in obj_array:
+                tmp_old_id = obj.id
+                self.detach_obj_from_session(obj, db, log)
+                db.add(obj)
+                db.flush()
+                old2new[tmp_old_id] = obj.id
+        return old2new
+
+    @staticmethod
+    def save_obj(obj, db=None, log=None):
+        if db is None or obj is None:
+            log.error('ERROR: save_obj - input parameters error')
+            return None
+        else:
+            db.add(obj)
+            db.flush()
+            return obj
+
+    @staticmethod
+    def save_objects(obj_array, db=None, log=None):
+        if db is None or obj_array is None or len(obj_array) is 0:
+            log.error('ERROR: save_and_detach_objects - input parameters error')
+        else:
+            db.bulk_save_objects(obj_array)
+
+    @staticmethod
+    def detach_obj_from_session(obj, db=None, log=None):
+        if db is None or obj is None:
+            log.error('ERROR: detach_obj_from_session - input parameters error')
+        else:
+            obj.id = None
+            db.expunge(obj)
+            make_transient(obj)
+
+    def detach_objects_from_session(self, obj_array, db=None, log=None):
+        if db is None or obj_array is None or len(obj_array) is 0:
+            log.error('ERROR: detach_objects_from_session - input parameters error')
+        else:
+            for obj in obj_array:
+                self.detach_obj_from_session(obj, db, log)
+
+    #for testing only
+    def cleanup(self, db, ver_id):
+        print ver_id
+        db.query(Version).filter_by(id=ver_id, creator='admin').delete()
+            # for path_id in path_ids_to_delete:
+            #     db.query(Pathids).filter_by(id=path_id).delete()
+            # print db.query(Pathidconf).filter_by(id_confver=ver_id).delete()
+        db.commit()
+
+

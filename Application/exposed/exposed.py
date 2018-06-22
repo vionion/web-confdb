@@ -5,6 +5,7 @@
 # Class: Exposed
 import json
 
+import datetime
 from confdb_v2.queries import ConfDbQueries
 from cachedb.queries import CacheDbQueries
 from item_wrappers.FolderItem import *
@@ -14,9 +15,8 @@ from item_wrappers.Parameter import *
 from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
-from marshmallow import Schema, fields, pprint
-from marshmallow.ordereddict import OrderedDict
 
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
@@ -445,7 +445,7 @@ class Exposed(object):
     #         db: database session object
     #
 
-    def getOUModuleItems(self, oumid=-2, db = None, src = 0, request = None, log = None):
+    def getOUModuleItems(self, oumid=-2, db = None, src = 0, request = None, verid = -1, log = None):
 
         if (oumid == -2 or db == None):
             log.error('ERROR: getOUModuleItems - input parameters error' + self.log_arguments(oumid=oumid))
@@ -456,7 +456,7 @@ class Exposed(object):
         schema = ResponseParamSchema()
 
 
-        oumodule_params = cache.get_params(oumid, cache_session, log)
+        oumodule_params = cache.get_params(oumid, ver, cache_session, log)
         if oumodule_params is None:
             external_id = cache.get_external_id(cache_session, oumid, "oum", src, log)
 
@@ -464,7 +464,7 @@ class Exposed(object):
             for param in oumodule_params:
                 param.module_id = oumid
 
-            cache.put_params(oumid, oumodule_params, cache_session, log)
+            cache.put_params(oumid, oumodule_params, verid, cache_session, log)
 
         if oumodule_params is None:
             return None
@@ -493,10 +493,10 @@ class Exposed(object):
         cache_session = request.db_cache
         return cache.delete_event_statement(internal_id, rank, cache_session, log)
 
-    def update_cached_param(self, mod_id, src, param_name, value, request, log):
+    def update_cached_param(self, mod_id, src, param_name, value, ver, request, log):
         cache = self.cache
         cache_session = request.db_cache
-        cache.update_params(mod_id, param_name, value, cache_session, log)
+        cache.update_params(mod_id, param_name, value, ver, cache_session, log)
 
     def drag_n_drop_reorder(self, node_id, old_parent, new_order, request, log):
         cache = self.cache
@@ -566,7 +566,7 @@ class Exposed(object):
         cache_session.commit()
 
 
-    def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, log = None):
+    def getModuleItems(self, mid=-2, db = None, src = 0, request = None, allmod = "false", fromSequence = False, verid = -1, log = None):
 
         if (mid == -2 or db == None):
             log.error('ERROR: getModuleItems - input parameters error' + self.log_arguments(mid=mid))
@@ -594,7 +594,7 @@ class Exposed(object):
         #         internal_module_id = cache.patMappingDictGetInternal(mid, "mod", cache_session, log)
 
         internal_module_id = mid
-        module_params = cache.get_params(internal_module_id, cache_session, log)
+        module_params = cache.get_params(internal_module_id, verid, cache_session, log)
 
         if module_params is None:
             external_module_id = cache.get_external_id(cache_session, internal_module_id, "mod", src, log)
@@ -604,7 +604,7 @@ class Exposed(object):
             for param in module_params:
                 param.module_id = internal_module_id
 
-            cache.put_params(internal_module_id, module_params, cache_session, log)
+            cache.put_params(internal_module_id, module_params, verid, cache_session, log)
 
         if module_params is None:
             return None
@@ -1180,7 +1180,7 @@ class Exposed(object):
 
         try:
 
-            modules = queries.getConfPaelements(ver_id, db, log)
+            modules = queries.getConfModules(ver_id, db, log)
 
             templates = queries.getRelTemplates(id_rel, db, log)
 
@@ -1239,7 +1239,7 @@ class Exposed(object):
         module_names = cache.get_modules_names(ver_id, cache_session, log)
         if module_names is None:
             try:
-                module_names = queries.getConfPaelements(ver_id, db, log)
+                module_names = queries.getConfModules(ver_id, db, log)
                 cache.put_modules_names(ver_id, [o.name for o in module_names], cache_session, log)
             except:
                 log.error('ERROR: Query getConfPaelements Error')
@@ -1273,6 +1273,122 @@ class Exposed(object):
         resp.children = evcon_names
         output = schema.dump(resp)
         return output.data
+
+    def get_changed_params(self, ver_id, log=None, request=None):
+        cache = self.cache
+        cache_session = request.db_cache
+        changed_params = cache.get_changed_params(ver_id, cache_session, log)
+        return changed_params
+
+    def get_version(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
+        cache = self.cache
+        cache_session = request.db_cache
+        if cnf == -2 or ver == -2 or db is None:
+            log.error('ERROR: get_version - input parameters error' + self.log_arguments(cnf=cnf, ver=ver))
+        if cnf != -2 and cnf != -1:
+            cnf = cache.folMappingDictGetExternal(cnf, src, "cnf", cache_session, log)
+        version = self.getRequestedVersion(ver, cnf, db, log)
+        return version
+
+    def get_last_version(self, cnf, db=None, log=None):
+        if cnf == -2 or db is None:
+            log.error('ERROR: get_version - input parameters error' + self.log_arguments(cnf=cnf))
+        version = self.getRequestedVersion(-2, cnf, db, log)
+        return version
+
+    def create_new_version(self, old_version, db=None, log=None):
+        old_version.version += 1
+        old_version.creator = 'admin'
+        old_version.created = datetime.datetime.now()
+        old_version.description = 'testing saving'
+        old_version.name = re.search('.*\/V', old_version.name).group(0) + str(old_version.version)
+        return self.queries.save_version(old_version, db, log)
+
+    def create_new_configuration(self, changed_version, db=None, request=None, log=None, src=0):
+        data = self.get_changed_params(changed_version.id, log, request)
+        if len(data) is 0:
+            log.error('ERROR: create_new_configuration - no changes found')
+        else:
+            try:
+                # TODO: do it in one trnsaction
+                last_version = self.get_last_version(changed_version.id_config, db, log)
+                cleanup_version_id = last_version.id
+                if last_version is not None:
+
+                    # 1. gathering data to copy
+
+                    pathid2conf = []
+                    pathids = self.queries.getPaths(changed_version.id, db, log)
+                    pathid2pae = self.queries.get_conf_pathitems(changed_version.id, db, log)
+                    paelements = self.queries.get_conf_paelements(changed_version.id, db, log)
+
+                    pae2moe = []
+                    pae2tmpl = []
+                    for pae in paelements:
+                        pae2moe.extend(self.queries.getModuleParamItemsOne(pae.id, db, log))
+                        if pae.id_templ is not None:
+                            pae2tmpl.append(ModToTemp(id_pae=pae.id, id_templ=pae.id_templ))
+
+                    moelements = []
+                    moe_ids = (obj.id_moe for obj in pae2moe)
+                    moelements.extend(self.queries.getModuleParamElements(moe_ids, db, log))
+
+                    # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+                    self.queries.detach_objects_from_session(pathid2pae, db, log)
+                    self.queries.detach_obj_from_session(last_version, db, log)
+
+                    # 3. saving copied data
+
+                    old2new_paths = self.queries.save_get_id_mapping(pathids, db, log)
+                    old2new_modules = self.queries.save_get_id_mapping(paelements, db, log)
+                    old2new_params = self.queries.save_get_id_mapping(moelements, db, log)
+
+                    # 4. modifying/updating data, creating some new instances
+
+                    # 4.1 creating new version
+                    new_version = self.create_new_version(last_version, db, src)
+
+                    # 4.2 mapping new paths to corresponding templates
+                    for p2m in pae2tmpl:
+                        p2m.id_pae = old2new_modules[p2m.id_pae]
+
+                    # 4.3 creating new relations between new modules and new params
+
+                    new_pae2moe = []
+                    for p2m in pae2moe:
+                        if p2m.id_pae in old2new_modules and p2m.id_moe in old2new_params:
+                            # array of fresh instances is necessary because getModuleParamItemsOne returns aggregation of two objects,
+                            # module2param_relation and its param. We need to save only module2param_relation in this case, since we save params earlier
+                            new_pae2moe.append(Moduleitem(
+                                id_pae=old2new_modules[p2m.id_pae],
+                                id_moe=old2new_params[p2m.id_moe],
+                                lvl=p2m.lvl,
+                                order=p2m.order))
+
+                    # 4.3 creating new relations between new paths and created configuration
+
+                    for i, item in enumerate(old2new_paths.iteritems()):
+                        pathid2conf.append(Pathidconf(id_confver=new_version.id, id_pathid=item[1], order=i))
+
+                    # 4.3 remapping paths to modules
+
+                    for p2m in pathid2pae:
+                        if p2m.id_pae in old2new_modules and p2m.id_pathid in old2new_paths:
+                            p2m.id_pae = old2new_modules[p2m.id_pae]
+                            p2m.id_pathid = old2new_paths[p2m.id_pathid]
+
+                    # 5. saving new relations
+
+                    self.queries.save_objects(pathid2conf, db, log)
+                    self.queries.save_objects(pathid2pae, db, log)
+                    self.queries.save_objects(new_pae2moe, db, log)
+                    self.queries.save_objects(pae2tmpl, db, log)
+
+                    self.queries.cleanup(db, cleanup_version_id)
+            except Exception as e:
+                    msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
+                    log.error(msg)
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
@@ -1348,7 +1464,7 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getServiceItems(self, sid_internal=-2, db = None, log = None, src = 0, request = None):
+    def getServiceItems(self, sid_internal=-2, db = None, log = None, src = 0, request = None, verid = -1):
 
         if (sid_internal == -2 or db == None):
             log.error('ERROR: getServiceItems - input parameters error' + self.log_arguments(sid_internal=sid_internal))
@@ -1359,14 +1475,14 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        service_params = cache.get_params(sid_internal, cache_session, log)
+        service_params = cache.get_params(sid_internal, verid, cache_session, log)
         if service_params is None:
             sid_external = cache.get_external_id(cache_session, sid_internal, "srv", src, log)
             service_params = self.params_builder.serviceParamsBuilder(sid_external, self.queries, db, log)
             for param in service_params:
                 param.module_id = sid_internal
 
-            cache.put_params(sid_internal, service_params, cache_session, log)
+            cache.put_params(sid_internal, service_params, verid, cache_session, log)
 
         if service_params is None:
             return None
@@ -1643,7 +1759,7 @@ class Exposed(object):
         return output.data
 
 
-    def getESModItems(self, internal_esmod_id, db, src=0, log = None, request=None):
+    def getESModItems(self, internal_esmod_id, db, src=0, log = None, request=None, verid = -1):
 
         if (internal_esmod_id == -2 or db == None):
             log.error('ERROR: getESModItems - input parameters error' + self.log_arguments(internal_esmod_id=internal_esmod_id))
@@ -1654,14 +1770,14 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        es_mod_params = cache.get_params(internal_esmod_id, cache_session, log)
+        es_mod_params = cache.get_params(internal_esmod_id, verid, cache_session, log)
         if es_mod_params is None:
             external_esmod_id = cache.get_external_id(cache_session, internal_esmod_id, "es_mod", src, log)
             es_mod_params = self.params_builder.esModuleParamsBuilder(external_esmod_id, self.queries, db, log)
             for param in es_mod_params:
                 param.module_id = internal_esmod_id
 
-            cache.put_params(internal_esmod_id, es_mod_params, cache_session, log)
+            cache.put_params(internal_esmod_id, es_mod_params, verid, cache_session, log)
 
         if es_mod_params is None:
             return None
@@ -1853,7 +1969,7 @@ class Exposed(object):
     #@params: sid: service id
     #         db: database session object
     #
-    def getGpsetItems(self, internal_gpset_id=-2, db = None, log = None, request = None, src = 0):
+    def getGpsetItems(self, internal_gpset_id=-2, db = None, log = None, request = None, verid = -1, src = 0):
 
         if (internal_gpset_id == -2 or db == None):
             log.error('ERROR: getGpsetItems - input parameters error' + self.log_arguments(internal_gpset_id=internal_gpset_id))
@@ -1864,7 +1980,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        gpset_params = cache.get_params(internal_gpset_id, cache_session, log)
+        gpset_params = cache.get_params(internal_gpset_id, verid, cache_session, log)
 
         if gpset_params is None:
             external_gpset_id = cache.gpsMappingDictGetExternal(internal_gpset_id, src, "gps", cache_session, log)
@@ -1872,7 +1988,7 @@ class Exposed(object):
             for param in gpset_params:
                 param.module_id = internal_gpset_id
 
-            cache.put_params(internal_gpset_id, gpset_params, cache_session, log)
+            cache.put_params(internal_gpset_id, gpset_params, verid, cache_session, log)
 
         if gpset_params is None:
             return None
@@ -2011,7 +2127,7 @@ class Exposed(object):
 
         return output.data
 
-    def getEDSourceItems(self, internal_ed_source_id, db, src=0, log = None, request=None):
+    def getEDSourceItems(self, internal_ed_source_id, db, src=0, log = None, request=None, verid = -1):
 
         if (internal_ed_source_id == -2 or db == None):
             log.error('ERROR: getEDSourceItems - input parameters error' + self.log_arguments(edsid=internal_ed_source_id))
@@ -2022,7 +2138,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponseParamSchema()
 
-        ed_source_params = cache.get_params(internal_ed_source_id, cache_session, log)
+        ed_source_params = cache.get_params(internal_ed_source_id, verid, cache_session, log)
 
         if ed_source_params is None:
             external_ed_source_id = cache.get_external_id(cache_session, internal_ed_source_id, "ed_source", src, log)
@@ -2031,7 +2147,7 @@ class Exposed(object):
             for param in ed_source_params:
                 param.module_id = internal_ed_source_id
 
-            cache.put_params(internal_ed_source_id, ed_source_params, cache_session, log)
+            cache.put_params(internal_ed_source_id, ed_source_params, verid, cache_session, log)
 
         if ed_source_params is None:
             return None
@@ -2117,7 +2233,7 @@ class Exposed(object):
 
         return output.data
 
-    def getESSourceItems(self, internal_essource_id, db, src=0, log = None, request=None):
+    def getESSourceItems(self, internal_essource_id, db, src=0, log = None, request=None, verid = -1):
 
         if (internal_essource_id == -2 or db == None):
             log.error('ERROR: getESSourceItems - input parameters error' + self.log_arguments(internal_essource_id=internal_essource_id))
@@ -2128,7 +2244,7 @@ class Exposed(object):
         cache = self.cache
         cache_session = request.db_cache
 
-        essource_params = cache.get_params(internal_essource_id, cache_session, log)
+        essource_params = cache.get_params(internal_essource_id, verid, cache_session, log)
 
         if essource_params is None:
             external_essource_id = cache.get_external_id(cache_session, internal_essource_id, "es_source", src, log)
@@ -2136,7 +2252,7 @@ class Exposed(object):
             for param in essource_params:
                 param.module_id = internal_essource_id
 
-            cache.put_params(internal_essource_id, essource_params, cache_session, log)
+            cache.put_params(internal_essource_id, essource_params, verid, cache_session, log)
 
         if essource_params is None:
             return None

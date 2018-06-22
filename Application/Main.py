@@ -7,12 +7,8 @@
 # as well the Database session
 # Class: Root
 
-import sys
-import logging
-import logging.handlers
 import cherrypy
 import os
-import tempfile
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -278,11 +274,11 @@ class Root(object):
             # id_oum = oumodsMap.get(mid)
             # data = self.funcs.getOUModuleItems(id_oum, db, self.log)
             id_oum = mid
-            data = self.funcs.getOUModuleItems(id_oum, db, src, cherrypy.request, self.log)
+            data = self.funcs.getOUModuleItems(id_oum, db, src, cherrypy.request, verid, self.log)
 
         else:
 
-            data = self.funcs.getModuleItems(mid, db, src, cherrypy.request, allmod, False, self.log)
+            data = self.funcs.getModuleItems(mid, db, src, cherrypy.request, allmod, False, verid, self.log)
             # if (allmod == 'true'):
             #     id_p = allmodsMap.get(mid)
             #     data = self.funcs.getModuleItems(id_p, db, self.log)
@@ -382,6 +378,7 @@ class Root(object):
     def update_param_val(self):
         input_json = byteify(cherrypy.request.json)
         value = input_json['value']
+        ver = input_json['ver_id']
         mod_id = input_json['modId']
         param_name = input_json['parName']
 
@@ -389,7 +386,7 @@ class Root(object):
         # UPD: TODO: it still might be different from 0, so remove hardcode
         src = 0
 
-        self.funcs.update_cached_param(mod_id, src, param_name, value, cherrypy.request, self.log)
+        self.funcs.update_cached_param(mod_id, src, param_name, value, ver, cherrypy.request, self.log)
         # TODO: remove it, it is stupid. Return something more enhanced
         return input_json
 
@@ -473,6 +470,30 @@ class Root(object):
             self.log.error('ERROR: get_evcon_names - data returned null object')
             cherrypy.HTTPError(500, "Error in retreiving the evcon tags names")
         return data
+
+    @cherrypy.expose
+    def save(self, _dc=101, vid=-2, cid=-2, online="False"):
+        db_online = cherrypy.request.db_online
+        db_offline = cherrypy.request.db_offline
+        db = None
+        src = 0
+        if online == 'file':
+            src = 0
+            # data = self.par_funcs.get_input_tags_names_from_file(ver, self.config_dict)
+            # if (data == None):
+            #     self.log.error('ERROR: get_module_names - data returned null object')
+            #     cherrypy.HTTPError(500, "Error in retreiving the input tags names")
+        else:
+            if online == 'True' or online == 'true':
+                db = db_online
+                src = 1
+            else:
+                db = db_offline
+        cid = int(cid)
+        vid = int(vid)
+        changed_version = self.funcs.get_version(cid, vid, db, self.log, cherrypy.request, src)
+        if changed_version is not None:
+            self.funcs.create_new_configuration(changed_version, db, cherrypy.request, self.log, src)
 
     #Get the directories of the DB
 
@@ -715,7 +736,7 @@ class Root(object):
             else:
                 db = db_offline
 
-            data = self.funcs.getServiceItems(sid, db, self.log, src, cherrypy.request)
+            data = self.funcs.getServiceItems(sid, db, self.log, src, cherrypy.request, verid)
             if (data == None):
                 self.log.error('ERROR: allsrvitems - data returned null object')
                 cherrypy.HTTPError(500, "Error in retreiving the Service Parameters")
@@ -948,7 +969,7 @@ class Root(object):
 
         mid = int(mid)
 
-        data = self.funcs.getESModItems(mid,db, src, self.log, cherrypy.request)
+        data = self.funcs.getESModItems(mid,db, src, self.log, cherrypy.request, verid)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allesmoditems - data returned null object')
@@ -1020,7 +1041,7 @@ class Root(object):
         data = None
       
         # data = self.funcs.getModuleItems(mid, db, self.log)
-        data = self.funcs.getModuleItems(mid, db, src, cherrypy.request, "false", fromSequence, self.log)
+        data = self.funcs.getModuleItems(mid, db, src, cherrypy.request, "false", fromSequence, verid, self.log)
 
         
         if (data == None):
@@ -1261,7 +1282,7 @@ class Root(object):
                 gpsMap = self.gpsMap
                 src = 0
 
-        data = self.funcs.getGpsetItems(set_id, db, self.log, cherrypy.request, src)
+        data = self.funcs.getGpsetItems(set_id, db, self.log, cherrypy.request, verid, src)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: allgpsetitems - data returned null object')
@@ -1342,7 +1363,7 @@ class Root(object):
 
         mid = int(mid)
 
-        data = self.funcs.getEDSourceItems(mid, db, src, self.log, cherrypy.request)
+        data = self.funcs.getEDSourceItems(mid, db, src, self.log, cherrypy.request, verid)
         if (data == None):
 #            print ("Exception - Error")
             self.log.error('ERROR: data returned null object')
@@ -1420,7 +1441,7 @@ class Root(object):
                 db = db_offline
             mid = int(mid)
 
-            data = self.funcs.getESSourceItems(mid, db, src, self.log, cherrypy.request)
+            data = self.funcs.getESSourceItems(mid, db, src, self.log, cherrypy.request, verid)
             if (data == None):
     #            print ("Exception - Error")
                 self.log.error('ERROR: allessourceitems - data returned null object')

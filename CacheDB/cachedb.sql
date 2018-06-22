@@ -110,7 +110,7 @@ $$ LANGUAGE plpgsql;
 --
 -- For all the params, caching whole object as json.
 --
-CREATE TABLE params_cache (id SERIAL PRIMARY KEY, data JSON);
+CREATE TABLE params_cache (id SERIAL PRIMARY KEY, data JSON, version_id BIGINT, changed BOOLEAN);
 
 CREATE TABLE endpaths_cache (version_id SERIAL PRIMARY KEY, data JSON);
 

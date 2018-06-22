@@ -176,7 +176,39 @@ Ext.define('CmsConfigExplorer.view.editor.EditorController', {
         cards.setActiveItem(0);
         
     },
-    
+
+    onSave: function (button, e, eOpts) {
+        var cid = this.getViewModel().get("idCnf");
+        var vid = this.getViewModel().get("idVer");
+        var online = this.getViewModel().get("online");
+        var loading = this.lookupReference('loadingtext');
+        loading.setHidden(false);
+
+        var loadinggif = this.lookupReference('loadinggif');
+        loadinggif.setHidden(false);
+        Ext.Ajax.request({
+            url: 'save',
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+             params: {
+                    cid: cid,
+                    vid: vid,
+                    online: online
+                },
+            failure: function (response) {
+                Ext.Msg.alert('Error', response.responseText);
+                console.log(response);
+                loadinggif.setHidden(true);
+                loading.setHidden(true);
+            }, success: function (response) {
+                loadinggif.setHidden(true);
+                loading.setHidden(true);
+                console.log('ok');
+
+            }
+        });
+    },
+
     onLinkClick: function(button){
         
         var link = this.getViewModel().get('link');

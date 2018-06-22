@@ -91,12 +91,13 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
         if (context.record.modified !== null) {
             prevVal = context.record.modified.rendervalue;
         }
+        var vid = this.getViewModel().get("idVer");
         validate(context.value, prevVal, type, function (valid, validValue) {
                 context.value = validValue;
                 context.record.modified = {rendervalue: validValue};
                 context.record.set('rendervalue', validValue);
                 if (valid) {
-                    var myObject = {'value': context.value, 'parName': parName, 'modId': modId};
+                    var myObject = {'value': context.value, 'parName': parName, 'modId': modId, ver_id: vid};
                     Ext.Ajax.request({
                         url: 'update_param_val',
                         // why the hell it doesn't work with UPDATE?

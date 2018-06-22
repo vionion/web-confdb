@@ -1,7 +1,7 @@
 # File tables.py Description:
 # This files contains tables descriptions for sqlalchemy
 #
-from sqlalchemy import Column, Integer, String, BigInteger, UniqueConstraint, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, BigInteger, Boolean
 from sqlalchemy.dialects.postgresql import JSON, ARRAY
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,6 +12,9 @@ class ParamsCached(BaseCache):
     __tablename__ = 'params_cache'
     id = Column('id', Integer, primary_key=True)
     data = Column('data', JSON)
+    version_id = Column('version_id', BigInteger)
+    changed = Column('changed', Boolean, default=False)
+
 
 class EndPathsCached(BaseCache):
     __tablename__ = 'endpaths_cache'

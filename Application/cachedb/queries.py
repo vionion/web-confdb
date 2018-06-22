@@ -458,7 +458,7 @@ class CacheDbQueries(object):
         return internal_id
 
     @staticmethod
-    def get_params(internal_entity_id, cache, log):
+    def get_params(internal_entity_id, ver, cache, log):
         # this param id must be internal id, which is from one of the 'id' columns in tables in cache. Not from Oracle!
 
         if internal_entity_id < 0 or cache is None:
@@ -467,7 +467,8 @@ class CacheDbQueries(object):
 
         try:
             cached_params = cache.query(ParamsCached).filter(
-                ParamsCached.id == internal_entity_id).first()
+                ParamsCached.id == internal_entity_id).filter(
+                ParamsCached.version_id == ver).first()
             if cached_params is None:
                 return None
             else:
@@ -485,12 +486,12 @@ class CacheDbQueries(object):
             return None
 
     @staticmethod
-    def put_params(internal_entity_id, params, cache, log):
+    def put_params(internal_entity_id, params, ver, cache, log):
         # it is possible to reduce amount of data stored in cache, since we don't really use all of the parameter values
         # (check param_builder.buildParameterStructure)
         json_params = json.dumps(params, default=lambda o: o.__dict__)
         try:
-            params = ParamsCached(data=json_params, id=internal_entity_id)
+            params = ParamsCached(data=json_params, id=internal_entity_id, version_id=ver)
             cache.add(params)
             cache.commit()
         except Exception as e:
@@ -499,17 +500,21 @@ class CacheDbQueries(object):
             return -2
 
     @staticmethod
-    def update_params(internal_entity_id, param_name, param_value, cache, log):
+    def update_params(internal_entity_id, param_name, param_value, ver, cache, log):
         try:
             params = cache.query(ParamsCached).filter(
-                ParamsCached.id == internal_entity_id).first()
+                ParamsCached.id == internal_entity_id).filter(
+                ParamsCached.version_id == ver).first()
             json_params = json.loads(params.data)
             for param in json_params:
                 if param['name'] == param_name:
                     param['value'] = param_value
+                    param['changed'] = True
             params.data = json.dumps(json_params)
+            params.changed = True
             print("updated: " + param_name + " - " + param_value)
             flag_modified(params, 'data')
+            flag_modified(params, 'changed')
             cache.commit()
         except Exception as e:
             msg = 'ERROR: Query update_params() Error: ' + e.args[0]
@@ -552,7 +557,7 @@ class CacheDbQueries(object):
         return item
 
     def put_path_items(self, parrent_id, path_items, cache, log):
-        nodes = []
+        nodes = set()
         for pathitem in path_items:
             children = self.get_path_items(pathitem.internal_id, cache, log, pathitem.lvl + 1)
             if len(children) is 0:
@@ -560,7 +565,7 @@ class CacheDbQueries(object):
             else:
                 pathitem.children = children
             self.put_path_item(pathitem, parrent_id, cache, log)
-            nodes.append(pathitem)
+            nodes.add(pathitem)
         return nodes
 
     @staticmethod
@@ -678,6 +683,33 @@ class CacheDbQueries(object):
             msg = 'ERROR: Query get_module_names() Error: ' + e.args[0]
             log.error(msg)
             return None
+
+    @staticmethod
+    def get_changed_params(version_id, cache, log):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_changed_params - input parameters error')
+            return []
+
+        try:
+            changed_params = cache.query(ParamsCached).filter(
+                ParamsCached.version_id == version_id).filter(
+                ParamsCached.changed == True).all()
+            if changed_params is None:
+                return []
+            else:
+                result = []
+                for param in changed_params:
+                    dict_params = byteify(json.loads(param.data))
+                    obj_param = convert_module_dict2obj(dict_params, log)
+                    for param in obj_param:
+                        if hasattr(param, 'changed') and param.changed is True:
+                            result.append(param)
+                return result
+
+        except Exception as e:
+            msg = 'ERROR: Query get_changed_params() Error: ' + e.args[0]
+            log.error(msg)
+            return []
 
     @staticmethod
     def put_modules_names(ver_id, names_list, cache, log):
@@ -823,7 +855,6 @@ class CacheDbQueries(object):
                 dataset_relation.path_ids.remove(path_id)
                 flag_modified(dataset_relation, 'path_ids')
             cache.commit()
-            print dataset_relation.path_ids
         except Exception as e:
             msg = 'ERROR: Query remove_parrent2dataset() Error: ' + e.args[0]
             log.error(msg)

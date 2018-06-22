@@ -44,7 +44,7 @@ class ModToTemp(Base):
      # nome della tabella
     __tablename__ = 'u_mod2templ'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_templ = Column('id_templ', Integer, ForeignKey('u_moduletemplates.id'))
 
@@ -55,6 +55,7 @@ class Pathidconf(Base):
     id = Column('id', Integer, primary_key=True)
     id_confver = Column(ForeignKey('u_confversions.id'))
     id_pathid = Column(ForeignKey('u_pathids.id'))
+    order = Column('ord', Integer)
 
 class Paths(Base):
     # nome della tabella
@@ -68,7 +69,7 @@ class Pathids(Base):
     # nome della tabella
     __tablename__ = 'u_pathids'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_path = Column(ForeignKey('u_paths.id'))
     description = Column(CLOB)
     name = column_property(
@@ -81,7 +82,7 @@ class Pathelement(Base):
     # nome della tabella
     __tablename__ = 'u_paelements'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     paetype = Column(Integer)
     id_templ = column_property(
@@ -99,7 +100,7 @@ class PathelementFull(Base):
     # nome della tabella
     __tablename__ = 'u_paelements, u_mod2templ, u_moduletemplates, u_moduletypes'
 
-    id        = Column('id', Integer, primary_key=True)
+    id        = Column('id', Integer, primary_key=True, autoincrement=True)
     name      = Column(String)
     paetype   = Column(Integer)
     id_templ  = Column(Integer)
@@ -110,7 +111,7 @@ class PathelementFull(Base):
 class Pathitems(Base):
     __tablename__ = 'u_pathid2pae'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_parent = Column(Integer)
@@ -165,7 +166,7 @@ class Modelement(Base):
      # nome della tabella
     __tablename__ = 'u_moelements'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     moetype = Column(Integer)
     paramtype = Column(String)
@@ -177,7 +178,7 @@ class Moduleitem(Base):
      # nome della tabella
     __tablename__ = 'u_pae2moe'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_pae = Column('id_pae', Integer, ForeignKey('u_paelements.id'))
     id_moe = Column('id_moe', Integer, ForeignKey('u_moelements.id'))
     lvl = Column(Integer)
@@ -265,7 +266,7 @@ class Version(Base):
     # nome della tabella
     __tablename__ = 'u_confversions'
     # definisco che id \'e un numero intero in sequenza e chiave primaria
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_config = Column('id_config', Integer, ForeignKey('u_configurations.id'))
     id_parentdir = Column('id_parentdir', Integer, ForeignKey('u_directories.id'))
     name = Column(String)

@@ -101,7 +101,10 @@ Ext.define("CmsConfigExplorer.view.editor.Editor",{
                         },
                         {
                             text: 'Save',
-                            disabled: true
+                            listeners: {
+                                click: 'onSave',
+                                scope: 'controller'
+                            }
                         },
                         {
                             text: 'Import',
