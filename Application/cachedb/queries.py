@@ -477,7 +477,7 @@ class CacheDbQueries(object):
                 # accepts instances of ModuleitemFull object, there is no reason to create another params builder for dicts,
                 # it is easier to create objects out of dicts
                 obj_params = convert_module_dict2obj(dict_params, log)
-                wrapped_params = ParamsBuilder.buildParameterStructure(log, obj_params, cached_params.id, set_default=False)
+                wrapped_params = ParamsBuilder.buildParameterStructure(log, obj_params, cached_params.id)
                 return wrapped_params
 
         except Exception as e:
