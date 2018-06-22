@@ -558,7 +558,7 @@ class CacheDbQueries(object):
         return item
 
     def put_path_items(self, parrent_id, path_items, cache, log):
-        nodes = set()
+        nodes = []
         for pathitem in path_items:
             children = self.get_path_items(pathitem.internal_id, cache, log, pathitem.lvl + 1)
             if len(children) is 0:
@@ -566,7 +566,7 @@ class CacheDbQueries(object):
             else:
                 pathitem.children = children
             self.put_path_item(pathitem, parrent_id, cache, log)
-            nodes.add(pathitem)
+            nodes.append(pathitem)
         return nodes
 
     @staticmethod

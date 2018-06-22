@@ -166,9 +166,8 @@ class Exposed(object):
                 lzsequence = seq[lzseq]
                 pats.insert(lzsequence.order, lzsequence)
 
-            pats.sort(key=lambda x: x.order, reverse=False)
-
             pats = cache.put_path_items(internal_path_id, pats, cache_session, log)
+            pats.sort(key=lambda x: x.order, reverse=False)
 
         if pats is None:
             return None
