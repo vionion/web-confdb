@@ -203,8 +203,6 @@ Ext.define('CmsConfigExplorer.view.editor.EditorController', {
             }, success: function (response) {
                 loadinggif.setHidden(true);
                 loading.setHidden(true);
-                console.log('ok');
-
             }
         });
     },

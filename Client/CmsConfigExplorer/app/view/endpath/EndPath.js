@@ -24,7 +24,7 @@ Ext.define("CmsConfigExplorer.view.endpath.EndPath",{
     },
 
     listeners:{
-        doSmthToAllNodes: 'updateAllNodes'
+        updateAllNodes: 'updateAllNodes'
     },
 
     items: [

@@ -13,7 +13,6 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             var newOrder;
             var newParent;
             var version = -2;
-            console.log(dropPosition + " " + overModel.data.Name);
             if (dropPosition === 'append') {
                 if (overModel.parentNode.data.root) {
                     // if it was appended to Path node
