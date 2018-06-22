@@ -16,8 +16,7 @@ class ParamsBuilder():
             logger.error('ERROR: query %s(%s, ...): %s' % (query.__name__, module_id, e))
             return None
 
-        return ParamsBuilder.buildParameterStructure(logger, elements, set_default)
-
+        return ParamsBuilder.buildParameterStructure(logger, elements, set_default=set_default)
 
     @staticmethod
     def buildParameterStructure(logger, elements, module_id=-1, set_default = False):

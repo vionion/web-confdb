@@ -509,6 +509,7 @@ class CacheDbQueries(object):
             for param in json_params:
                 if param['name'] == param_name:
                     param['value'] = param_value
+                    param['default'] = False
                     param['changed'] = True
             params.data = json.dumps(json_params)
             params.changed = True
