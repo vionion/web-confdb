@@ -1824,7 +1824,7 @@ class Exposed(object):
                         item.children.append(child)
 
                     written_sequences.add(item.name)
-                    built_sequences.add(item)
+                    built_sequences.append(item)
 
             children.append(item)
 
@@ -1866,7 +1866,7 @@ class Exposed(object):
             msg = 'ERROR: getAllSequences: error querying database for Paths and EndPaths:\n' + e.args[0]
             log.error(msg)
 
-        built_sequences = set()
+        built_sequences = []
         written_sequences = set()
         elements = None
         items = None
@@ -1912,8 +1912,8 @@ class Exposed(object):
 
                     written_sequences.add(item.name)
                     item.expanded = False
-                    built_sequences.add(item)
-            built_sequences = cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
+                    built_sequences.append(item)
+                    cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
 
         built_sequences = sorted(built_sequences, key=lambda x: x.name, reverse=False)
         resp.success = True
