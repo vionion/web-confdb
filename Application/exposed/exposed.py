@@ -1309,7 +1309,7 @@ class Exposed(object):
             log.error('ERROR: create_new_configuration - no changes found')
         else:
             try:
-                # TODO: do it in one trnsaction
+                # TODO: do it in one transaction
                 last_version = self.get_last_version(changed_version.id_config, db, log)
                 cleanup_version_id = last_version.id
                 if last_version is not None:
@@ -1318,15 +1318,12 @@ class Exposed(object):
 
                     pathid2conf = []
                     pathids = self.queries.getPaths(changed_version.id, db, log)
+                    pathids.extend(self.queries.getEndPaths(changed_version.id, db, log))
                     pathid2pae = self.queries.get_conf_pathitems(changed_version.id, db, log)
                     paelements = self.queries.get_conf_paelements(changed_version.id, db, log)
 
-                    pae2moe = []
-                    pae2tmpl = []
-                    for pae in paelements:
-                        pae2moe.extend(self.queries.getModuleParamItemsOne(pae.id, db, log))
-                        if pae.id_templ is not None:
-                            pae2tmpl.append(ModToTemp(id_pae=pae.id, id_templ=pae.id_templ))
+                    pae2tmpl = self.queries.getMod2TempByVer(changed_version.id, db, log)
+                    pae2moe = self.queries.get_mod2param_by_ver(changed_version.id, db, log)
 
                     moelements = []
                     moe_ids = (obj.id_moe for obj in pae2moe)
@@ -1335,6 +1332,8 @@ class Exposed(object):
                     # 2. detaching from db session, after that we can change it and it will not affect old versions
 
                     self.queries.detach_objects_from_session(pathid2pae, db, log)
+                    self.queries.detach_objects_from_session(pae2tmpl, db, log)
+                    self.queries.detach_objects_from_session(pae2moe, db, log)
                     self.queries.detach_obj_from_session(last_version, db, log)
 
                     # 3. saving copied data
@@ -1354,16 +1353,10 @@ class Exposed(object):
 
                     # 4.3 creating new relations between new modules and new params
 
-                    new_pae2moe = []
                     for p2m in pae2moe:
                         if p2m.id_pae in old2new_modules and p2m.id_moe in old2new_params:
-                            # array of fresh instances is necessary because getModuleParamItemsOne returns aggregation of two objects,
-                            # module2param_relation and its param. We need to save only module2param_relation in this case, since we save params earlier
-                            new_pae2moe.append(Moduleitem(
-                                id_pae=old2new_modules[p2m.id_pae],
-                                id_moe=old2new_params[p2m.id_moe],
-                                lvl=p2m.lvl,
-                                order=p2m.order))
+                            p2m.id_pae = old2new_modules[p2m.id_pae]
+                            p2m.id_moe = old2new_params[p2m.id_moe]
 
                     # 4.3 creating new relations between new paths and created configuration
 
@@ -1381,7 +1374,7 @@ class Exposed(object):
 
                     self.queries.save_objects(pathid2conf, db, log)
                     self.queries.save_objects(pathid2pae, db, log)
-                    self.queries.save_objects(new_pae2moe, db, log)
+                    self.queries.save_objects(pae2moe, db, log)
                     self.queries.save_objects(pae2tmpl, db, log)
 
                     self.queries.cleanup(db, cleanup_version_id)

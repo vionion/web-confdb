@@ -363,6 +363,24 @@ class ConfDbQueries(object):
         return items
 
 
+
+    def get_mod2param_by_ver(self, id_ver, db, log):
+
+        if (db == None or id_ver == None):
+            log.error('ERROR: getMod2TempByVer - input parameters error')
+
+        mod2temps = db.query(Moduleitem).from_statement(
+            text("SELECT UNIQUE u_pae2moe.id, u_pae2moe.id_pae, u_pae2moe.id_moe, u_pae2moe.lvl, u_pae2moe.ord "
+                 + "FROM u_pathid2pae, u_paelements, u_pathid2conf, u_pae2moe "
+                 + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
+                 + "and u_pathid2pae.id_pae=u_paelements.id "
+                 + "and u_paelements.paetype=1 "
+                 + "and u_pae2moe.id_pae=u_paelements.id "
+                 + "and u_pathid2conf.id_confver=:ver")).params(ver=id_ver).all()
+
+        return mod2temps
+
+
     def getModuleParamItemsOne(self, id_pae, db, log):
 
         if (id_pae == -2 or db == None):
@@ -532,7 +550,7 @@ class ConfDbQueries(object):
     def get_conf_paelements(id_ver, db, log):
         if db is None or id_ver == -2:
             log.error('ERROR: getConfModules - input parameters error')
-        elements = db.query(Pathelement).from_statement(text("SELECT UNIQUE u_paelements.id, u_paelements.name "
+        elements = db.query(Pathelement).from_statement(text("SELECT UNIQUE u_paelements.id, u_paelements.name, u_paelements.paetype "
                                                              + "FROM u_pathid2pae, u_paelements, u_pathid2conf "
                                                              + "WHERE u_pathid2conf.id_pathid=u_pathid2pae.id_pathid "
                                                              + "and u_pathid2pae.id_pae=u_paelements.id "
