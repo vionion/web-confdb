@@ -16,7 +16,8 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv
+
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
@@ -1295,92 +1296,365 @@ class Exposed(object):
         version = self.getRequestedVersion(-2, cnf, db, log)
         return version
 
-    def create_new_version(self, old_version, db=None, log=None):
-        old_version.version += 1
+    def create_new_version(self, old_version, version_number, db=None, log=None):
+        old_version.version = version_number
         old_version.creator = 'admin'
         old_version.created = datetime.datetime.now()
         old_version.description = 'testing saving'
-        old_version.name = re.search('.*\/V', old_version.name).group(0) + str(old_version.version)
+        old_version.name = re.search('.*\/V', old_version.name).group(0) + str(version_number)
         return self.queries.save_version(old_version, db, log)
 
     def create_new_configuration(self, changed_version, db=None, request=None, log=None, src=0):
         data = self.get_changed_params(changed_version.id, log, request)
-        if len(data) is 0:
+        # if len(data) is 0:
+
+        # for testing only
+        if False:
+
             log.error('ERROR: create_new_configuration - no changes found')
         else:
             try:
                 # TODO: do it in one transaction
                 last_version = self.get_last_version(changed_version.id_config, db, log)
-                cleanup_version_id = last_version.id
                 if last_version is not None:
-
-                    # 1. gathering data to copy
-
-                    pathid2conf = []
-                    pathids = self.queries.getPaths(changed_version.id, db, log)
-                    pathids.extend(self.queries.getEndPaths(changed_version.id, db, log))
-                    pathid2pae = self.queries.get_conf_pathitems(changed_version.id, db, log)
-                    paelements = self.queries.get_conf_paelements(changed_version.id, db, log)
-
-                    pae2tmpl = self.queries.getMod2TempByVer(changed_version.id, db, log)
-                    pae2moe = self.queries.get_mod2param_by_ver(changed_version.id, db, log)
-
-                    moelements = []
-                    moe_ids = (obj.id_moe for obj in pae2moe)
-                    moelements.extend(self.queries.getModuleParamElements(moe_ids, db, log))
-
-                    # 2. detaching from db session, after that we can change it and it will not affect old versions
-
-                    self.queries.detach_objects_from_session(pathid2pae, db, log)
-                    self.queries.detach_objects_from_session(pae2tmpl, db, log)
-                    self.queries.detach_objects_from_session(pae2moe, db, log)
-                    self.queries.detach_obj_from_session(last_version, db, log)
-
-                    # 3. saving copied data
-
-                    old2new_paths = self.queries.save_get_id_mapping(pathids, db, log)
-                    old2new_modules = self.queries.save_get_id_mapping(paelements, db, log)
-                    old2new_params = self.queries.save_get_id_mapping(moelements, db, log)
-
-                    # 4. modifying/updating data, creating some new instances
-
-                    # 4.1 creating new version
-                    new_version = self.create_new_version(last_version, db, src)
-
-                    # 4.2 mapping new paths to corresponding templates
-                    for p2m in pae2tmpl:
-                        p2m.id_pae = old2new_modules[p2m.id_pae]
-
-                    # 4.3 creating new relations between new modules and new params
-
-                    for p2m in pae2moe:
-                        if p2m.id_pae in old2new_modules and p2m.id_moe in old2new_params:
-                            p2m.id_pae = old2new_modules[p2m.id_pae]
-                            p2m.id_moe = old2new_params[p2m.id_moe]
-
-                    # 4.3 creating new relations between new paths and created configuration
-
-                    for i, item in enumerate(old2new_paths.iteritems()):
-                        pathid2conf.append(Pathidconf(id_confver=new_version.id, id_pathid=item[1], order=i))
-
-                    # 4.3 remapping paths to modules
-
-                    for p2m in pathid2pae:
-                        if p2m.id_pae in old2new_modules and p2m.id_pathid in old2new_paths:
-                            p2m.id_pae = old2new_modules[p2m.id_pae]
-                            p2m.id_pathid = old2new_paths[p2m.id_pathid]
-
-                    # 5. saving new relations
-
-                    self.queries.save_objects(pathid2conf, db, log)
-                    self.queries.save_objects(pathid2pae, db, log)
-                    self.queries.save_objects(pae2moe, db, log)
-                    self.queries.save_objects(pae2tmpl, db, log)
-
-                    self.queries.cleanup(db, cleanup_version_id)
+                    changed_version_id = changed_version.id
+                    self.queries.detach_obj_from_session(changed_version, db, log)
+                    new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
+                    old2new_paths = self.save_paths(changed_version_id, new_version.id, db, log)
+                    self.save_ed_sources(changed_version_id, new_version.id, db, log)
+                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, db, log)
+                    self.save_services(changed_version_id, new_version.id, db, log)
+                    self.save_es_modules(changed_version_id, new_version.id, db, log)
+                    self.save_es_sources(changed_version_id, new_version.id, db, log)
+                    self.save_global_pset(changed_version_id, new_version.id, db, log)
+                    db.commit()
             except Exception as e:
-                    msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
-                    log.error(msg)
+                msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
+                log.error(msg)
+
+    def save_paths(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 paths, endpaths, their modules/sequences and their params for modules and templates
+
+        pathid2conf = []
+        pathids = self.queries.getPaths(changed_version_id, db, log)
+        pathids.extend(self.queries.getEndPaths(changed_version_id, db, log))
+        pathid2pae = self.queries.get_conf_pathitems(changed_version_id, db, log)
+        paelements = self.queries.get_conf_paelements(changed_version_id, db, log)
+        pae2tmpl = self.queries.getMod2TempByVer(changed_version_id, db, log)
+        pae2moe = self.queries.get_mod2param_by_ver(changed_version_id, db, log)
+
+        moelements = []
+        for moe_id in pae2moe:
+            moelements.extend(self.queries.getModuleParamElements(moe_id.id_moe, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(pathid2pae, db, log)
+        self.queries.detach_objects_from_session(pae2tmpl, db, log)
+        self.queries.detach_objects_from_session(pae2moe, db, log)
+
+        # 3. saving copied data
+
+        old2new_paths = self.queries.save_get_id_mapping(pathids, db, log)
+        old2new_modules = self.queries.save_get_id_mapping(paelements, db, log)
+        old2new_params = self.queries.save_get_id_mapping(moelements, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 mapping new paths to corresponding templates
+
+        for p2m in pae2tmpl:
+            p2m.id_pae = old2new_modules[p2m.id_pae]
+
+        # 4.2 remapping relations between modules and params
+
+        for p2m in pae2moe:
+            if p2m.id_pae in old2new_modules and p2m.id_moe in old2new_params:
+                p2m.id_pae = old2new_modules[p2m.id_pae]
+                p2m.id_moe = old2new_params[p2m.id_moe]
+
+        # 4.3 creating new relations between new paths and created configuration
+
+        for i, item in enumerate(old2new_paths.iteritems()):
+            pathid2conf.append(Pathidconf(id_confver=new_version_id, id_pathid=item[1], order=i))
+
+        # 4.4 remapping paths to modules
+
+        for p2m in pathid2pae:
+            if p2m.id_pae in old2new_modules and p2m.id_pathid in old2new_paths:
+                p2m.id_pae = old2new_modules[p2m.id_pae]
+                p2m.id_pathid = old2new_paths[p2m.id_pathid]
+
+        # 5. saving new relations
+
+        self.queries.save_objects(pathid2conf, db, log)
+        self.queries.save_objects(pathid2pae, db, log)
+        self.queries.save_objects(pae2moe, db, log)
+        self.queries.save_objects(pae2tmpl, db, log)
+
+        return old2new_paths
+
+    def save_services(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 services and their params. Templates left unchanged
+
+        conf2srv = []
+        services = self.queries.getConfServices(changed_version_id, db, log)
+        serv_param_elements = []
+        for service in services:
+            serv_param_elements.extend(self.queries.getServiceParamElements(service.id, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(serv_param_elements, db, log)
+
+        # 3. saving copied data
+
+        old2new_services = self.queries.save_get_id_mapping(services, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new services
+
+        for service_param in serv_param_elements:
+            service_param.id_service = old2new_services[service_param.id_service]
+
+        # 4.2 creating new relations between new services and created configuration
+
+        for i, service in enumerate(services):
+            conf2srv.append(Conf2Srv(id_confver=new_version_id, id_service=service.id, order=i))
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2srv, db, log)
+        self.queries.save_objects(serv_param_elements, db, log)
+
+    def save_es_modules(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 esmodules and their params. Templates left unchanged
+
+        esmodules = self.queries.getConfESModules(changed_version_id, db, log)
+        conf2esm = self.queries.getConfToESMRel(changed_version_id, db, log)
+        esmodules_elements = []
+        for es_module in esmodules:
+            esmodules_elements.extend(self.queries.getESModParams(es_module.id, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(esmodules_elements, db, log)
+        self.queries.detach_objects_from_session(conf2esm, db, log)
+
+        # 3. saving copied data
+
+        old2new_esmodules = self.queries.save_get_id_mapping(esmodules, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new esmodules
+
+        for es_module_elem in esmodules_elements:
+            es_module_elem.id_esmodule = old2new_esmodules[es_module_elem.id_esmodule]
+
+        # 4.2 creating new relations between new esmodules and created configuration
+
+        for c2esm in conf2esm:
+            c2esm.id_confver = new_version_id
+            c2esm.id_esmodule = old2new_esmodules[c2esm.id_esmodule]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2esm, db, log)
+        self.queries.save_objects(esmodules_elements, db, log)
+
+    def save_es_sources(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 essources and their params. Templates left unchanged
+
+        essources = self.queries.getConfESSource(changed_version_id, db, log)
+        conf2ess = self.queries.getConfToESSRel(changed_version_id, db, log)
+        essources_elements = []
+        for es_source in essources:
+            essources_elements.extend(self.queries.getESSourceParams(es_source.id, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(essources_elements, db, log)
+        self.queries.detach_objects_from_session(conf2ess, db, log)
+
+        # 3. saving copied data
+
+        old2new_essources = self.queries.save_get_id_mapping(essources, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new essources
+
+        for es_source_elem in essources_elements:
+            es_source_elem.id_essource = old2new_essources[es_source_elem.id_essource]
+
+        # 4.2 creating new relations between new essources and created configuration
+
+        for c2esm in conf2ess:
+            c2esm.id_confver = new_version_id
+            c2esm.id_essource = old2new_essources[c2esm.id_essource]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2ess, db, log)
+        self.queries.save_objects(essources_elements, db, log)
+
+    def save_ed_sources(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 edsources and their params. Templates left unchanged
+
+        edsources = self.queries.getConfEDSource(changed_version_id, db, log)
+        conf2eds = self.queries.getConfToEDSRel(changed_version_id, db, log)
+        edsources_elements = []
+        for ed_source in edsources:
+            edsources_elements.extend(self.queries.getEDSourceParams(ed_source.id, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(edsources_elements, db, log)
+        self.queries.detach_objects_from_session(conf2eds, db, log)
+
+        # 3. saving copied data
+
+        old2new_edsources = self.queries.save_get_id_mapping(edsources, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new edsources
+
+        for ed_source_elem in edsources_elements:
+            ed_source_elem.id_edsource = old2new_edsources[ed_source_elem.id_edsource]
+
+        # 4.2 creating new relations between new edsources and created configuration
+
+        for c2esm in conf2eds:
+            c2esm.id_confver = new_version_id
+            c2esm.id_edsource = old2new_edsources[c2esm.id_edsource]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2eds, db, log)
+        self.queries.save_objects(edsources_elements, db, log)
+
+    def save_global_pset(self, changed_version_id, new_version_id, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 gpsets and their params
+
+        gpsets = self.queries.getConfGPsets(changed_version_id, db, log)
+        conf2gpsets = self.queries.get_conf2GPSets_relations(changed_version_id, db, log)
+        gpsets_elements = []
+        for gp_set in gpsets:
+            gpsets_elements.extend(self.queries.getGpsetElements(gp_set.id, db, log))
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(gpsets_elements, db, log)
+        self.queries.detach_objects_from_session(conf2gpsets, db, log)
+
+        # 3. saving copied data
+
+        old2new_gpsets = self.queries.save_get_id_mapping(gpsets, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new gpsets
+
+        for gp_set_elem in gpsets_elements:
+            gp_set_elem.id_gpset = old2new_gpsets[gp_set_elem.id_gpset]
+
+        # 4.2 creating new relations between new gpsets and created configuration
+
+        for c2gpset in conf2gpsets:
+            c2gpset.id_confver = new_version_id
+            c2gpset.id_gpset = old2new_gpsets[c2gpset.id_gpset]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2gpsets, db, log)
+        self.queries.save_objects(gpsets_elements, db, log)
+
+    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 streams, datasets, eventconfigs;
+
+        streams = self.queries.getConfStreams(changed_version_id, db, log)
+        evcontents = self.queries.getConfEventContents(changed_version_id, db, log)
+        datasets = self.queries.getConfDatasets(changed_version_id, db, log)
+        datasets_ids = (dataset.id for dataset in datasets)
+
+        # 1.2 relations with each other and configuration
+
+        dat2pats = self.queries.getAllDatsPatsRels(changed_version_id, datasets_ids, db, log)
+        evCoToStr = self.queries.getEvCoToStream(changed_version_id, db, log)
+        conf2evco = self.queries.get_conf2evco_rels(changed_version_id, db, log)
+        conf2st_dat = self.queries.getConfStrDatRels(changed_version_id, db, log)
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(conf2st_dat, db, log)
+        self.queries.detach_objects_from_session(conf2evco, db, log)
+        self.queries.detach_objects_from_session(evCoToStr, db, log)
+        self.queries.detach_objects_from_session(dat2pats, db, log)
+
+        # 3. saving copied data
+
+        old2new_streams = self.queries.save_get_id_mapping(streams, db, log)
+        old2new_datasets = self.queries.save_get_id_mapping(datasets, db, log)
+        old2new_evco = self.queries.save_get_id_mapping(evcontents, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning new datasets and streams to congiguration
+
+        for c2st_dat in conf2st_dat:
+            c2st_dat.id_confver = new_version_id
+            c2st_dat.id_streamid = old2new_streams[c2st_dat.id_streamid]
+            c2st_dat.id_datasetid = old2new_datasets[c2st_dat.id_datasetid]
+
+        # 4.2 mapping created paths to new datasets (relation to streams is not in use in this app, just to keep db consistent)
+
+        for d2p in dat2pats:
+            d2p.id_pathid = old2new_paths[d2p.id_pathid]
+            d2p.id_datasetid = old2new_datasets[d2p.id_datasetid]
+            d2p.id_streamid = old2new_streams[d2p.id_streamid]
+
+        # 4.3 mapping evcontents to streams
+
+        for e2str in evCoToStr:
+            e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
+            e2str.id_streamid = old2new_streams[e2str.id_streamid]
+
+        # 4.2 mapping evcontents to configuration
+
+        for c2evco in conf2evco:
+            c2evco.id_confver = new_version_id
+            c2evco.id_evcoid = old2new_evco[c2evco.id_evcoid]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(evCoToStr, db, log)
+        self.queries.save_objects(conf2evco, db, log)
+        self.queries.save_objects(conf2st_dat, db, log)
+        self.queries.save_objects(dat2pats, db, log)
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
@@ -2093,7 +2367,7 @@ class Exposed(object):
 #            return None
 
         templates_dict = dict((x.id, x) for x in templates)
-        modules_dict = dict((x.id, x) for lvlx in modules)
+        modules_dict = dict((x.id, x) for x in modules)
         conf2eds_dict = dict((x.id_edsource, x.order) for x in conf2eds)
 
         edsources = []

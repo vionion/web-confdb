@@ -287,7 +287,7 @@ class Version(Base):
 class SrvTemplate(Base):
     __tablename__ = 'u_srvtemplates'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     name = Column(String)
 
 
@@ -316,15 +316,16 @@ class SrvTempElement(Base):
 class Service(Base):
     __tablename__ = 'u_services'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_template = Column('id_template', Integer, ForeignKey('u_srvtemplates.id'))
 
 class Conf2Srv(Base):
     __tablename__ = 'u_conf2srv'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_confver = Column('id_confver', Integer, ForeignKey('u_confversions.id'))
     id_service = Column('id_service', Integer, ForeignKey('u_services.id'))
+    order = Column('ord', Integer)
 
 class SrvElement(Base):
     __tablename__ = 'u_srvelements'
@@ -353,9 +354,10 @@ class Stream(Base):
 class StreamId(Base):
     __tablename__ = 'u_streamids'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_stream = Column('id_stream', Integer, ForeignKey('u_streams.id'))
-    fractodisk = Column(Integer)
+    fractodisk = Column('fractodisk', Integer)
+    streamid = Column('streamid', Integer)
     name = column_property(
         select([Stream.name]).where(Stream.id == id_stream)
     )
@@ -380,6 +382,7 @@ class DatasetId(Base):
 
     id = Column('id', Integer, primary_key=True)
     id_dataset = Column('id_dataset', Integer, ForeignKey('u_datasets.id'))
+    datasetid = Column('datasetid', Integer)
     name = column_property(
         select([Dataset.name]).where(Dataset.id == id_dataset)
     )
@@ -387,7 +390,7 @@ class DatasetId(Base):
 class PathidToStrDst(Base):
     __tablename__ = 'u_pathid2strdst'
 
-    id = Column('id', Integer, primary_key=True)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     id_pathid = Column(Integer, ForeignKey('u_pathids.id'))
     id_streamid = Column('id_streamid', Integer, ForeignKey('u_streamids.id'))
     id_datasetid = Column('id_datasetid', Integer, ForeignKey('u_datasetids.id'))

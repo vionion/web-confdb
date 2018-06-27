@@ -172,7 +172,7 @@ class ConfDbQueries(object):
             log.error('ERROR: getStreamid - input parameters error')
 
         stid = db.query(StreamId).from_statement(text("SELECT DISTINCT "
-                                                      + "u_streamids.id, u_streamids.id_stream "
+                                                      + "u_streamids.id, u_streamids.id_stream, u_streamids.streamid, u_streamids.fractodisk "
                                                       + "FROM u_streamids "
                                                       + "WHERE u_streamids.id=:node ")).params(node=id_streamid).first()
 
@@ -412,12 +412,12 @@ class ConfDbQueries(object):
         return elements
 
 
-    def getModuleParamElements(self, moeIds, db, log):
+    def getModuleParamElements(self, moeId, db, log):
 
-        if (moeIds==None or db == None):
+        if (moeId==None or db == None):
                 log.error('ERROR: getModuleParamElements - input parameters error')
 
-        elements = db.query(Modelement).filter(Modelement.id.in_(moeIds)).order_by(Modelement.id).all()
+        elements = db.query(Modelement).filter(Modelement.id == moeId).order_by(Modelement.id).all()
 
         return elements
 
@@ -677,7 +677,7 @@ class ConfDbQueries(object):
         if (db == None or ver == -2):
             log.error('ERROR: getConfStreams - input parameters error')
 
-        streams = db.query(StreamId).from_statement(text("SELECT DISTINCT u_streamids.id, u_streamids.id_stream "
+        streams = db.query(StreamId).from_statement(text("SELECT DISTINCT u_streamids.id, u_streamids.id_stream, u_streamids.streamid, u_streamids.fractodisk "
                                                          + "FROM u_conf2strdst, u_streamids "
                                                          + "WHERE u_streamids.id=u_conf2strdst.id_streamid "
                                                          + "and u_conf2strdst.id_confver=:ver ")).params(ver=ver).all()
@@ -689,7 +689,7 @@ class ConfDbQueries(object):
         if (db == None or ver == -2):
             log.error('ERROR: getConfDatasets - input parameters error')
 
-        datasets = db.query(DatasetId).from_statement(text("SELECT DISTINCT u_datasetids.id, u_datasetids.id_dataset "
+        datasets = db.query(DatasetId).from_statement(text("SELECT DISTINCT u_datasetids.id, u_datasetids.id_dataset, u_datasetids.datasetid "
                                                            + "FROM u_conf2strdst, u_datasetids "
                                                            + "WHERE u_datasetids.id=u_conf2strdst.id_datasetid "
                                                            + "and u_conf2strdst.id_confver=:ver ")).params(
@@ -735,6 +735,18 @@ class ConfDbQueries(object):
                  + "and U_CONF2EVCO.id_confver=:ver")).params(ver=ver).all()
 
         return evcontents
+
+    @staticmethod
+    def get_conf2evco_rels(ver, db, log):
+        if (db == None or ver == -2):
+            log.error('ERROR: getConfToEvCoRels - input parameters error')
+
+        rels = db.query(ConfToEvCo).from_statement(text(
+            "SELECT DISTINCT u_conf2evco.id, u_conf2evco.id_confver, u_conf2evco.id_evcoid "
+            + "FROM u_conf2evco "
+            + "WHERE u_conf2evco.id_confver =:ver ")).params(ver=ver).all()
+
+        return rels
 
     def getEvCoToStream(self, ver, db, log):
 
@@ -923,6 +935,18 @@ class ConfDbQueries(object):
 
         return elements
 
+    def get_conf2GPSets_relations(self, id_ver, db, log):
+
+        if (db == None or id_ver == -2):
+            log.error('ERROR: getConf2GPSetsRel - input parameters error')
+
+        conf2gpsets = db.query(Conf2Gpset).from_statement(
+            text(" SELECT u_conf2gpset.id, u_conf2gpset.id_gpset, u_conf2gpset.ord "
+                 + "FROM u_conf2gpset "
+                 + "WHERE u_conf2gpset.id_confver =:ver ")).params(ver=id_ver).all()
+
+        return conf2gpsets
+
     def getGpsetElements(self, gpsId, db, log):
 
         if (gpsId == None or db == None):
@@ -1101,10 +1125,15 @@ class ConfDbQueries(object):
         if (db == None or ver == -2 or idis == None):
             log.error('ERROR: getAllDatsPatsRels - input parameters error')
 
-        # dprels = db.query(PathidToStrDst).filter(PathidToStrDst.id_datasetid.in_(idis)).all()
-        dprels = db.query(func.max(PathidToStrDst.id), PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).filter(
-            PathidToStrDst.id_datasetid.in_(idis)).group_by(PathidToStrDst.id_datasetid, PathidToStrDst.id_pathid).all()
-
+        # TODO: refactor it to sqlalchemy ORM, if possible
+        ids_str = '(' + ', '.join(str(x) for x in idis) + ')'
+        dprels = db.query(PathidToStrDst).from_statement(
+            text(
+                "SELECT DISTINCT u_pathid2strdst.id, u_pathid2strdst.id_datasetid, u_pathid2strdst.id_pathid, u_pathid2strdst.id_streamid "
+                + "FROM u_pathid2strdst INNER JOIN ("
+                + " SELECT MAX(u_pathid2strdst.id) maxid, u_pathid2strdst.id_datasetid, u_pathid2strdst.id_pathid "
+                + " FROM u_pathid2strdst WHERE u_pathid2strdst.id_datasetid IN " + ids_str + " GROUP BY u_pathid2strdst.id_datasetid, u_pathid2strdst.id_pathid ORDER BY u_pathid2strdst.id) maxId "
+                + "ON u_pathid2strdst.id = maxId.maxid ORDER BY u_pathid2strdst.id")).all()
         return dprels
 
     def getL1SeedsPathItems(self, idis, db, log):
@@ -1375,13 +1404,5 @@ class ConfDbQueries(object):
             for obj in obj_array:
                 self.detach_obj_from_session(obj, db, log)
 
-    #for testing only
-    def cleanup(self, db, ver_id):
-        print ver_id
-        db.query(Version).filter_by(id=ver_id, creator='admin').delete()
-            # for path_id in path_ids_to_delete:
-            #     db.query(Pathids).filter_by(id=path_id).delete()
-            # print db.query(Pathidconf).filter_by(id_confver=ver_id).delete()
-        db.commit()
 
 

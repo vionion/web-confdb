@@ -694,7 +694,7 @@ class CacheDbQueries(object):
         try:
             changed_params = cache.query(ParamsCached).filter(
                 ParamsCached.version_id == version_id).filter(
-                ParamsCached.changed == True).all()
+                ParamsCached.changed is True).all()
             if changed_params is None:
                 return []
             else:
@@ -706,7 +706,6 @@ class CacheDbQueries(object):
                         if hasattr(param, 'changed') and param.changed is True:
                             result.append(param)
                 return result
-
         except Exception as e:
             msg = 'ERROR: Query get_changed_params() Error: ' + e.args[0]
             log.error(msg)
