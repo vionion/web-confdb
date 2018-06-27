@@ -1600,20 +1600,23 @@ class Exposed(object):
         evcontents = self.queries.getConfEventContents(changed_version_id, db, log)
         datasets = self.queries.getConfDatasets(changed_version_id, db, log)
         datasets_ids = (dataset.id for dataset in datasets)
+        streams_ids = (stream.id for stream in streams)
 
         # 1.2 relations with each other and configuration
 
         dat2pats = self.queries.getAllDatsPatsRels(changed_version_id, datasets_ids, db, log)
         evCoToStr = self.queries.getEvCoToStream(changed_version_id, db, log)
+        pathid2oum = self.queries.getPathidToOum(streams_ids, db, log)
         conf2evco = self.queries.get_conf2evco_rels(changed_version_id, db, log)
         conf2st_dat = self.queries.getConfStrDatRels(changed_version_id, db, log)
 
         # 2. detaching from db session, after that we can change it and it will not affect old versions
 
-        self.queries.detach_objects_from_session(conf2st_dat, db, log)
-        self.queries.detach_objects_from_session(conf2evco, db, log)
-        self.queries.detach_objects_from_session(evCoToStr, db, log)
         self.queries.detach_objects_from_session(dat2pats, db, log)
+        self.queries.detach_objects_from_session(evCoToStr, db, log)
+        self.queries.detach_objects_from_session(pathid2oum, db, log)
+        self.queries.detach_objects_from_session(conf2evco, db, log)
+        self.queries.detach_objects_from_session(conf2st_dat, db, log)
 
         # 3. saving copied data
 
@@ -1637,13 +1640,19 @@ class Exposed(object):
             d2p.id_datasetid = old2new_datasets[d2p.id_datasetid]
             d2p.id_streamid = old2new_streams[d2p.id_streamid]
 
-        # 4.3 mapping evcontents to streams
+         # 4.3 updating ids for pathid2oum relations
+
+        for pid2oum in pathid2oum:
+            pid2oum.id_pathid = old2new_paths[pid2oum.id_pathid]
+            pid2oum.id_streamid = old2new_streams[pid2oum.id_streamid]
+
+        # 4.4 mapping evcontents to streams
 
         for e2str in evCoToStr:
             e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
             e2str.id_streamid = old2new_streams[e2str.id_streamid]
 
-        # 4.2 mapping evcontents to configuration
+        # 4.5 mapping evcontents to configuration
 
         for c2evco in conf2evco:
             c2evco.id_confver = new_version_id
@@ -1651,10 +1660,11 @@ class Exposed(object):
 
         # 5. saving relations and params
 
+        self.queries.save_objects(dat2pats, db, log)
         self.queries.save_objects(evCoToStr, db, log)
+        self.queries.save_objects(pathid2oum, db, log)
         self.queries.save_objects(conf2evco, db, log)
         self.queries.save_objects(conf2st_dat, db, log)
-        self.queries.save_objects(dat2pats, db, log)
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
