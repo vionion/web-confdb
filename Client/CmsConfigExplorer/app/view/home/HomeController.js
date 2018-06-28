@@ -39,6 +39,28 @@ Ext.define('CmsConfigExplorer.view.home.HomeController', {
         else {
             Ext.Msg.alert('Error', 'The Path is not correct, please try again.');
         }
+    },
+
+    checkForMessages: function () {
+        Ext.Ajax.request({
+            url: 'get_service_messages',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            failure: function (response) {
+                console.log(response);
+            }, success: function (response) {
+                var messages = JSON.parse(response.responseText).children;
+                var messages_html = '';
+
+                messages.forEach(function (message) {
+                    messages_html = messages_html.concat("- ").concat(message.message).concat("</br>").concat("</br>");
+                });
+                messages_html.slice(0, messages_html.length - 10);
+                if (messages.length > 0) {
+                    Ext.Msg.alert('Service message', messages_html);
+                }
+            }
+        });
     }
 
 });

@@ -156,6 +156,13 @@ class PathsItemSchema(Schema):
         ordered = True
 
 
+class ServiceMessageSchema(Schema):
+    name = fields.String()
+
+    class Meta:
+        fields = ('message',)
+
+
 class ModuleNameSchema(Schema):
     name = fields.String()
 

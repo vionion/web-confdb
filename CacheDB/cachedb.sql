@@ -134,6 +134,8 @@ CREATE TABLE paths_cache (path_id BIGINT, name text, is_endpath INTEGER, data JS
 
 CREATE TABLE paths2datasets_relation (dataset_id BIGINT, path_ids BIGINT[], ver_id BIGINT, PRIMARY KEY (dataset_id, ver_id));
 
+CREATE TABLE service_messages (id SERIAL PRIMARY KEY, due_date BIGINT, message text);
+
 CREATE or REPLACE FUNCTION getClientMappings(BIGINT, text, text) RETURNS text[] AS $$
 DECLARE
     external_id ALIAS FOR $1;

@@ -1,6 +1,9 @@
+import calendar
 from collections import namedtuple
 
 import copy
+
+from datetime import datetime
 from sqlalchemy import *
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import *
@@ -663,17 +666,32 @@ class CacheDbQueries(object):
             return -2
 
     @staticmethod
+    def get_service_messages(cache, log):
+        try:
+            d = datetime.utcnow()
+            unixtime_now = calendar.timegm(d.utctimetuple())
+            service_messages = cache.query(ServiceMessage).filter(
+                ServiceMessage.due_date >= unixtime_now).all()
+            if len(service_messages) is 0:
+                return []
+            else:
+                return service_messages
+        except Exception as e:
+            msg = 'ERROR: Query get_service_messages() Error: ' + e.args[0]
+            log.error(msg)
+            return []
+
+    @staticmethod
     def get_modules_names(version_id, cache, log):
-        #TODO: refactor it to return [] in case of error or if list doesn't exists
         if version_id < 0 or cache is None:
             log.error('ERROR: get_module_names - input parameters error')
-            return -2
+            return []
 
         try:
             cached_names_list = cache.query(ModulesNames).filter(
                 ModulesNames.version_id == version_id).first()
             if cached_names_list is None:
-                return None
+                return []
             else:
                 wrapped_names = []
                 for name in cached_names_list.names:
@@ -683,7 +701,7 @@ class CacheDbQueries(object):
         except Exception as e:
             msg = 'ERROR: Query get_module_names() Error: ' + e.args[0]
             log.error(msg)
-            return None
+            return []
 
     def get_changed_params(self, version_id, cache, log):
         if version_id < 0 or cache is None:

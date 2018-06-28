@@ -1222,6 +1222,18 @@ class Exposed(object):
 
         return output.data
 
+    def get_service_messages(self, log=None, request=None):
+        cache = self.cache
+        cache_session = request.db_cache
+        resp = Response()
+        schema = ResponseServiceMessagesSchema()
+        messages = cache.get_service_messages(cache_session, log)
+        resp.success = True
+        resp.children = messages
+        output = schema.dump(resp)
+        return output.data
+
+
     def get_input_tags_names(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
         queries = self.queries
         cache = self.cache

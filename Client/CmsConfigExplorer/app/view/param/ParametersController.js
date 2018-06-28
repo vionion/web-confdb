@@ -107,6 +107,9 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
                         failure: function (response) {
                             Ext.Msg.alert("Error");
                             console.log(response);
+                        },
+                        success: function () {
+                            context.record.set('isDefault', "False");
                         }
                     });
                 }

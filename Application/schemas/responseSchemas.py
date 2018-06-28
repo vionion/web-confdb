@@ -83,6 +83,13 @@ class ResponseModuleDetailsSchema(Schema):
         fields = ("success", "children")
         ordered = True
 
+class ResponseServiceMessagesSchema(Schema):
+    success = fields.Boolean()
+    children = fields.Nested(ServiceMessageSchema, many=True)
+    class Meta:
+        fields = ("success", "children")
+        ordered = True
+
 class ResponseModuleNamesSchema(Schema):
     success = fields.Boolean()
     children = fields.Nested(ModuleNameSchema, many=True)

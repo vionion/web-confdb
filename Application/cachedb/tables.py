@@ -75,3 +75,11 @@ class EventStatementsCached(BaseCache):
     statement_id = Column('statement_id', Integer, primary_key=True)
     statement_rank = Column('statement_rank', Integer, primary_key=True)
     data = Column('data', JSON)
+
+class ServiceMessage(BaseCache):
+    __tablename__ = 'service_messages'
+    id = Column('id', Integer, primary_key=True)
+    # due_date is unix timestamp in UTC. Example:
+    # 1530186947 is 06/28/2018 @ 11:55am (UTC), or 13:55 in Geneva
+    due_date = Column('due_date', Integer)
+    message = Column('message', String)

@@ -427,6 +427,12 @@ class Root(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    def get_service_messages(self, query=""):
+        messages = self.funcs.get_service_messages(self.log, cherrypy.request)
+        return messages
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
     def get_module_names(self, query="", ver = -2, cnf = -2,online = "False"):
         db = None
         db_online = cherrypy.request.db_online

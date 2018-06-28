@@ -15,7 +15,12 @@ Ext.define("CmsConfigExplorer.view.home.Home",{
 
     reference: "home",
 //    height: '100%',
-    
+
+    listeners:{
+        afterrender: 'checkForMessages',
+        scope: 'controller'
+    },
+
     items: [
         {
             xtype: 'panel',
