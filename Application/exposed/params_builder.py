@@ -47,6 +47,8 @@ class ParamsBuilder():
             item = Parameter(module_id, p.id, p.name, value, p.moetype, p.paramtype, parents[-1], p.lvl, p.order, p.tracked, p.hex)
             if hasattr(p, "id_moe"):
                 item.id_moe = p.id_moe
+            if hasattr(p, "id_modtemp"):
+                item.id_modtemp = p.id_modtemp
             if hasattr(p, "default"):
                 item.default = p.default
             else:

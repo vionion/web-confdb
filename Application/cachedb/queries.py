@@ -685,31 +685,34 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
 
-    @staticmethod
-    def get_changed_params(version_id, cache, log):
+    def get_changed_params(self, version_id, cache, log):
         if version_id < 0 or cache is None:
             log.error('ERROR: get_changed_params - input parameters error')
-            return []
-
+            return {}, {}
         try:
             changed_params = cache.query(ParamsCached).filter(
                 ParamsCached.version_id == version_id).filter(
-                ParamsCached.changed is True).all()
-            if changed_params is None:
-                return []
+                ParamsCached.changed == True).all()
+            if len(changed_params) is 0:
+                return {}, {}
             else:
-                result = []
+                params = {}
+                from_templates = {}
                 for param in changed_params:
                     dict_params = byteify(json.loads(param.data))
-                    obj_param = convert_module_dict2obj(dict_params, log)
-                    for param in obj_param:
-                        if hasattr(param, 'changed') and param.changed is True:
-                            result.append(param)
-                return result
+                    obj_params = convert_module_dict2obj(dict_params, log)
+                    for obj_param in obj_params:
+                        if hasattr(obj_param, 'changed') and obj_param.changed is True:
+                            if hasattr(obj_param, 'id_moe'):
+                                params[obj_param.id_moe] = obj_param
+                            elif hasattr(obj_param, 'id_modtemp'):
+                                from_templates[obj_param.id_modtemp] = obj_param
+
+                return params, from_templates
         except Exception as e:
             msg = 'ERROR: Query get_changed_params() Error: ' + e.args[0]
             log.error(msg)
-            return []
+            return {}, {}
 
     @staticmethod
     def put_modules_names(ver_id, names_list, cache, log):

@@ -16,7 +16,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement
 
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -1277,8 +1277,8 @@ class Exposed(object):
     def get_changed_params(self, ver_id, log=None, request=None):
         cache = self.cache
         cache_session = request.db_cache
-        changed_params = cache.get_changed_params(ver_id, cache_session, log)
-        return changed_params
+        changed_params, changed_template_params = cache.get_changed_params(ver_id, cache_session, log)
+        return changed_params, changed_template_params
 
     def get_version(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
         cache = self.cache
@@ -1305,12 +1305,8 @@ class Exposed(object):
         return self.queries.save_version(old_version, db, log)
 
     def create_new_configuration(self, changed_version, db=None, request=None, log=None, src=0):
-        data = self.get_changed_params(changed_version.id, log, request)
-        # if len(data) is 0:
-
-        # for testing only
-        if False:
-
+        changed_params, changed_template_params = self.get_changed_params(changed_version.id, log, request)
+        if len(changed_params) is 0 and len(changed_template_params) is 0:
             log.error('ERROR: create_new_configuration - no changes found')
         else:
             try:
@@ -1320,7 +1316,9 @@ class Exposed(object):
                     changed_version_id = changed_version.id
                     self.queries.detach_obj_from_session(changed_version, db, log)
                     new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
-                    old2new_paths = self.save_paths(changed_version_id, new_version.id, db, log)
+                    self.save_params(changed_params, db, log)
+                    self.save_params(changed_template_params, db, log)
+                    old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_template_params, db, log)
                     self.save_ed_sources(changed_version_id, new_version.id, db, log)
                     self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, db, log)
                     self.save_services(changed_version_id, new_version.id, db, log)
@@ -1332,7 +1330,20 @@ class Exposed(object):
                 msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
                 log.error(msg)
 
-    def save_paths(self, changed_version_id, new_version_id, db, log):
+    def save_params(self, changed_params, db, log):
+        for changed_param_key in changed_params.keys():
+            value = changed_params[changed_param_key]
+            save = Modelement()
+            save.name = value.name
+            save.moetype = value.moetype
+            save.paramtype = value.paramtype
+            save.value = value.value
+            save.tracked = value.tracked
+            save.lvl = value.lvl
+            save.order = value.order
+            changed_params[changed_param_key] = self.queries.save_obj(save, db, log)
+
+    def save_paths(self, changed_version_id, new_version_id, changed_params, changed_template_params, db, log):
 
         # 1. gathering data to copy
 
@@ -1348,7 +1359,8 @@ class Exposed(object):
 
         moelements = []
         for moe_id in pae2moe:
-            moelements.extend(self.queries.getModuleParamElements(moe_id.id_moe, db, log))
+            if moe_id.id_moe not in changed_params:
+                moelements.extend(self.queries.getModuleParamElements(moe_id.id_moe, db, log))
 
         # 2. detaching from db session, after that we can change it and it will not affect old versions
 
@@ -1366,12 +1378,25 @@ class Exposed(object):
 
         # 4.1 mapping new paths to corresponding templates
 
+        pae2moe_to_save = []
         for p2m in pae2tmpl:
             p2m.id_pae = old2new_modules[p2m.id_pae]
+            # if template parameter was changed, create new module-param relation
+            if p2m.id_templ in changed_template_params:
+                new_pae2moe = Moduleitem()
+                new_pae2moe.id_pae = p2m.id_pae
+                new_pae2moe.id_moe = changed_template_params[p2m.id_templ].id
+                new_pae2moe.lvl = changed_template_params[p2m.id_templ].lvl
+                new_pae2moe.order = changed_template_params[p2m.id_templ].order
+                pae2moe_to_save.append(new_pae2moe)
 
         # 4.2 remapping relations between modules and params
 
         for p2m in pae2moe:
+            # if some param was changed, map it to new param
+            if p2m.id_pae in old2new_modules and p2m.id_moe in changed_params:
+                p2m.id_moe = changed_params[p2m.id_moe].id
+                p2m.id_pae = old2new_modules[p2m.id_pae]
             if p2m.id_pae in old2new_modules and p2m.id_moe in old2new_params:
                 p2m.id_pae = old2new_modules[p2m.id_pae]
                 p2m.id_moe = old2new_params[p2m.id_moe]
@@ -1394,6 +1419,7 @@ class Exposed(object):
         self.queries.save_objects(pathid2pae, db, log)
         self.queries.save_objects(pae2moe, db, log)
         self.queries.save_objects(pae2tmpl, db, log)
+        self.queries.save_objects(pae2moe_to_save, db, log)
 
         return old2new_paths
 

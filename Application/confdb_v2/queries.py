@@ -1360,7 +1360,7 @@ class ConfDbQueries(object):
 
     def save_get_id_mapping(self, obj_array, db=None, log=None):
         old2new = OrderedDict()
-        if db is None or obj_array is None or len(obj_array) is 0:
+        if db is None or obj_array is None:
             log.error('ERROR: save_get_id_mapping - input parameters error')
         else:
             for obj in obj_array:
@@ -1383,7 +1383,7 @@ class ConfDbQueries(object):
 
     @staticmethod
     def save_objects(obj_array, db=None, log=None):
-        if db is None or obj_array is None or len(obj_array) is 0:
+        if db is None or obj_array is None:
             log.error('ERROR: save_and_detach_objects - input parameters error')
         else:
             db.bulk_save_objects(obj_array)
@@ -1398,7 +1398,7 @@ class ConfDbQueries(object):
             make_transient(obj)
 
     def detach_objects_from_session(self, obj_array, db=None, log=None):
-        if db is None or obj_array is None or len(obj_array) is 0:
+        if db is None or obj_array is None:
             log.error('ERROR: detach_objects_from_session - input parameters error')
         else:
             for obj in obj_array:
