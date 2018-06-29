@@ -721,11 +721,10 @@ class CacheDbQueries(object):
                     obj_params = convert_module_dict2obj(dict_params, log)
                     for obj_param in obj_params:
                         if hasattr(obj_param, 'changed') and obj_param.changed is True:
-                            if hasattr(obj_param, 'id_moe'):
-                                params[obj_param.id_moe] = obj_param
-                            elif hasattr(obj_param, 'id_modtemp'):
-                                from_templates[obj_param.id_modtemp] = obj_param
-
+                            if hasattr(obj_param, 'id_field_module'):
+                                params[obj_param.id_field_module] = obj_param
+                            elif hasattr(obj_param, 'id_field_templ'):
+                                from_templates[obj_param.id_field_templ] = obj_param
                 return params, from_templates
         except Exception as e:
             msg = 'ERROR: Query get_changed_params() Error: ' + e.args[0]

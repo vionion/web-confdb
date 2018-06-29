@@ -296,10 +296,10 @@ class DataBuilder(object):
         for module in modules:
             t2.start()
             # retrieve the template (default) parameters
-            t_params = self.params_builder.buildParameterStructure(self.logger, templates[module.id_templ], set_default = True)
+            t_params = self.params_builder.buildParameterStructure(self.logger, templates[module.id_templ], set_default=True, id_field='id_modtemp')
 
             # retreive the module parameters
-            m_params = self.params_builder.buildParameterStructure(self.logger, parameters[module.id], set_default = False)
+            m_params = self.params_builder.buildParameterStructure(self.logger, parameters[module.id], set_default=False, id_field='id_moe')
 
             # merge the template (default) and module parameters
             params = {}

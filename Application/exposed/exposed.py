@@ -456,7 +456,7 @@ class Exposed(object):
         schema = ResponseParamSchema()
 
 
-        oumodule_params = cache.get_params(oumid, ver, cache_session, log)
+        oumodule_params = cache.get_params(oumid, verid, cache_session, log)
         if oumodule_params is None:
             external_id = cache.get_external_id(cache_session, oumid, "oum", src, log)
 
