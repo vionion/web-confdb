@@ -27,7 +27,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
     , onBeforeCellEdit: function (editor, context, eOpts) {
 
         var col = context.column;
-        var value = context.value;
+        var value_length = context.value != null ? context.value.length : 0;
         var editor_area = new Ext.grid.plugin.CellEditing({
             xtype: 'textarea',
             editable: true,
@@ -71,7 +71,7 @@ Ext.define('CmsConfigExplorer.view.param.ParametersController', {
                 col.setEditor(editor_bool);
             } else if (context.record.get('paramtype') === 'InputTag') {
                 col.setEditor(editor_tags);
-            } else if (value.length > 70) {
+            } else if (value_length > 70) {
                 col.setEditor(editor_area);
             } else {
                 col.setEditor(editor_field);
