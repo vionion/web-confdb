@@ -715,21 +715,47 @@ class CacheDbQueries(object):
                 return {}, {}
             else:
                 params = {}
-                from_templates = {}
+                changed_templates_params = {}
                 for param in changed_params:
                     dict_params = byteify(json.loads(param.data))
                     obj_params = convert_module_dict2obj(dict_params, log)
                     for obj_param in obj_params:
                         if hasattr(obj_param, 'changed') and obj_param.changed is True:
                             if hasattr(obj_param, 'id_field_module'):
-                                params[obj_param.id_field_module] = obj_param
+                                if obj_param.id_field_module not in params:
+                                    params[obj_param.id_field_module] = {}
+                                params[obj_param.id_field_module][obj_param.name] = obj_param
                             elif hasattr(obj_param, 'id_field_templ'):
-                                from_templates[obj_param.id_field_templ] = obj_param
-                return params, from_templates
+                                if obj_param.id_field_templ not in changed_templates_params:
+                                    changed_templates_params[obj_param.id_field_templ] = {}
+                                changed_templates_params[obj_param.id_field_templ][obj_param.name] = obj_param
+                return params, changed_templates_params
         except Exception as e:
             msg = 'ERROR: Query get_changed_params() Error: ' + e.args[0]
             log.error(msg)
             return {}, {}
+
+    def get_changed_datasets_paths(self, version_id, cache, log, src=0):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_changed_datasets_paths - input parameters error')
+            return {}
+        try:
+            changed_dat2pat_relations = cache.query(Path2Datasets).filter(
+                Path2Datasets.version_id == version_id).all()
+            if len(changed_dat2pat_relations) is 0:
+                return {}
+            else:
+                result = {}
+                for dat2pat in changed_dat2pat_relations:
+                    dataset_external_id = self.get_external_id(cache, dat2pat.dataset_id, "dat", src, log)
+                    result[dataset_external_id] = []
+                    for path_id in dat2pat.path_ids:
+                        result[dataset_external_id].append(self.get_external_id(cache, path_id, "pat", src, log))
+                return result
+        except Exception as e:
+            msg = 'ERROR: Query get_changed_datasets_paths() Error: ' + e.args[0]
+            log.error(msg)
+            return {}
 
     @staticmethod
     def put_modules_names(ver_id, names_list, cache, log):
