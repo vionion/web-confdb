@@ -5,9 +5,11 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
     send_add_line_request: function (drop_line) {
         var streamsTab = this.getView().up().up();
         var internal_id = streamsTab.lookupReference('streamTree').getSelectionModel().getSelection()[0].data.internal_id;
+        var ver_id = this.getViewModel().get("idVer");
         var statement_request = {
             'internal_id': internal_id,
-            'drop_line': drop_line
+            'drop_line': drop_line,
+            'ver_id': ver_id
         };
         var store = this.getViewModel().getStore('ecstats');
         Ext.Ajax.request({
@@ -77,6 +79,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
         } else {
             context.record.modified = {};
         }
+        var ver_id = this.getViewModel().get("idVer");
         validateEvent(context.value, prevVal, column, function (valid, validValue) {
                 context.value = validValue;
                 context.record.modified[column] = validValue;
@@ -90,7 +93,8 @@ Ext.define('CmsConfigExplorer.view.streamdataset.EventContentController', {
                         'value': context.value,
                         'column': column,
                         'internal_id': internal_id,
-                        'statementrank': statementrank
+                        'statementrank': statementrank,
+                        'ver_id': ver_id
                     };
                     Ext.Ajax.request({
                         url: 'update_event_statement',

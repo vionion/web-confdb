@@ -1066,14 +1066,15 @@ class CacheDbQueries(object):
             return None
         return mapping.internal_id
 
-    def get_event_statements(self, statement_id, cache, log):
+    def get_event_statements(self, statement_id, verid, cache, log):
         if statement_id < 0 or cache is None:
             log.error('ERROR: get_event_statements - input parameters error')
             return -2
 
         try:
             cached_statements = cache.query(EventStatementsCached).filter(
-                EventStatementsCached.statement_id == statement_id).all()
+                EventStatementsCached.statement_id == statement_id).filter(
+                EventStatementsCached.version_id == verid).all()
             if len(cached_statements) is 0:
                 return None
             else:
@@ -1091,11 +1092,11 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
 
-    def put_event_statements(self, statement_id, statements, cache, log):
+    def put_event_statements(self, statement_id, statements, verid, cache, log):
         for statement in statements:
             json_params = json.dumps(statement, default=lambda o: o.__dict__)
             try:
-                cached_statement = EventStatementsCached(data=json_params, statement_id=statement_id, statement_rank=statement.statementrank)
+                cached_statement = EventStatementsCached(data=json_params, statement_id=statement_id, statement_rank=statement.statementrank, version_id=verid)
                 cache.add(cached_statement)
                 cache.commit()
             except Exception as e:
@@ -1104,11 +1105,12 @@ class CacheDbQueries(object):
                 return -2
 
     @staticmethod
-    def update_event_statements(internal_id, statementrank, param_name, param_value, cache, log):
+    def update_event_statements(internal_id, statementrank, param_name, param_value, verid, cache, log):
         try:
             statement = cache.query(EventStatementsCached)\
                 .filter(EventStatementsCached.statement_id == internal_id)\
                 .filter(EventStatementsCached.statement_rank == statementrank)\
+                .filter(EventStatementsCached.version_id == verid)\
                 .first()
             json_statement = json.loads(statement.data)
             json_statement[param_name] = param_value
@@ -1132,7 +1134,7 @@ class CacheDbQueries(object):
             return None
         return max_rank
 
-    def add_event_statement(self, statements_id, drop_line, cache, log):
+    def add_event_statement(self, statements_id, verid, drop_line, cache, log):
         try:
             new_rank = self.get_max_rank(cache, statements_id, log)
             data = {
@@ -1143,7 +1145,7 @@ class CacheDbQueries(object):
                 "extran": "*",
                 "modulel": "*",
                 "statementrank": new_rank}
-            statement = EventStatementsCached(statement_id=statements_id, statement_rank=new_rank, data=json.dumps(data))
+            statement = EventStatementsCached(statement_id=statements_id, statement_rank=new_rank, data=json.dumps(data), version_id=verid)
             cache.add(statement)
             cache.commit()
 
@@ -1193,7 +1195,7 @@ class CacheDbQueries(object):
                 cache.add(evco_name)
                 seh.event_id = internal_id
                 cache.commit()
-                self.add_event_statement(internal_id, true, cache, log)
+                self.add_event_statement(internal_id, version_id, true, cache, log)
                 return internal_id
         except Exception as e:
             msg = 'ERROR: Query update_event_statements() Error: ' + e.args[0]

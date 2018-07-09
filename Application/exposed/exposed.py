@@ -478,15 +478,15 @@ class Exposed(object):
         cache_session = request.db_cache
         return cache.update_streams_event(stream_id, internal_evcon_id, version_id, value, cache_session, log)
 
-    def update_event_statement(self, internal_id, statementrank, src, column, value, request, log):
+    def update_event_statement(self, internal_id, statementrank, src, column, value, verid, request, log):
         cache = self.cache
         cache_session = request.db_cache
-        cache.update_event_statements(internal_id, statementrank, column, value, cache_session, log)
+        cache.update_event_statements(internal_id, statementrank, column, value, verid, cache_session, log)
 
-    def add_event_statement(self, internal_id, drop_line, request, log):
+    def add_event_statement(self, internal_id, verid, drop_line, request, log):
         cache = self.cache
         cache_session = request.db_cache
-        return cache.add_event_statement(internal_id, drop_line, cache_session, log)
+        return cache.add_event_statement(internal_id, verid, drop_line, cache_session, log)
 
     def delete_event_statement(self, internal_id, rank, request, log):
         cache = self.cache
@@ -2015,7 +2015,7 @@ class Exposed(object):
     #         db: database session object
     #
 
-    def getEvcStatements(self, internal_evc_id=-2, db = None, log = None, request = None, src = 0):
+    def getEvcStatements(self, internal_evc_id=-2, verid=-1, db = None, log = None, request = None, src = 0):
 
         if (internal_evc_id==-2 or db == None):
             log.error('ERROR: getEvcStatements - input parameters error' + self.log_arguments(evc=internal_evc_id))
@@ -2027,7 +2027,7 @@ class Exposed(object):
         evcostatements = None
         evcotostats = None
 
-        evcostatements_wraped = cache.get_event_statements(internal_evc_id, cache_session, log)
+        evcostatements_wraped = cache.get_event_statements(internal_evc_id, verid, cache_session, log)
 
         if evcostatements_wraped is None:
             external_evc_id = cache.get_external_id(cache_session, internal_evc_id, "evc", src, log)
@@ -2047,7 +2047,7 @@ class Exposed(object):
                 st.statementrank = r
                 st.internal_id = internal_evc_id
                 evcostatements_wraped.append(EvCoStatement(st.internal_id, st.modulel, st.classn, st.extran, st.processn, st.statementtype, st.statementrank))
-            cache.put_event_statements(internal_evc_id, evcostatements_wraped, cache_session, log)
+            cache.put_event_statements(internal_evc_id, evcostatements_wraped, verid, cache_session, log)
 
         if evcostatements_wraped is None:
             return None

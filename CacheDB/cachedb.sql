@@ -124,7 +124,7 @@ CREATE TABLE modules_names_cache (version_id SERIAL PRIMARY KEY, names text[]);
 --
 CREATE TABLE ext2int_id_mapping (internal_id SERIAL PRIMARY KEY, external_id BIGINT, itemtype text, source INTEGER);
 
-CREATE TABLE event_statements_cache (statement_id BIGINT, statement_rank BIGINT, data JSON, PRIMARY KEY (statement_id, statement_rank));
+CREATE TABLE event_statements_cache (statement_id BIGINT, statement_rank BIGINT, data JSON, version_id BIGINT, PRIMARY KEY (statement_id, statement_rank, version_id));
 
 CREATE TABLE stream_event_hierarchy (stream_id BIGINT, event_id BIGINT, ver_id BIGINT,  PRIMARY KEY (stream_id, event_id, ver_id));
 

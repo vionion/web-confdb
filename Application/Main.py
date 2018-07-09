@@ -350,9 +350,10 @@ class Root(object):
         input_json = byteify(cherrypy.request.json)
         internal_id = input_json.get('internal_id')
         drop_line = input_json.get('drop_line')
+        verid = input_json.get('ver_id')
         cherrypy.response.status = 200
         try:
-            return self.funcs.add_event_statement(internal_id, drop_line, cherrypy.request, self.log)
+            return self.funcs.add_event_statement(internal_id, verid, drop_line, cherrypy.request, self.log)
         except Exception as e:
             cherrypy.response.status = 500
             return '500 ERROR: add_event_statement failed:' + e.args[0]
@@ -398,11 +399,12 @@ class Root(object):
         column = input_json.get('column')
         internal_id = input_json.get('internal_id')
         statementrank = input_json.get('statementrank')
+        verid = input_json.get('ver_id')
 
         # TODO: it still might be different from 0, so remove hardcode
         src = 0
         try:
-            self.funcs.update_event_statement(internal_id, statementrank, src, column, value, cherrypy.request, self.log)
+            self.funcs.update_event_statement(internal_id, statementrank, src, column, value, verid, cherrypy.request, self.log)
         except Exception as e:
             cherrypy.response.status = 500
             return '500 ERROR: update_event_statement failed:' + e.args[0]
@@ -845,7 +847,7 @@ class Root(object):
 	self.log.error('EVC: ')
 	self.log.error(str(evc))		
 
-        data = self.funcs.getEvcStatements(evc, db, self.log, cherrypy.request, src)
+        data = self.funcs.getEvcStatements(evc, verid, db, self.log, cherrypy.request, src)
         if (data == None):
             # print ("Exception - Error")
             self.log.error('ERROR: evcostatements - data returned null object')

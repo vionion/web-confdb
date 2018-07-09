@@ -15,7 +15,6 @@ class ParamsCached(BaseCache):
     version_id = Column('version_id', BigInteger)
     changed = Column('changed', Boolean, default=False)
 
-
 class EndPathsCached(BaseCache):
     __tablename__ = 'endpaths_cache'
     version_id = Column('version_id', Integer, primary_key=True)
@@ -74,6 +73,7 @@ class EventStatementsCached(BaseCache):
     __tablename__ = 'event_statements_cache'
     statement_id = Column('statement_id', Integer, primary_key=True)
     statement_rank = Column('statement_rank', Integer, primary_key=True)
+    version_id = Column('version_id', Integer, primary_key=True)
     data = Column('data', JSON)
 
 class ServiceMessage(BaseCache):
