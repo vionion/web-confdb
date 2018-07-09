@@ -16,7 +16,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo
 
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -1249,12 +1249,12 @@ class Exposed(object):
             return None
         ver_id = version.id
         module_names = cache.get_modules_names(ver_id, cache_session, log)
-        if module_names is None:
+        if len(module_names) is 0:
             try:
                 module_names = queries.getConfModules(ver_id, db, log)
                 cache.put_modules_names(ver_id, [o.name for o in module_names], cache_session, log)
             except:
-                log.error('ERROR: Query getConfPaelements Error')
+                log.error('ERROR: Query get_input_tags_names Error')
                 return None
         if module_names is None:
             return None
@@ -1298,6 +1298,12 @@ class Exposed(object):
         dat2pat = cache.get_changed_datasets_paths(ver_id, cache_session, log)
         return dat2pat
 
+    def get_changed_stream_event(self, ver_id, log=None, request=None):
+        cache = self.cache
+        cache_session = request.db_cache
+        str2evc = cache.get_changed_stream_event(ver_id, cache_session, log)
+        return str2evc
+
     def get_version(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
         cache = self.cache
         cache_session = request.db_cache
@@ -1323,9 +1329,15 @@ class Exposed(object):
         return self.queries.save_version(old_version, db, log)
 
     def create_new_configuration(self, changed_version, db=None, request=None, log=None, src=0):
+        any_changes = False
         changed_params, changed_templates_params = self.get_changed_params(changed_version.id, log, request)
+        any_changes |= len(changed_params) > 0
+        any_changes |= len(changed_templates_params) > 0
         changed_dat2pats = self.get_changed_dat2pat(changed_version.id, log, request)
-        if len(changed_params) is 0 and len(changed_templates_params) is 0 and len(changed_dat2pats.keys()) is 0:
+        any_changes |= len(changed_dat2pats.keys()) > 0
+        changed_str2evc = self.get_changed_stream_event(changed_version.id, log, request)
+        any_changes |= len(changed_str2evc.keys()) > 0
+        if not any_changes:
             log.error('ERROR: create_new_configuration - no changes found')
         else:
             try:
@@ -1337,7 +1349,7 @@ class Exposed(object):
                     new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
                     old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_ed_sources(changed_version_id, new_version.id, db, log)
-                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, db, log)
+                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, db, log)
                     self.save_services(changed_version_id, new_version.id, db, log)
                     self.save_es_modules(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_es_sources(changed_version_id, new_version.id, db, log)
@@ -1372,9 +1384,12 @@ class Exposed(object):
         pae2tmpl = self.queries.getMod2TempByVer(changed_version_id, db, log)
         pae2moe = self.queries.get_mod2param_by_ver(changed_version_id, db, log)
 
-        moelements = []
+        moelements = set()
         for moe_id in pae2moe:
-            moelements.extend(self.queries.getModuleParamElements(moe_id.id_moe, db, log))
+            # this is made to keep only unique module params, because they may duplicate otherwise
+            tmp_list = self.queries.getModuleParamElements(moe_id.id_moe, db, log)
+            for moelement in tmp_list:
+                moelements.add(moelement)
 
         # 2. detaching from db session, after that we can change it and it will not affect old versions
 
@@ -1656,7 +1671,7 @@ class Exposed(object):
         self.queries.save_objects(conf2gpsets, db, log)
         self.queries.save_objects(gpsets_elements, db, log)
 
-    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, db, log):
+    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, db, log):
 
         # 1. gathering data to copy
 
@@ -1667,6 +1682,8 @@ class Exposed(object):
         datasets = self.queries.getConfDatasets(changed_version_id, db, log)
         datasets_ids = (dataset.id for dataset in datasets)
         streams_ids = (stream.id for stream in streams)
+
+        evcontents_dict = dict((x.id_evco, x) for x in evcontents)
 
         # 1.2 relations with each other and configuration
 
@@ -1721,14 +1738,34 @@ class Exposed(object):
          # 4.3 updating ids for pathid2oum relations
 
         for pid2oum in pathid2oum:
-            pid2oum.id_pathid = old2new_paths[pid2oum.id_pathid]
-            pid2oum.id_streamid = old2new_streams[pid2oum.id_streamid]
+            if pid2oum.id_pathid in old2new_paths and pid2oum.id_streamid in old2new_streams:
+                pid2oum.id_pathid = old2new_paths[pid2oum.id_pathid]
+                pid2oum.id_streamid = old2new_streams[pid2oum.id_streamid]
 
         # 4.4 mapping evcontents to streams
 
+        conf2evco_to_save = []
         for e2str in evCoToStr:
-            e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
-            e2str.id_streamid = old2new_streams[e2str.id_streamid]
+            if (e2str.id_streamid in changed_str2evc or e2str.id_evcoid in old2new_evco) and e2str.id_streamid in old2new_streams:
+                # if stream is now related to other evco, remap with value from cache
+                if e2str.id_streamid in changed_str2evc:
+                    if changed_str2evc[e2str.id_streamid] > 0:
+                        e2str.id_evcoid = evcontents_dict[changed_str2evc[e2str.id_streamid]].id
+                    else:
+                        # if it is new evco, save it and add to conf2evco array to be saved too. Also, map stream to new evco
+                        print "new name"
+                        # new_evco = EventContent()
+                        # new_evco.name = 'test5'
+                        # new_evco_id = EventContentId()
+                        # new_evco_id.id_evco = self.queries.save_obj(new_evco, db, log).id
+                        # new_conf2evco = ConfToEvCo()
+                        # new_conf2evco.id_evcoid = self.queries.save_obj(new_evco_id, db, log).id
+                        # new_conf2evco.id_confver = new_version_id
+                        # conf2evco_to_save.append(new_conf2evco)
+                        # e2str.id_evcoid = new_conf2evco.id_evcoid
+                else:
+                    e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
+                e2str.id_streamid = old2new_streams[e2str.id_streamid]
 
         # 4.5 mapping evcontents to configuration
 
@@ -1742,6 +1779,7 @@ class Exposed(object):
         self.queries.save_objects(evCoToStr, db, log)
         self.queries.save_objects(pathid2oum, db, log)
         self.queries.save_objects(conf2evco, db, log)
+        self.queries.save_objects(conf2evco_to_save, db, log)
         self.queries.save_objects(conf2st_dat, db, log)
 
     #Returns all the services present in a Configuration version

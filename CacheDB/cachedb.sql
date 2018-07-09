@@ -130,7 +130,7 @@ CREATE TABLE stream_event_hierarchy (stream_id BIGINT, event_id BIGINT, ver_id B
 
 CREATE TABLE event_configs_names_cache (event_id BIGINT, name text, ver_id BIGINT,  PRIMARY KEY (event_id, ver_id));
 
-CREATE TABLE paths_cache (path_id BIGINT, name text, is_endpath INTEGER, data JSON, version_id BIGINT, PRIMARY KEY (path_id));
+CREATE TABLE paths_cache (path_id BIGINT, name text, is_endpath INTEGER, data JSON, version_id BIGINT, PRIMARY KEY (path_id, version_id));
 
 CREATE TABLE paths2datasets_relation (dataset_id BIGINT, path_ids BIGINT[], ver_id BIGINT, PRIMARY KEY (dataset_id, ver_id));
 

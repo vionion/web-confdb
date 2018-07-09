@@ -757,6 +757,26 @@ class CacheDbQueries(object):
             log.error(msg)
             return {}
 
+    def get_changed_stream_event(self, version_id, cache, log, src=0):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_changed_stream_event - input parameters error')
+            return {}
+        try:
+            changed_str2evc_relations = self.get_streams_events_relations(version_id, cache, log)
+            if len(changed_str2evc_relations) is 0:
+                return {}
+            else:
+                result = {}
+                for str2evc in changed_str2evc_relations:
+                    stream_ext_id = self.get_external_id(cache, str2evc['id_streamid'], "str", src, log)
+                    evc_ext_id = self.get_external_id(cache, str2evc['id_evcoid'], "evc", src, log)
+                    result[stream_ext_id] = evc_ext_id
+                return result
+        except Exception as e:
+            msg = 'ERROR: Query get_changed_stream_event() Error: ' + e.args[0]
+            log.error(msg)
+            return {}
+
     @staticmethod
     def put_modules_names(ver_id, names_list, cache, log):
         try:
