@@ -819,7 +819,7 @@ class CacheDbQueries(object):
         try:
             wrapped_names = []
             for name in names_list:
-                internal_id = self.get_internal_id(cache, name.id_evco, 'evc', src, log)
+                internal_id = self.get_internal_id(cache, name.id, 'evc', src, log)
                 if not cache.query(exists().where(EvconNames.event_id == internal_id).where(EvconNames.version_id == ver_id)).scalar():
                     evco_name = EvconNames(event_id=internal_id, name=name.name, version_id=ver_id)
                     wrapped_names.append(EvcoName(evco_name.event_id, evco_name.name))
@@ -1065,6 +1065,37 @@ class CacheDbQueries(object):
             log.error(msg)
             return None
         return mapping.internal_id
+
+    def get_versions_event_statements(self, version_id, cache, log, src=0):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_versions_event_statements - input parameters error')
+            return {}
+        try:
+            cached_statements = cache.query(EventStatementsCached).filter(
+                EventStatementsCached.version_id == version_id).all()
+            if len(cached_statements) is 0:
+                return {}
+            else:
+                result = {}
+                from confdb_v2.tables import EvCoStatement
+                for statement in cached_statements:
+                    dict_statement = byteify(json.loads(statement.data))
+                    evc_external_id = self.get_external_id(cache, statement.statement_id, "evc", src, log)
+                    if evc_external_id not in result:
+                        result[evc_external_id] = {}
+                    evco_statement = EvCoStatement()
+                    evco_statement.classn = dict_statement['classn']
+                    evco_statement.modulel = dict_statement['modulel']
+                    evco_statement.extran = dict_statement['extran']
+                    evco_statement.processn = dict_statement['processn']
+                    evco_statement.statementtype = dict_statement['statementtype']
+                    result[evc_external_id][statement.statement_rank] = evco_statement
+                return result
+
+        except Exception as e:
+            msg = 'ERROR: Query get_versions_event_statements() Error: ' + e.args[0]
+            log.error(msg)
+            return {}
 
     def get_event_statements(self, statement_id, verid, cache, log):
         if statement_id < 0 or cache is None:

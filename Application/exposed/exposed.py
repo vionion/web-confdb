@@ -16,7 +16,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat
 
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -1304,6 +1304,12 @@ class Exposed(object):
         str2evc = cache.get_changed_stream_event(ver_id, cache_session, log)
         return str2evc
 
+    def get_changed_evco_statements(self, ver_id, log=None, request=None):
+        cache = self.cache
+        cache_session = request.db_cache
+        statements = cache.get_versions_event_statements(ver_id, cache_session, log)
+        return statements
+
     def get_version(self, cnf=-2, ver=-2, db=None, log=None, request=None, src=0):
         cache = self.cache
         cache_session = request.db_cache
@@ -1337,6 +1343,8 @@ class Exposed(object):
         any_changes |= len(changed_dat2pats.keys()) > 0
         changed_str2evc = self.get_changed_stream_event(changed_version.id, log, request)
         any_changes |= len(changed_str2evc.keys()) > 0
+        changed_evco_statements = self.get_changed_evco_statements(changed_version.id, log, request)
+        any_changes |= len(changed_evco_statements.keys()) > 0
         if not any_changes:
             log.error('ERROR: create_new_configuration - no changes found')
         else:
@@ -1349,7 +1357,7 @@ class Exposed(object):
                     new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
                     old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_ed_sources(changed_version_id, new_version.id, db, log)
-                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, db, log)
+                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, changed_evco_statements, db, log)
                     self.save_services(changed_version_id, new_version.id, db, log)
                     self.save_es_modules(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_es_sources(changed_version_id, new_version.id, db, log)
@@ -1671,7 +1679,7 @@ class Exposed(object):
         self.queries.save_objects(conf2gpsets, db, log)
         self.queries.save_objects(gpsets_elements, db, log)
 
-    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, db, log):
+    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, changed_evco_statements, db, log):
 
         # 1. gathering data to copy
 
@@ -1683,7 +1691,14 @@ class Exposed(object):
         datasets_ids = (dataset.id for dataset in datasets)
         streams_ids = (stream.id for stream in streams)
 
-        evcontents_dict = dict((x.id_evco, x) for x in evcontents)
+        evcontents_dict = dict((x.id, x) for x in evcontents)
+        evcotostats = []
+        evcotostats_dict = dict()
+        for evcontent in evcontents:
+            if evcontent.id not in changed_evco_statements:
+                evco_stats = self.queries.getEvCoToStat(evcontent.id, db, log)
+                evcotostats.extend(evco_stats)
+                evcotostats_dict[evcontent.id] = evco_stats
 
         # 1.2 relations with each other and configuration
 
@@ -1700,6 +1715,7 @@ class Exposed(object):
         self.queries.detach_objects_from_session(pathid2oum, db, log)
         self.queries.detach_objects_from_session(conf2evco, db, log)
         self.queries.detach_objects_from_session(conf2st_dat, db, log)
+        self.queries.detach_objects_from_session(evcotostats, db, log)
 
         # 3. saving copied data
 
@@ -1773,6 +1789,22 @@ class Exposed(object):
             c2evco.id_confver = new_version_id
             c2evco.id_evcoid = old2new_evco[c2evco.id_evcoid]
 
+        # 4.6 mapping evco statements to new evco
+
+        for old_id, new_id in old2new_evco.items():
+            # if there are changes in cache for evco, map them
+            if old_id in changed_evco_statements:
+                for statementrank, statement in changed_evco_statements[old_id].items():
+                    evc2stat = EvCoToStat()
+                    evc2stat.statementrank = statementrank
+                    evc2stat.id_stat = self.queries.save_obj(statement, db, log).id
+                    evc2stat.id_evcoid = new_id
+                    self.queries.save_obj(evc2stat, db, log)
+            # otherwise remap statements from source config
+            elif old_id in evcotostats_dict:
+                for old_evco in evcotostats_dict[old_id]:
+                    old_evco.id_evcoid = new_id
+
         # 5. saving relations and params
 
         self.queries.save_objects(dat2pats, db, log)
@@ -1781,6 +1813,7 @@ class Exposed(object):
         self.queries.save_objects(conf2evco, db, log)
         self.queries.save_objects(conf2evco_to_save, db, log)
         self.queries.save_objects(conf2st_dat, db, log)
+        self.queries.save_objects(evcotostats, db, log)
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
@@ -1938,13 +1971,13 @@ class Exposed(object):
 
         relations_dict = dict((x.id_datasetid, x.id_streamid) for x in relations)
         evcontents_dict = dict((x.id, x) for x in evcontents)
-        evCoToStr_dict = dict((x.id_streamid, evcontents_dict.get(x.id_evcoid).id_evco) for x in evCoToStr)
+        evCoToStr_dict = dict((x.id_streamid, evcontents_dict.get(x.id_evcoid).id) for x in evCoToStr)
         evCoToStr_dict_cached = dict((x['id_streamid'], x['id_evcoid']) for x in evCoToStr_cached)
         # TODO: this logic must be checked
         #---- Building evco ---------------
         evco_dict = {}
         for e in evcontents:
-            evco_internal_id = cache.get_internal_id(cache_session, e.id_evco, "evc", src, log)
+            evco_internal_id = cache.get_internal_id(cache_session, e.id, "evc", src, log)
             si = Streamitem(evco_internal_id,-1, e.name,"evc")
 
             si.id_stream = -2
