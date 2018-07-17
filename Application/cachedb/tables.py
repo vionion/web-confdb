@@ -30,6 +30,8 @@ class PathItemsHierarchy(BaseCache):
     parent_id = Column('parent_id', BigInteger, primary_key=True)
     child_id = Column('child_id', BigInteger, primary_key=True)
     order = Column('child_order', Integer)
+    changed = Column('changed', Boolean, default=False)
+    version_id = Column('version_id', BigInteger, primary_key=True)
 
 class StreamEventHierarchy(BaseCache):
     __tablename__ = 'stream_event_hierarchy'

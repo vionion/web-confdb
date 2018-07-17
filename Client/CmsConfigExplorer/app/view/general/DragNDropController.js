@@ -12,7 +12,7 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             // I came to CERN to create a new order!
             var newOrder;
             var newParent;
-            var version = -2;
+            var version = this.getViewModel().get("idVer");
             if (dropPosition === 'append') {
                 if (overModel.parentNode.data.root) {
                     // if it was appended to Path node
@@ -20,7 +20,6 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
                     if (overModel.childNodes.length === 0) {
                         // magic number to show that desired action is to append node to the unloaded path
                         newOrder = -78;
-                        version = this.getViewModel().get("idVer");
                     } else {
                         newOrder = overModel.childNodes.length + 1;
                     }
@@ -106,11 +105,9 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             'oldParent': oldParent,
             'newParent': newParent,
             'order': order,
-            'copied': copied
+            'copied': copied,
+            'version': version
         };
-        if (version > 0) {
-            dndRequestObj['version'] = version;
-        }
         Ext.Ajax.request({
             url: 'drag_n_drop',
             method: 'POST',

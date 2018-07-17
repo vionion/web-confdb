@@ -336,7 +336,7 @@ class Root(object):
         try:
             # raise Exception('test exception')
             if old_parent == new_parent:
-                self.funcs.drag_n_drop_reorder(node_id, old_parent, order, cherrypy.request, self.log)
+                self.funcs.drag_n_drop_reorder(node_id, old_parent, order, version, cherrypy.request, self.log)
             else:
                 self.funcs.drag_n_drop(node_id, old_parent, new_parent, order, copied, cherrypy.request, self.log, version)
         except Exception as e:

@@ -525,20 +525,26 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def get_path_items(self, parent_id, cache, log, lvl=0):
+    def get_path_items(self, parent_id, version_id, cache, log, lvl=0, changed=None):
         items = []
         if parent_id < 0 or cache is None:
             log.error('ERROR: get_path_items - input parameters error')
             return items
         try:
-            cached_path_children = cache.query(PathItemsHierarchy).filter(
-                PathItemsHierarchy.parent_id == parent_id).all()
+            search_query = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.order >= 0).filter(
+                PathItemsHierarchy.version_id == version_id)
+            if changed is not None:
+                search_query = search_query.filter(PathItemsHierarchy.changed == changed)
+            cached_path_children = search_query.all()
             if len(cached_path_children) is 0:
                 return items
             else:
                 for children in cached_path_children:
                     item = self.get_wrapped_item(cache, children, lvl)
-                    item.children = self.get_path_items(item.internal_id, cache, log, lvl + 1)
+                    item.changed = children.changed
+                    item.children = self.get_path_items(item.internal_id, version_id, cache, log, lvl + 1)
                     items.append(item)
                 items.sort(key=lambda x: x.order, reverse=False)
                 return items
@@ -560,20 +566,20 @@ class CacheDbQueries(object):
         item.lvl = lvl
         return item
 
-    def put_path_items(self, parrent_id, path_items, cache, log):
+    def put_path_items(self, parent_id, path_items, version_id, cache, log):
         nodes = []
         for pathitem in path_items:
-            children = self.get_path_items(pathitem.internal_id, cache, log, pathitem.lvl + 1)
+            children = self.get_path_items(pathitem.internal_id, version_id, cache, log, pathitem.lvl + 1)
             if len(children) is 0:
-                self.put_path_items(pathitem.internal_id, pathitem.children, cache, log)
+                self.put_path_items(pathitem.internal_id, pathitem.children, version_id, cache, log)
             else:
                 pathitem.children = children
-            self.put_path_item(pathitem, parrent_id, cache, log)
+            self.put_path_item(pathitem, parent_id, version_id, cache, log)
             nodes.append(pathitem)
         return nodes
 
     @staticmethod
-    def put_path_item(pathitem, parrent_id, cache, log):
+    def put_path_item(pathitem, parent_id, version_id, cache, log):
         pathitem_copy = copy.deepcopy(pathitem)
         pathitem_copy.children = []
         json_path_item = json.dumps(pathitem_copy, default=lambda o: o.__dict__)
@@ -581,8 +587,8 @@ class CacheDbQueries(object):
             if not cache.query(exists().where(PathItemsCached.path_item_id == pathitem.internal_id)).scalar():
                 params = PathItemsCached(data=json_path_item, path_item_id=pathitem_copy.internal_id)
                 cache.add(params)
-            if not cache.query(exists().where(PathItemsHierarchy.parent_id == parrent_id).where(PathItemsHierarchy.child_id == pathitem.internal_id)).scalar():
-                pih = PathItemsHierarchy(parent_id=parrent_id, child_id=pathitem.internal_id, order=pathitem.order)
+            if not cache.query(exists().where(PathItemsHierarchy.version_id == version_id).where(PathItemsHierarchy.parent_id == parent_id).where(PathItemsHierarchy.child_id == pathitem.internal_id)).scalar():
+                pih = PathItemsHierarchy(parent_id=parent_id, child_id=pathitem.internal_id, order=pathitem.order, version_id=version_id)
                 cache.add(pih)
             cache.commit()
         except Exception as e:
@@ -757,25 +763,62 @@ class CacheDbQueries(object):
             log.error(msg)
             return {}
 
+    def get_changed_path_items_hierarchy(self, version_id, cache, log, src=0):
+        if version_id < 0 or cache is None:
+            log.error('ERROR: get_changed_path_items_hierarchy - input parameters error')
+            return {}
+        try:
+            paths = self.get_paths(version_id, cache, log)
+            result = {}
+            parent_ids = {path.internal_id: self.get_external_id(cache, path.internal_id, "pat", src, log) for path in paths}
+            self.get_cached_parent_children_relations(cache, parent_ids, version_id, result, log, src)
+            return result
+        except Exception as e:
+            msg = 'ERROR: Query get_changed_path_items_hierarchy() Error: ' + e.args[0]
+            log.error(msg)
+            return {}
+
+    def get_cached_parent_children_relations(self, cache, parent_ids, version_id, result, log, src, lvl=0):
+        for parent_id in parent_ids.keys():
+            cached_path_children = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.version_id == version_id).all()
+            for hierarchy_relation in cached_path_children:
+                relation_item = self.get_wrapped_item(cache, hierarchy_relation, lvl)
+                ext_relation_item_id = self.get_external_id(cache, relation_item.internal_id, "mod" if relation_item.paetype == 1 else "seq", src, log)
+                self.get_cached_parent_children_relations(cache, {hierarchy_relation.child_id: ext_relation_item_id}, version_id, result, log, src, lvl + 1)
+                if hierarchy_relation.changed is True:
+                    if parent_ids[parent_id] not in result:
+                        result[parent_ids[parent_id]] = {}
+                    result[parent_ids[parent_id]][ext_relation_item_id] = relation_item
+
     def get_changed_stream_event(self, version_id, cache, log, src=0):
         if version_id < 0 or cache is None:
             log.error('ERROR: get_changed_stream_event - input parameters error')
-            return {}
+            return {}, {}
         try:
             changed_str2evc_relations = self.get_streams_events_relations(version_id, cache, log)
             if len(changed_str2evc_relations) is 0:
-                return {}
+                return {}, {}
             else:
                 result = {}
+                cached_names = {}
+                EvCoName = namedtuple('EvCoName', ['int_evco_id', 'name'])
                 for str2evc in changed_str2evc_relations:
                     stream_ext_id = self.get_external_id(cache, str2evc['id_streamid'], "str", src, log)
                     evc_ext_id = self.get_external_id(cache, str2evc['id_evcoid'], "evc", src, log)
                     result[stream_ext_id] = evc_ext_id
-                return result
+                    if evc_ext_id < 0:
+                        cached_name = cache.query(EvconNames).filter(
+                            EvconNames.version_id == version_id).filter(
+                            EvconNames.event_id == str2evc['id_evcoid']).first()
+                        if cached_name is not None:
+                            cached_names[stream_ext_id] = EvCoName(str2evc['id_evcoid'], cached_name.name)
+                return result, cached_names
         except Exception as e:
             msg = 'ERROR: Query get_changed_stream_event() Error: ' + e.args[0]
             log.error(msg)
-            return {}
+            return {}, {}
 
     @staticmethod
     def put_modules_names(ver_id, names_list, cache, log):
@@ -893,7 +936,7 @@ class CacheDbQueries(object):
             log.error(msg)
 
     @staticmethod
-    def add_parrent2dataset(path_id, dsid, version, cache, log):
+    def add_parent2dataset(path_id, dsid, version, cache, log):
         try:
             dataset_relation = cache.query(Path2Datasets).filter(
                     Path2Datasets.version_id == version).filter(
@@ -907,11 +950,11 @@ class CacheDbQueries(object):
                     flag_modified(dataset_relation, 'path_ids')
             cache.commit()
         except Exception as e:
-            msg = 'ERROR: Query add_parrent2dataset() Error: ' + e.args[0]
+            msg = 'ERROR: Query add_parent2dataset() Error: ' + e.args[0]
             log.error(msg)
 
     @staticmethod
-    def remove_parrent2dataset(path_id, dsid, version, cache, log):
+    def remove_parent2dataset(path_id, dsid, version, cache, log):
         try:
             dataset_relation = cache.query(Path2Datasets).filter(
                     Path2Datasets.version_id == version).filter(
@@ -922,19 +965,22 @@ class CacheDbQueries(object):
                 flag_modified(dataset_relation, 'path_ids')
             cache.commit()
         except Exception as e:
-            msg = 'ERROR: Query remove_parrent2dataset() Error: ' + e.args[0]
+            msg = 'ERROR: Query remove_parent2dataset() Error: ' + e.args[0]
             log.error(msg)
 
-    def drag_n_drop_reorder(self, node_id, parent_id, new_order, cache, log):
+    def drag_n_drop_reorder(self, node_id, parent_id, new_order, version_id, cache, log):
         try:
-            moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(
+            moved_node = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.version_id == version_id).filter(
+                PathItemsHierarchy.parent_id == parent_id).filter(
                 PathItemsHierarchy.child_id == node_id).first()
             if moved_node.order > new_order:
-                self.update_orders(cache, new_order, moved_node.order - 1, parent_id, 1)
+                self.update_orders(cache, new_order, moved_node.order - 1, parent_id, version_id, 1)
                 moved_node.order = new_order
             else:
-                self.update_orders(cache, moved_node.order + 1, new_order - 1, parent_id, -1)
+                self.update_orders(cache, moved_node.order + 1, new_order - 1, parent_id, version_id, -1)
                 moved_node.order = new_order - 1
+            moved_node.changed = True
 
         except Exception as e:
             msg = 'ERROR: Query drag_n_drop_reorder() Error: ' + e.args[0]
@@ -942,21 +988,29 @@ class CacheDbQueries(object):
             return -2
 
     @staticmethod
-    def update_orders(cache, order_from, order_to, parent_id, diff):
-        nodes_to_update = cache.query(PathItemsHierarchy) \
-            .filter(PathItemsHierarchy.parent_id == parent_id) \
-            .filter(PathItemsHierarchy.order.between(order_from, order_to)).all()
+    def update_orders(cache, order_from, order_to, parent_id, version_id, diff):
+        nodes_to_update = cache.query(PathItemsHierarchy).filter(
+            PathItemsHierarchy.version_id == version_id).filter(
+            PathItemsHierarchy.parent_id == parent_id).filter(
+            PathItemsHierarchy.order.between(order_from, order_to)).all()
         for node in nodes_to_update:
             node.order = node.order + diff
+            node.changed = True
 
-    def drag_n_drop_add_parent(self, node_id, parent_id, new_order, cache, log):
+    def drag_n_drop_add_parent(self, node_id, parent_id, new_order, version_id, cache,  log):
         try:
-            max_order = self.get_max_order(cache, parent_id, log)
-            if not cache.query(exists().where(PathItemsHierarchy.parent_id == parent_id).where(
-                    PathItemsHierarchy.child_id == node_id)).scalar():
-                copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order)
-                cache.add(copied_node)
-            self.update_orders(cache, new_order, max_order, parent_id, 1)
+            max_order = self.get_max_order(cache, parent_id, version_id, log)
+            copied_node = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.version_id == version_id).filter(
+                PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.child_id == node_id).first()
+            if copied_node is not None:
+                copied_node.order = new_order
+                copied_node.changed = True
+            else:
+                copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order, changed=True, version_id=version_id)
+            cache.add(copied_node)
+            self.update_orders(cache, new_order, max_order, parent_id, version_id, 1)
 
         except Exception as e:
             msg = 'ERROR: Query drag_n_drop_add_parent() Error: ' + e.args[0]
@@ -964,9 +1018,10 @@ class CacheDbQueries(object):
             return -2
 
     @staticmethod
-    def get_max_order(cache, parent_id, log):
+    def get_max_order(cache, parent_id, version_id, log):
         try:
             max_order = cache.query(PathItemsHierarchy.order).filter(
+                PathItemsHierarchy.version_id == version_id).filter(
                 PathItemsHierarchy.parent_id == parent_id).count()
         except Exception as e:
             msg = 'ERROR: Query get_max_order() Error: ' + e.args[0]
@@ -974,17 +1029,20 @@ class CacheDbQueries(object):
             return None
         return max_order
 
-    def drag_n_drop_move(self, node_id, parent_id, old_parent_id, new_order, cache, log):
-        self.drag_n_drop_add_parent(node_id, parent_id, new_order, cache, log)
-        self.drag_n_drop_delete_parent(node_id, old_parent_id, cache, log)
+    def drag_n_drop_move(self, node_id, parent_id, old_parent_id, new_order, version_id, cache, log):
+        self.drag_n_drop_add_parent(node_id, parent_id, new_order, version_id, cache, log)
+        self.drag_n_drop_delete_parent(node_id, old_parent_id, version_id, cache, log)
 
-    def drag_n_drop_delete_parent(self, node_id, parent_id, cache, log):
+    def drag_n_drop_delete_parent(self, node_id, parent_id, version_id, cache, log):
         try:
-            moved_node = cache.query(PathItemsHierarchy).filter(PathItemsHierarchy.parent_id == parent_id).filter(
+            moved_node = cache.query(PathItemsHierarchy).filter(
+                PathItemsHierarchy.version_id == version_id).filter(
+                PathItemsHierarchy.parent_id == parent_id).filter(
                 PathItemsHierarchy.child_id == node_id).first()
-            max_order = self.get_max_order(cache, parent_id, log)
-            self.update_orders(cache, moved_node.order, max_order, parent_id, -1)
-            cache.delete(moved_node)
+            max_order = self.get_max_order(cache, parent_id, version_id, log)
+            self.update_orders(cache, moved_node.order, max_order, parent_id, version_id, -1)
+            moved_node.order = -10
+            moved_node.changed = True
 
         except Exception as e:
             msg = 'ERROR: Query drag_n_drop_delete_parent() Error: ' + e.args[0]
@@ -1062,6 +1120,24 @@ class CacheDbQueries(object):
 
         except Exception as e:
             msg = 'ERROR: Query put_external_id() Error: ' + e.args[0]
+            log.error(msg)
+            return None
+        return mapping.internal_id
+
+    @staticmethod
+    def update_external_id(cache, int_id, new_ext_id, itemtype, src, log, old_ext_id=None):
+        try:
+            search_query = cache.query(IdMapping).filter(
+                IdMapping.internal_id == int_id).filter(
+                IdMapping.itemtype == itemtype).filter(
+                IdMapping.source == src)
+            if old_ext_id is not None:
+                search_query = search_query.filter(IdMapping.external_id == old_ext_id)
+            mapping = search_query.first()
+            mapping.external_id = new_ext_id
+            cache.commit()
+        except Exception as e:
+            msg = 'ERROR: Query update_external_id() Error: ' + e.args[0]
             log.error(msg)
             return None
         return mapping.internal_id
@@ -1263,11 +1339,12 @@ class CacheDbQueries(object):
             log.error(msg)
             return -2
 
-    def getCompletePathSequencesItems(self, cache, id_pathid, log, lvl=0):
+    def getCompletePathSequencesItems(self, cache, id_pathid, version_id, log, lvl=0):
         result = list()
         try:
             cached_path_children = cache.query(PathItemsHierarchy).filter(
-                PathItemsHierarchy.parent_id == id_pathid).all()
+                PathItemsHierarchy.parent_id == id_pathid).filter(
+                PathItemsHierarchy.version_id == version_id).all()
             if len(cached_path_children) is 0:
                 return result
             else:
@@ -1275,7 +1352,7 @@ class CacheDbQueries(object):
                     item = self.get_wrapped_item(cache, children, lvl)
                     if (item.paetype == 2 and item.lvl == 0) or item.lvl > 0:
                         result.append(item)
-                    children = self.getCompletePathSequencesItems(cache, item.internal_id, log, lvl + 1)
+                    children = self.getCompletePathSequencesItems(cache, item.internal_id, log, version_id, lvl + 1)
                     if children.__len__() > 0:
                         result.extend(children)
 

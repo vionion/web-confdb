@@ -736,6 +736,17 @@ class ConfDbQueries(object):
 
         return evcontents
 
+    def getEventContentIdByName(self, name, db, log):
+
+        if (db is None or name is None):
+            log.error('ERROR: getEventContentByName - input parameters error')
+        evcontent = db.query(EventContentId).from_statement(
+            text("select u_eventcontentids.id , u_eventcontentids.id_evco "
+                 + "from u_eventcontentids, u_eventcontents "
+                 + "where u_eventcontents.id=u_eventcontentids.id_evco "
+                 + "and u_eventcontents.name=:name")).params(name=name).first()
+        return evcontent
+
     @staticmethod
     def get_conf2evco_rels(ver, db, log):
         if (db == None or ver == -2):

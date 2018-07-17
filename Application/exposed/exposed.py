@@ -16,7 +16,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat, Pathitems
 
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -54,12 +54,14 @@ class Exposed(object):
                     counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session, log)
                     for child in new_children:
                         item.children.append(child)
+                    item.children.sort(key=lambda x: x.order, reverse=False)
 
                 else:
                     item.expanded = False
                     counter, new_children, written_sequences, built_sequences = self.getPathSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences, src, cache_session, log)
                     for child in new_children:
                         item.children.append(child)
+                    item.children.sort(key=lambda x: x.order, reverse=False)
 
                     written_sequences.add(item.name)
                     built_sequences.add(item)
@@ -88,7 +90,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponsePathItemSchema()
 
-        pats = cache.get_path_items(internal_path_id, cache_session, log)
+        pats = cache.get_path_items(internal_path_id, ver, cache_session, log)
 
         if len(pats) is 0:
 
@@ -138,6 +140,7 @@ class Exposed(object):
                         for child in new_children:
 
                             item.children.append(child)
+                        item.children.sort(key=lambda x: x.order, reverse=False)
 
                         written_sequences.add(item.name)
                         item.expanded = False
@@ -167,7 +170,7 @@ class Exposed(object):
                 lzsequence = seq[lzseq]
                 pats.insert(lzsequence.order, lzsequence)
 
-            pats = cache.put_path_items(internal_path_id, pats, cache_session, log)
+            pats = cache.put_path_items(internal_path_id, pats, ver, cache_session, log)
             pats.sort(key=lambda x: x.order, reverse=False)
 
         if pats is None:
@@ -191,7 +194,7 @@ class Exposed(object):
         resp = Response()
         schema = ResponsePathItemSchema()
 
-        endpath_items = cache.get_path_items(internal_endpath_id, cache_session, log)
+        endpath_items = cache.get_path_items(internal_endpath_id, ver, cache_session, log)
 
         if len(endpath_items) is 0:
             external_id = cache.get_external_id(cache_session, internal_endpath_id, "pat", src, log)
@@ -240,6 +243,7 @@ class Exposed(object):
                         for child in new_children:
 
                             item.children.append(child)
+                        item.children.sort(key=lambda x: x.order, reverse=False)
 
                         written_sequences.add(item.name)
                         item.expanded = False
@@ -299,7 +303,7 @@ class Exposed(object):
                 endpath_items.insert(oum.order, oum)
                 endpath_items.sort(key=lambda x: x.order, reverse=False)
 
-            endpath_items = cache.put_path_items(internal_endpath_id, endpath_items, cache_session, log)
+            endpath_items = cache.put_path_items(internal_endpath_id, endpath_items, ver, cache_session, log)
 
         resp.success = True
         resp.children = endpath_items
@@ -498,10 +502,10 @@ class Exposed(object):
         cache_session = request.db_cache
         cache.update_params(mod_id, param_name, value, ver, cache_session, log)
 
-    def drag_n_drop_reorder(self, node_id, old_parent, new_order, request, log):
+    def drag_n_drop_reorder(self, node_id, old_parent, new_order, version_id, request, log):
         cache = self.cache
         cache_session = request.db_cache
-        cache.drag_n_drop_reorder(node_id, old_parent, new_order, cache_session, log)
+        cache.drag_n_drop_reorder(node_id, old_parent, new_order, version_id, cache_session, log)
 
     def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log, version=-2):
         cache = self.cache
@@ -509,18 +513,18 @@ class Exposed(object):
         cache_session.begin_nested()
         cache_session.execute('LOCK TABLE path_items_hierarchy IN ACCESS EXCLUSIVE MODE;')
         if version > 0:
-            max_order = cache.get_max_order(cache_session, new_parent, log)
+            max_order = cache.get_max_order(cache_session, new_parent, version, log)
             if max_order == 0:
                 db_offline = request.db_offline
                 # db selection and src is hardcoded, not good
                 self.getPathItems(new_parent, version, db_offline, log, 0, request)
-                max_order = cache.get_max_order(cache_session, new_parent, log)
+                max_order = cache.get_max_order(cache_session, new_parent, version, log)
             new_order = max_order
 
         if copied:
-            cache.drag_n_drop_add_parent(node_id, new_parent, new_order, cache_session, log)
+            cache.drag_n_drop_add_parent(node_id, new_parent, new_order, version, cache_session, log)
         else:
-            cache.drag_n_drop_move(node_id, new_parent, old_parent, new_order, cache_session, log)
+            cache.drag_n_drop_move(node_id, new_parent, old_parent, new_order, version, cache_session, log)
         cache_session.commit()
         # to close nested transaction
         cache_session.commit()
@@ -544,8 +548,8 @@ class Exposed(object):
             except:
                 log.error('ERROR: Query path_move Error')
 
-        cache.add_parrent2dataset(path_id, new_parent, version, cache_session, log)
-        cache.remove_parrent2dataset(path_id, old_parent, version, cache_session, log)
+        cache.add_parent2dataset(path_id, new_parent, version, cache_session, log)
+        cache.remove_parent2dataset(path_id, old_parent, version, cache_session, log)
 
         cache_session.commit()
         # to close nested transaction
@@ -1292,6 +1296,12 @@ class Exposed(object):
         changed_params, changed_templates_params = cache.get_changed_params(ver_id, cache_session, log)
         return changed_params, changed_templates_params
 
+    def get_changed_path_items_hierarchy(self, ver_id, log=None, request=None):
+        cache = self.cache
+        cache_session = request.db_cache
+        changed_hierarchy = cache.get_changed_path_items_hierarchy(ver_id, cache_session, log)
+        return changed_hierarchy
+
     def get_changed_dat2pat(self, ver_id, log=None, request=None):
         cache = self.cache
         cache_session = request.db_cache
@@ -1301,8 +1311,8 @@ class Exposed(object):
     def get_changed_stream_event(self, ver_id, log=None, request=None):
         cache = self.cache
         cache_session = request.db_cache
-        str2evc = cache.get_changed_stream_event(ver_id, cache_session, log)
-        return str2evc
+        str2evc, cached_evco_names = cache.get_changed_stream_event(ver_id, cache_session, log)
+        return str2evc, cached_evco_names
 
     def get_changed_evco_statements(self, ver_id, log=None, request=None):
         cache = self.cache
@@ -1339,9 +1349,11 @@ class Exposed(object):
         changed_params, changed_templates_params = self.get_changed_params(changed_version.id, log, request)
         any_changes |= len(changed_params) > 0
         any_changes |= len(changed_templates_params) > 0
+        changed_hierarchy = self.get_changed_path_items_hierarchy(changed_version.id, log, request)
+        any_changes |= len(changed_hierarchy) > 0
         changed_dat2pats = self.get_changed_dat2pat(changed_version.id, log, request)
         any_changes |= len(changed_dat2pats.keys()) > 0
-        changed_str2evc = self.get_changed_stream_event(changed_version.id, log, request)
+        changed_str2evc, cached_names = self.get_changed_stream_event(changed_version.id, log, request)
         any_changes |= len(changed_str2evc.keys()) > 0
         changed_evco_statements = self.get_changed_evco_statements(changed_version.id, log, request)
         any_changes |= len(changed_evco_statements.keys()) > 0
@@ -1355,9 +1367,9 @@ class Exposed(object):
                     changed_version_id = changed_version.id
                     self.queries.detach_obj_from_session(changed_version, db, log)
                     new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
-                    old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
+                    old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_templates_params, changed_hierarchy, db, log)
                     self.save_ed_sources(changed_version_id, new_version.id, db, log)
-                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, changed_evco_statements, db, log)
+                    self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, cached_names, changed_evco_statements, db, log, request.db_cache)
                     self.save_services(changed_version_id, new_version.id, db, log)
                     self.save_es_modules(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_es_sources(changed_version_id, new_version.id, db, log)
@@ -1378,7 +1390,7 @@ class Exposed(object):
         save.order = changed_param.order
         return save
 
-    def save_paths(self, changed_version_id, new_version_id, changed_params, changed_template_params, db, log):
+    def save_paths(self, changed_version_id, new_version_id, changed_params, changed_template_params, changed_hierarchy, db, log):
 
         # 1. gathering data to copy
 
@@ -1454,15 +1466,61 @@ class Exposed(object):
 
         # 4.5 remapping paths to modules
 
+        # 4.5.1 preparing necessary data
+
+        pathid2pae_dict = dict()
+        pae2paths_dict = dict()
         for p2m in pathid2pae:
-            if p2m.id_pae in old2new_modules and p2m.id_pathid in old2new_paths:
-                p2m.id_pae = old2new_modules[p2m.id_pae]
-                p2m.id_pathid = old2new_paths[p2m.id_pathid]
+            if p2m.id_parent is None:
+                parent_key = p2m.id_pathid
+            else:
+                parent_key = p2m.id_parent
+            if parent_key not in pathid2pae_dict:
+                pathid2pae_dict[parent_key] = {}
+            pathid2pae_dict[parent_key][p2m.id_pae] = p2m
+            if parent_key not in pae2paths_dict:
+                pae2paths_dict[parent_key] = {}
+            pae2paths_dict[parent_key][p2m.id_pathid] = p2m
+
+        # 4.5.2 creating new Pathitems objects for new relations
+
+        for parent_key in pathid2pae_dict:
+            if parent_key in changed_hierarchy:
+                cached_children_set = set(changed_hierarchy[parent_key].keys())
+                db_children_set = set(pathid2pae_dict[parent_key].keys())
+                added_elems = cached_children_set - db_children_set
+                for elem in added_elems:
+                    for pathid in pae2paths_dict[parent_key].keys():
+                        new_path2pae = Pathitems()
+                        new_path2pae.id_pae = elem
+                        new_path2pae.id_parent = parent_key
+                        new_path2pae.id_pathid = pathid
+                        new_path2pae.operator = 0
+                        index = pathid2pae.index(pae2paths_dict[parent_key][pathid])
+                        pathid2pae.insert(index, new_path2pae)
+
+        # if we even remove objects from array, bulk_save_objects saves everything. So, we feed this method with ne array,
+        # which contains only data which we need to save
+        pathid2pae_to_save = []
+        for p2m in pathid2pae:
+                if p2m.id_parent is not None:
+                    parent_key = p2m.id_parent
+                else:
+                    parent_key = p2m.id_pathid
+                if parent_key in changed_hierarchy and p2m.id_pae in changed_hierarchy[parent_key]:
+                    p2m.lvl = changed_hierarchy[parent_key][p2m.id_pae].lvl
+                    p2m.order = changed_hierarchy[parent_key][p2m.id_pae].order
+                # most important -- deleted relations has negative order, but they stays in cache to differentiate them
+                # from relations which wasn't saved yet
+                if p2m.order >= 0 and p2m.id_pae in old2new_modules and p2m.id_pathid in old2new_paths:
+                    p2m.id_pae = old2new_modules[p2m.id_pae]
+                    p2m.id_pathid = old2new_paths[p2m.id_pathid]
+                    pathid2pae_to_save.append(p2m)
 
         # 5. saving new relations
 
         self.queries.save_objects(pathid2conf, db, log)
-        self.queries.save_objects(pathid2pae, db, log)
+        self.queries.save_objects(pathid2pae_to_save, db, log)
         self.queries.save_objects(pae2moe, db, log)
         self.queries.save_objects(pae2tmpl, db, log)
         self.queries.save_objects(pae2moe_to_save, db, log)
@@ -1679,7 +1737,7 @@ class Exposed(object):
         self.queries.save_objects(conf2gpsets, db, log)
         self.queries.save_objects(gpsets_elements, db, log)
 
-    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, changed_evco_statements, db, log):
+    def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, cached_names, changed_evco_statements, db, log, cache_session):
 
         # 1. gathering data to copy
 
@@ -1769,16 +1827,18 @@ class Exposed(object):
                         e2str.id_evcoid = evcontents_dict[changed_str2evc[e2str.id_streamid]].id
                     else:
                         # if it is new evco, save it and add to conf2evco array to be saved too. Also, map stream to new evco
-                        print "new name"
-                        # new_evco = EventContent()
-                        # new_evco.name = 'test5'
-                        # new_evco_id = EventContentId()
-                        # new_evco_id.id_evco = self.queries.save_obj(new_evco, db, log).id
-                        # new_conf2evco = ConfToEvCo()
-                        # new_conf2evco.id_evcoid = self.queries.save_obj(new_evco_id, db, log).id
-                        # new_conf2evco.id_confver = new_version_id
-                        # conf2evco_to_save.append(new_conf2evco)
-                        # e2str.id_evcoid = new_conf2evco.id_evcoid
+                        evcoid_with_name = self.queries.getEventContentIdByName(cached_names[e2str.id_streamid].name, db, log)
+                        if evcoid_with_name is None:
+                            new_evco = EventContent()
+                            new_evco.name = cached_names[e2str.id_streamid].name
+                            evcoid_with_name = EventContentId()
+                            evcoid_with_name.id_evco = self.queries.save_obj(new_evco, db, log).id
+                        new_conf2evco = ConfToEvCo()
+                        new_conf2evco.id_evcoid = self.queries.save_obj(evcoid_with_name, db, log).id
+                        new_conf2evco.id_confver = new_version_id
+                        conf2evco_to_save.append(new_conf2evco)
+                        e2str.id_evcoid = new_conf2evco.id_evcoid
+                        self.cache.update_external_id(cache_session, cached_names[e2str.id_streamid].int_evco_id, evcoid_with_name.id_evco, 'evc', 0, log, -1)
                 else:
                     e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
                 e2str.id_streamid = old2new_streams[e2str.id_streamid]
@@ -2242,12 +2302,14 @@ class Exposed(object):
 
                     for child in new_children:
                         item.children.append(child)
+                    item.children.sort(key=lambda x: x.order, reverse=False)
                 else:
                     item.expanded = False
                     counter, new_children, written_sequences, built_sequences = self.getSequenceChildren(counter, written_sequences, items, elements_dict, item.lvl+1, built_sequences,src,request,log)
 
                     for child in new_children:
                         item.children.append(child)
+                    item.children.sort(key=lambda x: x.order, reverse=False)
 
                     written_sequences.add(item.name)
                     built_sequences.append(item)
@@ -2299,7 +2361,7 @@ class Exposed(object):
         items_to_save = list()
 
         for path in itertools.chain(paths, endpaths):
-            cached_items = cache.getCompletePathSequencesItems(cache_session, path.internal_id, log)
+            cached_items = cache.getCompletePathSequencesItems(cache_session, path.internal_id,  version, log)
             external_id = cache.get_external_id(cache_session, path.internal_id, "pat", src, log)
             try:
                 elements = queries.getCompletePathSequences(external_id, ver_id, db, log)
@@ -2335,11 +2397,12 @@ class Exposed(object):
 
                     for child in new_children:
                         item.children.append(child)
+                    item.children.sort(key=lambda x: x.order, reverse=False)
 
                     written_sequences.add(item.name)
                     item.expanded = False
                     built_sequences.append(item)
-                    cache.put_path_items(path.internal_id, items_to_save, cache_session, log)
+                    cache.put_path_items(path.internal_id, items_to_save, ver, cache_session, log)
 
         built_sequences = sorted(built_sequences, key=lambda x: x.name, reverse=False)
         resp.success = True
