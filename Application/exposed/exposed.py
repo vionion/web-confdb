@@ -1833,12 +1833,23 @@ class Exposed(object):
                             new_evco.name = cached_names[e2str.id_streamid].name
                             evcoid_with_name = EventContentId()
                             evcoid_with_name.id_evco = self.queries.save_obj(new_evco, db, log).id
+                            self.queries.save_obj(evcoid_with_name, db, log)
                         new_conf2evco = ConfToEvCo()
-                        new_conf2evco.id_evcoid = self.queries.save_obj(evcoid_with_name, db, log).id
+                        new_conf2evco.id_evcoid = evcoid_with_name.id
                         new_conf2evco.id_confver = new_version_id
                         conf2evco_to_save.append(new_conf2evco)
+                        old_conf2evco = ConfToEvCo()
+                        old_conf2evco.id_evcoid = evcoid_with_name.id
+                        old_conf2evco.id_confver = changed_version_id
+                        conf2evco_to_save.append(old_conf2evco)
+                        self.cache.update_external_id(cache_session, cached_names[e2str.id_streamid].int_evco_id, evcoid_with_name.id, 'evc', 0, log)
+                        for statementrank, statement in changed_evco_statements[changed_str2evc[e2str.id_streamid]].items():
+                            evc2stat = EvCoToStat()
+                            evc2stat.statementrank = statementrank
+                            evc2stat.id_stat = self.queries.save_obj(statement, db, log).id
+                            evc2stat.id_evcoid = evcoid_with_name.id
+                            self.queries.save_obj(evc2stat, db, log)
                         e2str.id_evcoid = new_conf2evco.id_evcoid
-                        self.cache.update_external_id(cache_session, cached_names[e2str.id_streamid].int_evco_id, evcoid_with_name.id_evco, 'evc', 0, log, -1)
                 else:
                     e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
                 e2str.id_streamid = old2new_streams[e2str.id_streamid]

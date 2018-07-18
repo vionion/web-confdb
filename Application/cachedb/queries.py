@@ -1298,6 +1298,7 @@ class CacheDbQueries(object):
                 # Hardcoded again :(
                 src = 0
                 internal_id = self.get_internal_id(cache, -1, 'evc', src, log)
+                self.update_external_id(cache, internal_id, internal_id * -1, 'evc', 0, log, -1)
                 evco_name = EvconNames(event_id=internal_id, name=value, version_id=version_id)
                 cache.add(evco_name)
                 seh.event_id = internal_id
