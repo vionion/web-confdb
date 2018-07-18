@@ -16,7 +16,7 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat, Pathitems
+from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, ESSElement, SrvElement, EDSElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat, Pathitems
 
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
@@ -1368,18 +1368,19 @@ class Exposed(object):
                     self.queries.detach_obj_from_session(changed_version, db, log)
                     new_version = self.create_new_version(changed_version, last_version.version + 1, db, log)
                     old2new_paths = self.save_paths(changed_version_id, new_version.id, changed_params, changed_templates_params, changed_hierarchy, db, log)
-                    self.save_ed_sources(changed_version_id, new_version.id, db, log)
+                    self.save_ed_sources(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
+                    self.save_services(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
                     self.save_streams_datasets(changed_version_id, new_version.id, old2new_paths, changed_dat2pats, changed_str2evc, cached_names, changed_evco_statements, db, log, request.db_cache)
-                    self.save_services(changed_version_id, new_version.id, db, log)
                     self.save_es_modules(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
-                    self.save_es_sources(changed_version_id, new_version.id, db, log)
-                    self.save_global_pset(changed_version_id, new_version.id, db, log)
+                    self.save_es_sources(changed_version_id, new_version.id, changed_params, changed_templates_params, db, log)
+                    self.save_global_pset(changed_version_id, new_version.id, changed_params, db, log)
                     db.commit()
             except Exception as e:
                 msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
                 log.error(msg)
 
     def map_basic_elem(self, changed_param, class_name):
+        #TODO: maybe, add hex field too?
         save = eval(class_name)()
         save.name = changed_param.name
         save.moetype = changed_param.moetype
@@ -1527,139 +1528,7 @@ class Exposed(object):
 
         return old2new_paths
 
-    def save_services(self, changed_version_id, new_version_id, db, log):
-
-        # 1. gathering data to copy
-
-        # 1.1 services and their params. Templates left unchanged
-
-        conf2srv = []
-        services = self.queries.getConfServices(changed_version_id, db, log)
-        serv_param_elements = []
-        for service in services:
-            serv_param_elements.extend(self.queries.getServiceParamElements(service.id, db, log))
-
-        # 2. detaching from db session, after that we can change it and it will not affect old versions
-
-        self.queries.detach_objects_from_session(serv_param_elements, db, log)
-
-        # 3. saving copied data
-
-        old2new_services = self.queries.save_get_id_mapping(services, db, log)
-
-        # 4. modifying/updating data, creating some new instances
-
-        # 4.1 assigning params to new services
-
-        for service_param in serv_param_elements:
-            service_param.id_service = old2new_services[service_param.id_service]
-
-        # 4.2 creating new relations between new services and created configuration
-
-        for i, service in enumerate(services):
-            conf2srv.append(Conf2Srv(id_confver=new_version_id, id_service=service.id, order=i))
-
-        # 5. saving relations and params
-
-        self.queries.save_objects(conf2srv, db, log)
-        self.queries.save_objects(serv_param_elements, db, log)
-
-    def save_es_modules(self, changed_version_id, new_version_id, changed_params, changed_templates_params, db, log):
-
-        # 1. gathering data to copy
-
-        # 1.1 esmodules and their params
-
-        esmodules = self.queries.getConfESModules(changed_version_id, db, log)
-        conf2esm = self.queries.getConfToESMRel(changed_version_id, db, log)
-        esmodules_elements = []
-        new_esmodules_elements = []
-        for es_module in esmodules:
-            esmodules_elements.extend(self.queries.getESModParams(es_module.id, db, log))
-            # if one or more of the esmodule template params was changed
-            if es_module.id_template in changed_templates_params:
-                for changed_template_param in changed_templates_params[es_module.id_template].values():
-                    # create new param, and add it to the list to be saved
-                    param_to_save = self.map_basic_elem(changed_template_param, "ESMElement")
-                    param_to_save.hex = changed_template_param.hex
-                    param_to_save.id_esmodule = es_module.id
-                    new_esmodules_elements.append(param_to_save)
-
-        # 1.2 also, let's update values of changed param values
-        for esmodule_element in esmodules_elements:
-            if esmodule_element.id_esmodule in changed_params and esmodule_element.name in changed_params[esmodule_element.id_esmodule]:
-                esmodule_element.value = changed_params[esmodule_element.id_esmodule][esmodule_element.name].value
-
-        # 2. detaching from db session, after that we can change it and it will not affect old versions
-
-        self.queries.detach_objects_from_session(esmodules_elements, db, log)
-        self.queries.detach_objects_from_session(conf2esm, db, log)
-
-        # 3. saving copied data
-
-        old2new_esmodules = self.queries.save_get_id_mapping(esmodules, db, log)
-
-        # 4. modifying/updating data, creating some new instances
-
-        # 4.1 assigning params to new esmodules
-
-        # it is just easier to save all params, copied and created, together
-        esmodules_elements.extend(new_esmodules_elements)
-
-        for es_module_elem in esmodules_elements:
-            es_module_elem.id_esmodule = old2new_esmodules[es_module_elem.id_esmodule]
-
-        # 4.2 creating new relations between new esmodules and created configuration
-
-        for c2esm in conf2esm:
-            c2esm.id_confver = new_version_id
-            c2esm.id_esmodule = old2new_esmodules[c2esm.id_esmodule]
-
-        # 5. saving relations and params
-
-        self.queries.save_objects(conf2esm, db, log)
-        self.queries.save_objects(esmodules_elements, db, log)
-
-    def save_es_sources(self, changed_version_id, new_version_id, db, log):
-
-        # 1. gathering data to copy
-
-        # 1.1 essources and their params. Templates left unchanged
-
-        essources = self.queries.getConfESSource(changed_version_id, db, log)
-        conf2ess = self.queries.getConfToESSRel(changed_version_id, db, log)
-        essources_elements = []
-        for es_source in essources:
-            essources_elements.extend(self.queries.getESSourceParams(es_source.id, db, log))
-
-        # 2. detaching from db session, after that we can change it and it will not affect old versions
-
-        self.queries.detach_objects_from_session(essources_elements, db, log)
-        self.queries.detach_objects_from_session(conf2ess, db, log)
-
-        # 3. saving copied data
-
-        old2new_essources = self.queries.save_get_id_mapping(essources, db, log)
-
-        # 4. modifying/updating data, creating some new instances
-
-        # 4.1 assigning params to new essources
-
-        for es_source_elem in essources_elements:
-            es_source_elem.id_essource = old2new_essources[es_source_elem.id_essource]
-
-        # 4.2 creating new relations between new essources and created configuration
-
-        for c2esm in conf2ess:
-            c2esm.id_confver = new_version_id
-            c2esm.id_essource = old2new_essources[c2esm.id_essource]
-
-        # 5. saving relations and params
-
-        self.queries.save_objects(conf2ess, db, log)
-        self.queries.save_objects(essources_elements, db, log)
-
-    def save_ed_sources(self, changed_version_id, new_version_id, db, log):
+    def save_ed_sources(self, changed_version_id, new_version_id, changed_params, changed_templates_params, db, log):
 
         # 1. gathering data to copy
 
@@ -1668,8 +1537,22 @@ class Exposed(object):
         edsources = self.queries.getConfEDSource(changed_version_id, db, log)
         conf2eds = self.queries.getConfToEDSRel(changed_version_id, db, log)
         edsources_elements = []
+        new_edsources_elements = []
         for ed_source in edsources:
             edsources_elements.extend(self.queries.getEDSourceParams(ed_source.id, db, log))
+            # if one or more of the ed_source template params was changed
+            if ed_source.id_template in changed_templates_params:
+                for changed_template_param in changed_templates_params[ed_source.id_template].values():
+                    # create new param, and add it to the list to be saved
+                    param_to_save = self.map_basic_elem(changed_template_param, "EDSElement")
+                    param_to_save.hex = changed_template_param.hex
+                    param_to_save.id_edsource = ed_source.id
+                    new_edsources_elements.append(param_to_save)
+
+        # 1.2 also, let's update values of changed params
+        for ed_source_param in edsources_elements:
+            if ed_source_param.id_edsource in changed_params and ed_source_param.name in changed_params[ed_source_param.id_edsource]:
+                ed_source_param.value = changed_params[ed_source_param.id_edsource][ed_source_param.name].value
 
         # 2. detaching from db session, after that we can change it and it will not affect old versions
 
@@ -1683,6 +1566,9 @@ class Exposed(object):
         # 4. modifying/updating data, creating some new instances
 
         # 4.1 assigning params to new edsources
+
+        # it is just easier to save all params, copied and created, together
+        edsources_elements.extend(new_edsources_elements)
 
         for ed_source_elem in edsources_elements:
             ed_source_elem.id_edsource = old2new_edsources[ed_source_elem.id_edsource]
@@ -1698,44 +1584,59 @@ class Exposed(object):
         self.queries.save_objects(conf2eds, db, log)
         self.queries.save_objects(edsources_elements, db, log)
 
-    def save_global_pset(self, changed_version_id, new_version_id, db, log):
+    def save_services(self, changed_version_id, new_version_id, changed_params, changed_templates_params, db, log):
 
         # 1. gathering data to copy
 
-        # 1.1 gpsets and their params
+        # 1.1 services and their params. Templates left unchanged
 
-        gpsets = self.queries.getConfGPsets(changed_version_id, db, log)
-        conf2gpsets = self.queries.get_conf2GPSets_relations(changed_version_id, db, log)
-        gpsets_elements = []
-        for gp_set in gpsets:
-            gpsets_elements.extend(self.queries.getGpsetElements(gp_set.id, db, log))
+        conf2srv = []
+        services = self.queries.getConfServices(changed_version_id, db, log)
+        serv_param_elements = []
+        new_serv_param_elements = []
+        for service in services:
+            serv_param_elements.extend(self.queries.getServiceParamElements(service.id, db, log))
+            # if one or more of the serv_param template params was changed
+            if service.id_template in changed_templates_params:
+                for changed_template_param in changed_templates_params[service.id_template].values():
+                    # create new param, and add it to the list to be saved
+                    param_to_save = self.map_basic_elem(changed_template_param, "SrvElement")
+                    param_to_save.hex = changed_template_param.hex
+                    param_to_save.id_service = service.id
+                    new_serv_param_elements.append(param_to_save)
+
+        # 1.2 also, let's update values of changed params
+        for serv_param in serv_param_elements:
+            if serv_param.id_service in changed_params and serv_param.name in changed_params[serv_param.id_service]:
+                serv_param.value = changed_params[serv_param.id_service][serv_param.name].value
 
         # 2. detaching from db session, after that we can change it and it will not affect old versions
 
-        self.queries.detach_objects_from_session(gpsets_elements, db, log)
-        self.queries.detach_objects_from_session(conf2gpsets, db, log)
+        self.queries.detach_objects_from_session(serv_param_elements, db, log)
 
         # 3. saving copied data
 
-        old2new_gpsets = self.queries.save_get_id_mapping(gpsets, db, log)
+        old2new_services = self.queries.save_get_id_mapping(services, db, log)
 
         # 4. modifying/updating data, creating some new instances
 
-        # 4.1 assigning params to new gpsets
+        # 4.1 assigning params to new services
 
-        for gp_set_elem in gpsets_elements:
-            gp_set_elem.id_gpset = old2new_gpsets[gp_set_elem.id_gpset]
+        # it is just easier to save all params, copied and created, together
+        serv_param_elements.extend(new_serv_param_elements)
 
-        # 4.2 creating new relations between new gpsets and created configuration
+        for service_param in serv_param_elements:
+            service_param.id_service = old2new_services[service_param.id_service]
 
-        for c2gpset in conf2gpsets:
-            c2gpset.id_confver = new_version_id
-            c2gpset.id_gpset = old2new_gpsets[c2gpset.id_gpset]
+        # 4.2 creating new relations between new services and created configuration
+
+        for i, service in enumerate(services):
+            conf2srv.append(Conf2Srv(id_confver=new_version_id, id_service=service.id, order=i))
 
         # 5. saving relations and params
 
-        self.queries.save_objects(conf2gpsets, db, log)
-        self.queries.save_objects(gpsets_elements, db, log)
+        self.queries.save_objects(conf2srv, db, log)
+        self.queries.save_objects(serv_param_elements, db, log)
 
     def save_streams_datasets(self, changed_version_id, new_version_id, old2new_paths, changed_dat2pats, changed_str2evc, cached_names, changed_evco_statements, db, log, cache_session):
 
@@ -1885,6 +1786,162 @@ class Exposed(object):
         self.queries.save_objects(conf2evco_to_save, db, log)
         self.queries.save_objects(conf2st_dat, db, log)
         self.queries.save_objects(evcotostats, db, log)
+
+    def save_es_modules(self, changed_version_id, new_version_id, changed_params, changed_templates_params, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 esmodules and their params. Templates left unchanged
+
+        esmodules = self.queries.getConfESModules(changed_version_id, db, log)
+        conf2esm = self.queries.getConfToESMRel(changed_version_id, db, log)
+        esmodules_elements = []
+        new_esmodules_elements = []
+        for es_module in esmodules:
+            esmodules_elements.extend(self.queries.getESModParams(es_module.id, db, log))
+            # if one or more of the esmodule template params was changed
+            if es_module.id_template in changed_templates_params:
+                for changed_template_param in changed_templates_params[es_module.id_template].values():
+                    # create new param, and add it to the list to be saved
+                    param_to_save = self.map_basic_elem(changed_template_param, "ESMElement")
+                    param_to_save.hex = changed_template_param.hex
+                    param_to_save.id_esmodule = es_module.id
+                    new_esmodules_elements.append(param_to_save)
+
+        # 1.2 also, let's update values of changed params
+        for esmodule_element in esmodules_elements:
+            if esmodule_element.id_esmodule in changed_params and esmodule_element.name in changed_params[esmodule_element.id_esmodule]:
+                esmodule_element.value = changed_params[esmodule_element.id_esmodule][esmodule_element.name].value
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(esmodules_elements, db, log)
+        self.queries.detach_objects_from_session(conf2esm, db, log)
+
+        # 3. saving copied data
+
+        old2new_esmodules = self.queries.save_get_id_mapping(esmodules, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new esmodules
+
+        # it is just easier to save all params, copied and created, together
+        esmodules_elements.extend(new_esmodules_elements)
+
+        for es_module_elem in esmodules_elements:
+            es_module_elem.id_esmodule = old2new_esmodules[es_module_elem.id_esmodule]
+
+        # 4.2 creating new relations between new esmodules and created configuration
+
+        for c2esm in conf2esm:
+            c2esm.id_confver = new_version_id
+            c2esm.id_esmodule = old2new_esmodules[c2esm.id_esmodule]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2esm, db, log)
+        self.queries.save_objects(esmodules_elements, db, log)
+
+    def save_es_sources(self, changed_version_id, new_version_id, changed_params, changed_templates_params, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 essources and their params. Templates left unchanged
+
+        essources = self.queries.getConfESSource(changed_version_id, db, log)
+        conf2ess = self.queries.getConfToESSRel(changed_version_id, db, log)
+        essources_elements = []
+        new_essource_elements = []
+        for es_source in essources:
+            essources_elements.extend(self.queries.getESSourceParams(es_source.id, db, log))
+            # if one or more of the es_source template params was changed
+            if es_source.id_template in changed_templates_params:
+                for changed_template_param in changed_templates_params[es_source.id_template].values():
+                    # create new param, and add it to the list to be saved
+                    param_to_save = self.map_basic_elem(changed_template_param, "ESSElement")
+                    param_to_save.hex = changed_template_param.hex
+                    param_to_save.id_essource = es_source.id
+                    new_essource_elements.append(param_to_save)
+
+        # 1.2 also, let's update values of changed params
+        for essource_element in essources_elements:
+            if essource_element.id_essource in changed_params and essource_element.name in changed_params[essource_element.id_essource]:
+                essource_element.value = changed_params[essource_element.id_essource][essource_element.name].value
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(essources_elements, db, log)
+        self.queries.detach_objects_from_session(conf2ess, db, log)
+
+        # 3. saving copied data
+
+        old2new_essources = self.queries.save_get_id_mapping(essources, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new essources
+
+        # it is just easier to save all params, copied and created, together
+        essources_elements.extend(new_essource_elements)
+
+        for es_source_elem in essources_elements:
+            es_source_elem.id_essource = old2new_essources[es_source_elem.id_essource]
+
+        # 4.2 creating new relations between new essources and created configuration
+
+        for c2esm in conf2ess:
+            c2esm.id_confver = new_version_id
+            c2esm.id_essource = old2new_essources[c2esm.id_essource]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2ess, db, log)
+        self.queries.save_objects(essources_elements, db, log)
+
+    def save_global_pset(self, changed_version_id, new_version_id, changed_params, db, log):
+
+        # 1. gathering data to copy
+
+        # 1.1 gpsets and their params
+
+        gpsets = self.queries.getConfGPsets(changed_version_id, db, log)
+        conf2gpsets = self.queries.get_conf2GPSets_relations(changed_version_id, db, log)
+        gpsets_elements = []
+        for gp_set in gpsets:
+            gpsets_elements.extend(self.queries.getGpsetElements(gp_set.id, db, log))
+
+        # 1.2 let's update values of changed params
+        for gp_set in gpsets_elements:
+            if gp_set.id_gpset in changed_params and gp_set.name in changed_params[gp_set.id_gpset]:
+                gp_set.value = changed_params[gp_set.id_gpset][gp_set.name].value
+
+        # 2. detaching from db session, after that we can change it and it will not affect old versions
+
+        self.queries.detach_objects_from_session(gpsets_elements, db, log)
+        self.queries.detach_objects_from_session(conf2gpsets, db, log)
+
+        # 3. saving copied data
+
+        old2new_gpsets = self.queries.save_get_id_mapping(gpsets, db, log)
+
+        # 4. modifying/updating data, creating some new instances
+
+        # 4.1 assigning params to new gpsets
+
+        for gp_set_elem in gpsets_elements:
+            gp_set_elem.id_gpset = old2new_gpsets[gp_set_elem.id_gpset]
+
+        # 4.2 creating new relations between new gpsets and created configuration
+
+        for c2gpset in conf2gpsets:
+            c2gpset.id_confver = new_version_id
+            c2gpset.id_gpset = old2new_gpsets[c2gpset.id_gpset]
+
+        # 5. saving relations and params
+
+        self.queries.save_objects(conf2gpsets, db, log)
+        self.queries.save_objects(gpsets_elements, db, log)
 
     #Returns all the services present in a Configuration version
     # If a Config id is given, it will retrieve the last version
