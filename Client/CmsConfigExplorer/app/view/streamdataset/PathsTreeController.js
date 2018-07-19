@@ -74,6 +74,11 @@ Ext.define('CmsConfigExplorer.view.streamdataset.PathsTreeController', {
         var streamsDatasetTab = this.getView().up().up();
         var pathTab = streamsDatasetTab.prev().prev().prev().prev().prev().prev();
         var allPaths = pathTab.getViewModel().getStore('pathitems');
+        var allPathsFilteredCopy =  new Ext.data.Store({model: allPaths.model});
+        allPaths.each(function(r){
+            allPathsFilteredCopy.add(r.copy());
+        });
+        allPathsFilteredCopy.filter('pit', 'pat');
         var selected = [];
         datasetPaths.each(function (rec) {
                 selected.push(rec.data.internal_id);
@@ -105,7 +110,7 @@ Ext.define('CmsConfigExplorer.view.streamdataset.PathsTreeController', {
                 name: 'Features',
                 region: 'center',
                 padding: 20,
-                store: allPaths,
+                store: allPathsFilteredCopy,
                 displayField: 'Name',
                 valueField: 'internal_id',
                 value: selected,
