@@ -769,6 +769,7 @@ class CacheDbQueries(object):
             return {}
         try:
             paths = self.get_paths(version_id, cache, log)
+            paths.extend(self.get_endpaths(version_id, cache, log))
             result = {}
             parent_ids = {path.internal_id: self.get_external_id(cache, path.internal_id, "pat", src, log) for path in paths}
             self.get_cached_parent_children_relations(cache, parent_ids, version_id, result, log, src)
