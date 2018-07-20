@@ -1415,5 +1415,78 @@ class ConfDbQueries(object):
             for obj in obj_array:
                 self.detach_obj_from_session(obj, db, log)
 
+    @staticmethod
+    def map_basic_elem(changed_param, class_name):
+        save = eval(class_name)()
+        save.name = changed_param.name
+        save.moetype = changed_param.moetype
+        save.paramtype = changed_param.paramtype
+        save.value = changed_param.value
+        if hasattr(changed_param, "valuelob"):
+            save.valuelob = changed_param.valuelob
+        save.tracked = changed_param.tracked
+        save.lvl = changed_param.lvl
+        save.order = changed_param.order
+        if hasattr(changed_param, "hex"):
+            save.hex = changed_param.hex
+        return save
 
+    @staticmethod
+    def create_pathitem(id_pae, id_parent, id_pathid):
+        new_path2pae = Pathitems()
+        new_path2pae.id_pae = id_pae
+        new_path2pae.id_parent = id_parent
+        new_path2pae.id_pathid = id_pathid
+        new_path2pae.operator = 0
+        return new_path2pae
 
+    @staticmethod
+    def create_moduleitem(id_pae, id_moe, lvl, order):
+        new_pae2moe = Moduleitem()
+        new_pae2moe.id_pae = id_pae
+        new_pae2moe.id_moe = id_moe
+        new_pae2moe.lvl = lvl
+        new_pae2moe.order = order
+        return new_pae2moe
+
+    @staticmethod
+    def create_conf2evco(id_evcoid, confver_id):
+        new_conf2evco = ConfToEvCo()
+        new_conf2evco.id_evcoid = id_evcoid
+        new_conf2evco.id_confver = confver_id
+        return new_conf2evco
+
+    @staticmethod
+    def create_event_content_id(id_evco):
+        evcoid_with_name = EventContentId()
+        evcoid_with_name.id_evco = id_evco
+        return evcoid_with_name
+
+    @staticmethod
+    def create_event_content(name):
+        new_evco = EventContent()
+        new_evco.name = name
+        return new_evco
+
+    @staticmethod
+    def create_evc2stat(evc_id, statement_id, statementrank):
+        evc2stat = EvCoToStat()
+        evc2stat.statementrank = statementrank
+        evc2stat.id_stat = statement_id
+        evc2stat.id_evcoid = evc_id
+        return evc2stat
+
+    @staticmethod
+    def create_path2strDataset(dataset_id, path_id):
+        new_rel = PathidToStrDst()
+        new_rel.id_datasetid = dataset_id
+        new_rel.id_pathid = path_id
+        return new_rel
+
+    @staticmethod
+    def create_conf2Srv(id_confver, id_service, order):
+        return Conf2Srv(id_confver=id_confver, id_service=id_service, order=order)
+
+    @staticmethod
+    def create_pathidconf(id_confver, id_pathid, order):
+        return Pathidconf(id_confver=id_confver, id_pathid=id_pathid, order=order)

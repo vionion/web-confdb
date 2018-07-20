@@ -16,8 +16,6 @@ from item_wrappers.item_wrappers import *
 from schemas.responseSchemas import *
 from responses.responses import *
 
-from confdb_v2.tables import ModToTemp, Moduleitem, Pathidconf, Conf2Srv, Modelement, ESMElement, ESSElement, SrvElement, EDSElement, PathidToStrDst, EventContent, EventContentId, ConfToEvCo, EvCoToStat, Pathitems
-
 from params_builder import ParamsBuilder
 from summary_builder import SummaryBuilder
 import string
@@ -1338,8 +1336,10 @@ class Exposed(object):
 
     def create_new_version(self, old_version, version_number, db=None, log=None):
         old_version.version = version_number
+        # TODO: use username from
         old_version.creator = 'admin'
         old_version.created = datetime.datetime.now()
+        # TODO: change this
         old_version.description = 'testing saving'
         old_version.name = re.search('.*\/V', old_version.name).group(0) + str(version_number)
         return self.queries.save_version(old_version, db, log)
@@ -1352,11 +1352,11 @@ class Exposed(object):
         changed_hierarchy = self.get_changed_path_items_hierarchy(changed_version.id, log, request)
         any_changes |= len(changed_hierarchy) > 0
         changed_dat2pats = self.get_changed_dat2pat(changed_version.id, log, request)
-        any_changes |= len(changed_dat2pats.keys()) > 0
+        any_changes |= len(changed_dat2pats) > 0
         changed_str2evc, cached_names = self.get_changed_stream_event(changed_version.id, log, request)
-        any_changes |= len(changed_str2evc.keys()) > 0
+        any_changes |= len(changed_str2evc) > 0
         changed_evco_statements = self.get_changed_evco_statements(changed_version.id, log, request)
-        any_changes |= len(changed_evco_statements.keys()) > 0
+        any_changes |= len(changed_evco_statements) > 0
         if not any_changes:
             log.error('ERROR: create_new_configuration - no changes found')
         else:
@@ -1378,18 +1378,6 @@ class Exposed(object):
             except Exception as e:
                 msg = 'ERROR: Query create_new_configuration Error: ' + e.args[0]
                 log.error(msg)
-
-    def map_basic_elem(self, changed_param, class_name):
-        #TODO: maybe, add hex field too?
-        save = eval(class_name)()
-        save.name = changed_param.name
-        save.moetype = changed_param.moetype
-        save.paramtype = changed_param.paramtype
-        save.value = changed_param.value
-        save.tracked = changed_param.tracked
-        save.lvl = changed_param.lvl
-        save.order = changed_param.order
-        return save
 
     def save_paths(self, changed_version_id, new_version_id, changed_params, changed_template_params, changed_hierarchy, db, log):
 
@@ -1444,13 +1432,10 @@ class Exposed(object):
             if p2m.id_templ in changed_template_params:
                 for changed_template_param in changed_template_params[p2m.id_templ].values():
                     # create new module parameter
-                    param_to_save = self.map_basic_elem(changed_template_param, "Modelement")
+                    param_to_save = self.queries.map_basic_elem(changed_template_param, "Modelement")
+                    self.queries.save_obj(param_to_save, db, log)
                     # and create new module-param relation
-                    new_pae2moe = Moduleitem()
-                    new_pae2moe.id_pae = p2m.id_pae
-                    new_pae2moe.id_moe = self.queries.save_obj(param_to_save, db, log).id
-                    new_pae2moe.lvl = changed_template_param.lvl
-                    new_pae2moe.order = changed_template_param.order
+                    new_pae2moe = self.queries.create_moduleitem(p2m.id_pae, param_to_save.id, changed_template_param.lvl, changed_template_param.order)
                     pae2moe_to_save.append(new_pae2moe)
 
         # 4.3 remapping relations between modules and params
@@ -1462,8 +1447,8 @@ class Exposed(object):
 
         # 4.4 creating new relations between new paths and created configuration
 
-        for i, item in enumerate(old2new_paths.iteritems()):
-            pathid2conf.append(Pathidconf(id_confver=new_version_id, id_pathid=item[1], order=i))
+        for i, old2new_path in enumerate(old2new_paths.iteritems()):
+            pathid2conf.append(self.queries.create_pathidconf(new_version_id, old2new_path[1], i))
 
         # 4.5 remapping paths to modules
 
@@ -1492,11 +1477,7 @@ class Exposed(object):
                 added_elems = cached_children_set - db_children_set
                 for elem in added_elems:
                     for pathid in pae2paths_dict[parent_key].keys():
-                        new_path2pae = Pathitems()
-                        new_path2pae.id_pae = elem
-                        new_path2pae.id_parent = parent_key
-                        new_path2pae.id_pathid = pathid
-                        new_path2pae.operator = 0
+                        new_path2pae = self.queries.create_pathitem(elem, parent_key, pathid)
                         index = pathid2pae.index(pae2paths_dict[parent_key][pathid])
                         pathid2pae.insert(index, new_path2pae)
 
@@ -1544,8 +1525,7 @@ class Exposed(object):
             if ed_source.id_template in changed_templates_params:
                 for changed_template_param in changed_templates_params[ed_source.id_template].values():
                     # create new param, and add it to the list to be saved
-                    param_to_save = self.map_basic_elem(changed_template_param, "EDSElement")
-                    param_to_save.hex = changed_template_param.hex
+                    param_to_save = self.queries.map_basic_elem(changed_template_param, "EDSElement")
                     param_to_save.id_edsource = ed_source.id
                     new_edsources_elements.append(param_to_save)
 
@@ -1600,8 +1580,7 @@ class Exposed(object):
             if service.id_template in changed_templates_params:
                 for changed_template_param in changed_templates_params[service.id_template].values():
                     # create new param, and add it to the list to be saved
-                    param_to_save = self.map_basic_elem(changed_template_param, "SrvElement")
-                    param_to_save.hex = changed_template_param.hex
+                    param_to_save = self.queries.map_basic_elem(changed_template_param, "SrvElement")
                     param_to_save.id_service = service.id
                     new_serv_param_elements.append(param_to_save)
 
@@ -1631,7 +1610,7 @@ class Exposed(object):
         # 4.2 creating new relations between new services and created configuration
 
         for i, service in enumerate(services):
-            conf2srv.append(Conf2Srv(id_confver=new_version_id, id_service=service.id, order=i))
+            conf2srv.append(self.queries.create_conf2Srv(new_version_id, service.id, i))
 
         # 5. saving relations and params
 
@@ -1704,9 +1683,7 @@ class Exposed(object):
         # this way we add all path ids left for dataset - means added according to the previous version
         for dataset_id in changed_dat2pats.keys():
             for path_id in changed_dat2pats[dataset_id]:
-                new_rel = PathidToStrDst()
-                new_rel.id_datasetid = old2new_datasets[dataset_id]
-                new_rel.id_pathid = old2new_paths[path_id]
+                new_rel = self.queries.create_path2strDataset(old2new_datasets[dataset_id], old2new_paths[path_id])
                 # There is no stream_id relation because it is not actually in use
                 dat2pats.append(new_rel)
 
@@ -1730,26 +1707,19 @@ class Exposed(object):
                         # if it is new evco, save it and add to conf2evco array to be saved too. Also, map stream to new evco
                         evcoid_with_name = self.queries.getEventContentIdByName(cached_names[e2str.id_streamid].name, db, log)
                         if evcoid_with_name is None:
-                            new_evco = EventContent()
-                            new_evco.name = cached_names[e2str.id_streamid].name
-                            evcoid_with_name = EventContentId()
-                            evcoid_with_name.id_evco = self.queries.save_obj(new_evco, db, log).id
+                            new_evco = self.queries.create_event_content(cached_names[e2str.id_streamid].name)
+                            self.queries.save_obj(new_evco, db, log)
+                            evcoid_with_name = self.queries.create_event_content_id(new_evco.id)
                             self.queries.save_obj(evcoid_with_name, db, log)
-                        new_conf2evco = ConfToEvCo()
-                        new_conf2evco.id_evcoid = evcoid_with_name.id
-                        new_conf2evco.id_confver = new_version_id
+                        new_conf2evco = self.queries.create_conf2evco(evcoid_with_name.id, new_version_id)
                         conf2evco_to_save.append(new_conf2evco)
-                        old_conf2evco = ConfToEvCo()
-                        old_conf2evco.id_evcoid = evcoid_with_name.id
-                        old_conf2evco.id_confver = changed_version_id
+                        old_conf2evco = self.queries.create_conf2evco(evcoid_with_name.id, changed_version_id)
                         conf2evco_to_save.append(old_conf2evco)
                         self.cache.update_external_id(cache_session, cached_names[e2str.id_streamid].int_evco_id, evcoid_with_name.id, 'evc', 0, log)
                         for statementrank, statement in changed_evco_statements[changed_str2evc[e2str.id_streamid]].items():
-                            evc2stat = EvCoToStat()
-                            evc2stat.statementrank = statementrank
-                            evc2stat.id_stat = self.queries.save_obj(statement, db, log).id
-                            evc2stat.id_evcoid = evcoid_with_name.id
-                            self.queries.save_obj(evc2stat, db, log)
+                            self.queries.save_obj(statement, db, log)
+                            evc2stat = self.queries.create_evc2stat(evcoid_with_name.id, statement.id, statementrank)
+                            evcotostats.append(evc2stat)
                         e2str.id_evcoid = new_conf2evco.id_evcoid
                 else:
                     e2str.id_evcoid = old2new_evco[e2str.id_evcoid]
@@ -1767,11 +1737,9 @@ class Exposed(object):
             # if there are changes in cache for evco, map them
             if old_id in changed_evco_statements:
                 for statementrank, statement in changed_evco_statements[old_id].items():
-                    evc2stat = EvCoToStat()
-                    evc2stat.statementrank = statementrank
-                    evc2stat.id_stat = self.queries.save_obj(statement, db, log).id
-                    evc2stat.id_evcoid = new_id
-                    self.queries.save_obj(evc2stat, db, log)
+                    self.queries.save_obj(statement, db, log)
+                    evc2stat = self.queries.create_evc2stat(new_id, statement.id, statementrank)
+                    evcotostats.append(evc2stat)
             # otherwise remap statements from source config
             elif old_id in evcotostats_dict:
                 for old_evco in evcotostats_dict[old_id]:
@@ -1803,8 +1771,7 @@ class Exposed(object):
             if es_module.id_template in changed_templates_params:
                 for changed_template_param in changed_templates_params[es_module.id_template].values():
                     # create new param, and add it to the list to be saved
-                    param_to_save = self.map_basic_elem(changed_template_param, "ESMElement")
-                    param_to_save.hex = changed_template_param.hex
+                    param_to_save = self.queries.map_basic_elem(changed_template_param, "ESMElement")
                     param_to_save.id_esmodule = es_module.id
                     new_esmodules_elements.append(param_to_save)
 
@@ -1859,8 +1826,7 @@ class Exposed(object):
             if es_source.id_template in changed_templates_params:
                 for changed_template_param in changed_templates_params[es_source.id_template].values():
                     # create new param, and add it to the list to be saved
-                    param_to_save = self.map_basic_elem(changed_template_param, "ESSElement")
-                    param_to_save.hex = changed_template_param.hex
+                    param_to_save = self.queries.map_basic_elem(changed_template_param, "ESSElement")
                     param_to_save.id_essource = es_source.id
                     new_essource_elements.append(param_to_save)
 
