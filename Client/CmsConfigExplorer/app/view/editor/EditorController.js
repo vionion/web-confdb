@@ -133,8 +133,15 @@ Ext.define('CmsConfigExplorer.view.editor.EditorController', {
     onCnfDetailsLoad: function( store, records, successful, eOpts ){
         var det = records[0];
         var name = det.get("name");
+        var vid = det.get("gid");
         this.getViewModel().set( "cnfname", name );
-        
+        var view = this.getView();
+        var sumv = view.lookupReference('summaryview');
+        var detv = view.lookupReference('detailsview');
+        sumv.getViewModel().set("idVer", vid);
+        detv.getViewModel().set("idVer", vid);
+
+
         var link = window.location.origin + window.location.pathname + "#config=" + name;
         this.getViewModel().set('link',link);
         
