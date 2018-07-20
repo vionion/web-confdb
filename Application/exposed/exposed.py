@@ -507,12 +507,12 @@ class Exposed(object):
         cache_session = request.db_cache
         cache.drag_n_drop_reorder(node_id, old_parent, new_order, version_id, cache_session, log)
 
-    def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, request, log, version=-2):
+    def drag_n_drop(self, node_id, old_parent, new_parent, new_order, copied, version, request, log):
         cache = self.cache
         cache_session = request.db_cache
         cache_session.begin_nested()
         cache_session.execute('LOCK TABLE path_items_hierarchy IN ACCESS EXCLUSIVE MODE;')
-        if version > 0:
+        if new_order < 0:
             max_order = cache.get_max_order(cache_session, new_parent, version, log)
             if max_order == 0:
                 db_offline = request.db_offline

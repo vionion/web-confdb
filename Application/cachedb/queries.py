@@ -1000,6 +1000,7 @@ class CacheDbQueries(object):
     def drag_n_drop_add_parent(self, node_id, parent_id, new_order, version_id, cache,  log):
         try:
             max_order = self.get_max_order(cache, parent_id, version_id, log)
+            self.update_orders(cache, new_order, max_order, parent_id, version_id, 1)
             copied_node = cache.query(PathItemsHierarchy).filter(
                 PathItemsHierarchy.version_id == version_id).filter(
                 PathItemsHierarchy.parent_id == parent_id).filter(
@@ -1009,8 +1010,7 @@ class CacheDbQueries(object):
                 copied_node.changed = True
             else:
                 copied_node = PathItemsHierarchy(parent_id=parent_id, child_id=node_id, order=new_order, changed=True, version_id=version_id)
-            cache.add(copied_node)
-            self.update_orders(cache, new_order, max_order, parent_id, version_id, 1)
+                cache.add(copied_node)
 
         except Exception as e:
             msg = 'ERROR: Query drag_n_drop_add_parent() Error: ' + e.args[0]
@@ -1022,7 +1022,8 @@ class CacheDbQueries(object):
         try:
             max_order = cache.query(PathItemsHierarchy.order).filter(
                 PathItemsHierarchy.version_id == version_id).filter(
-                PathItemsHierarchy.parent_id == parent_id).count()
+                PathItemsHierarchy.parent_id == parent_id).filter(
+                PathItemsHierarchy.order >= 0).count()
         except Exception as e:
             msg = 'ERROR: Query get_max_order() Error: ' + e.args[0]
             log.error(msg)
