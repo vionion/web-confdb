@@ -77,6 +77,11 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
                 }
             }
             this.updateAllNodes(children[i].childNodes, newParentId, oldParentId, orig, newOrder, name, newParentClientId, copy);
+            // if adding to an empty path which has no children, but was loaded already
+            if(children[i].data.internal_id === newParentId && children[i].childNodes.length === 0){
+                children[i].insertChild(0, this.copyDroppedRecord(orig));
+                this.update_orders(children[i].childNodes);
+            }
         }
     },
 
