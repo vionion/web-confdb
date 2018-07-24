@@ -38,12 +38,14 @@ Ext.define('CmsConfigExplorer.view.general.DragNDropController', {
             if (copy) {
                 data.records = [this.copyDroppedRecord(data.records[0])];
             }
-            var view = this.getView();
-            this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy, version,
-                function () {
-                    // dropHandler.processDrop();
-                    view.fireEvent("updateAllNodes", data.view.panel.getRootNode().childNodes, newParent, oldParent, data.records[0], newOrder, data.records[0].data.Name, overModel.id, copy);
-                });
+            if (!(copy && newParent === oldParent)) {
+                var view = this.getView();
+                this.sendDnDrequest(nodeId, oldParent, newParent, newOrder, copy, version,
+                    function () {
+                        // dropHandler.processDrop();
+                        view.fireEvent("updateAllNodes", data.view.panel.getRootNode().childNodes, newParent, oldParent, data.records[0], newOrder, data.records[0].data.Name, overModel.id, copy);
+                    });
+            }
             dropHandler.cancelDrop();
         }
     },
