@@ -1279,7 +1279,7 @@ class Exposed(object):
                 evcons = queries.getConfEventContents(ver_id, db, log)
                 evcon_names = cache.put_evcon_names(ver_id, evcons, cache_session, src, log)
             except:
-                log.error('ERROR: Query getConfPaelements Error')
+                log.error('ERROR: Query get_evcon_names Error')
                 return None
         if evcon_names is None:
             return None
